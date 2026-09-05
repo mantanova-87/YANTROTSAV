@@ -1,4 +1,5 @@
-import { FormEvent, useState } from 'react'
+import { useState } from 'react'
+import type { FormEvent } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Mail, MapPin, Send, CheckCircle2, AlertCircle } from 'lucide-react'
 import { z } from 'zod'
