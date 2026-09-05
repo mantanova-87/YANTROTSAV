@@ -1,172 +1,725 @@
 import { motion } from 'framer-motion'
 import poster from '../assets/images/poster.png'
+
+// ============================================================
+// ANIMATION PRESETS
+// ============================================================
+
+const revealFromLeft = {
+  hidden: {
+    opacity: 0,
+    x: -120,
+    y: 50,
+    rotateY: 18,
+    rotateZ: -2,
+    scale: 0.9,
+    filter: 'blur(10px)',
+  },
+  visible: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+    rotateY: 0,
+    rotateZ: -1,
+    scale: 1,
+    filter: 'blur(0px)',
+  },
+}
+
+const revealFromRight = {
+  hidden: {
+    opacity: 0,
+    x: 120,
+    y: 50,
+    rotateY: -18,
+    rotateZ: 2,
+    scale: 0.9,
+    filter: 'blur(10px)',
+  },
+  visible: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+    rotateY: 0,
+    rotateZ: 1,
+    scale: 1,
+    filter: 'blur(0px)',
+  },
+}
+
+const revealFromDepth = {
+  hidden: {
+    opacity: 0,
+    y: 80,
+    rotateX: 20,
+    scale: 0.82,
+    filter: 'blur(12px)',
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    rotateX: 0,
+    scale: 1,
+    filter: 'blur(0px)',
+  },
+}
+
+// ============================================================
+// MESSAGE CARDS
+// Replace image: '' with your actual image filename.
+// Example:
+// image: 'message1.png'
+// ============================================================
+
 const messageCards = [
   {
-    image: 'https://placehold.co/900x600/080A0F/00E5FF?text=Image+01',
     title: 'Message Title One',
-    text: 'Add your message or introduction here.',
-    className: 'md:ml-[4%]',
+    text: 'Add your message or introduction here. This section can be used for a welcome message, vision, or important announcement.',
+    image: 'vc.jpg',
   },
   {
-    image: 'https://placehold.co/900x600/080A0F/FF6B00?text=Image+02',
     title: 'Message Title Two',
-    text: 'Add your message or introduction here.',
-    className: 'md:ml-auto md:mr-[4%]',
+    text: 'Add your message or introduction here. This section can highlight the purpose, experience, or story behind Yantrotsav.',
+    image: 'drdineshcse.jpeg',
   },
 ]
 
+// ============================================================
+// FEATURE CARDS
+// Replace image: '' with your actual image filename.
+// ============================================================
+
 const featureCards = [
   {
-    image: 'https://placehold.co/900x600/080A0F/00E5FF?text=Feature+01',
     title: 'Feature One',
     text: 'Add feature information here.',
+    image: '',
+    accent: 'cyan',
   },
   {
-    image: 'https://placehold.co/900x600/080A0F/FF6B00?text=Feature+02',
     title: 'Feature Two',
     text: 'Add feature information here.',
+    image: '',
+    accent: 'orange',
   },
   {
-    image: 'https://placehold.co/900x600/080A0F/7C3AED?text=Feature+03',
     title: 'Feature Three',
     text: 'Add feature information here.',
+    image: '',
+    accent: 'violet',
   },
 ]
+
+// ============================================================
+// HOME
+// ============================================================
 
 function Home() {
   return (
     <div className="min-h-screen overflow-hidden bg-[#050816] text-white">
 
-      {/* HERO POSTER */}
+      {/* ======================================================
+          HERO
+      ====================================================== */}
+
       <section className="relative w-full pt-[72px]">
-        <div className="relative overflow-hidden mx-8 my-8 rounded-xl">
+
+        <motion.div
+          initial={{
+            opacity: 0,
+            x: -120,
+            scale: 1.08,
+          }}
+          animate={{
+            opacity: 1,
+            x: 0,
+            scale: 1,
+          }}
+          transition={{
+            duration: 1.4,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="relative mx-auto w-[80vw] max-w-[1600px] p-2"
+        >
+
+          {/* Hero shadow */}
+          <div className="pointer-events-none absolute inset-2 translate-x-4 translate-y-4 bg-black/50 blur-xl" />
+
+          {/* Technical frame */}
+          <div className="pointer-events-none absolute inset-0 z-20">
+
+            <div className="absolute inset-0 border border-white/15" />
+
+            <div className="absolute inset-2 border border-white/10" />
+
+            {/* Top-left */}
+            <span className="absolute left-0 top-0 h-14 w-14 border-l-2 border-t-2 border-[#00E5FF]" />
+
+            {/* Top-right */}
+            <span className="absolute right-0 top-0 h-14 w-14 border-r-2 border-t-2 border-[#FF6B00]" />
+
+            {/* Bottom-left */}
+            <span className="absolute bottom-0 left-0 h-14 w-14 border-b-2 border-l-2 border-[#FF6B00]" />
+
+            {/* Bottom-right */}
+            <span className="absolute bottom-0 right-0 h-14 w-14 border-b-2 border-r-2 border-[#00E5FF]" />
+
+            {/* Technical markers */}
+            <span className="absolute left-3 top-3 h-1.5 w-1.5 bg-[#00E5FF]" />
+            <span className="absolute right-3 top-3 h-1.5 w-1.5 bg-[#FF6B00]" />
+            <span className="absolute bottom-3 left-3 h-1.5 w-1.5 bg-[#FF6B00]" />
+            <span className="absolute bottom-3 right-3 h-1.5 w-1.5 bg-[#00E5FF]" />
+          </div>
+
           <img
             src={poster}
             alt="YANTROTSAV event poster"
-            className="h-auto w-full object-cover "
+            className="relative z-10 block h-100 w-full max-w-[80vw] object-fill"
           />
+        </motion.div>
+      </section>
 
-          {/* Subtle overlay */}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050816]/50" />
+      {/* ======================================================
+          MESSAGE CARDS
+      ====================================================== */}
+
+      <section className="mx-auto max-w-[1400px] px-5 py-28 md:px-8 md:py-40">
+
+        {/* No negative spacing — cards do NOT overlap */}
+        <div className="space-y-20 md:space-y-[-10]">
+
+          {messageCards.map((card, index) => {
+
+            const animation =
+              index === 0
+                ? revealFromLeft
+                : revealFromRight
+
+            return (
+              <motion.article
+                key={card.title}
+                variants={animation}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{
+                  once: true,
+                  amount: 0.2,
+                }}
+                transition={{
+                  duration: 0.95,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                style={{
+                  perspective: 1200,
+                }}
+                className={`relative w-full max-w-5xl ${index === 0
+                    ? 'md:ml-[2%]'
+                    : 'md:ml-auto md:mr-[2%]'
+                  }`}
+              >
+
+                {/* ==================================================
+                    3D DEPTH SHADOW
+                ================================================== */}
+
+                <div className="absolute inset-2 translate-x-6 translate-y-6 bg-black/75 blur-[2px]" />
+
+                {/* Top-left triangular shadow */}
+                <span
+                  className={`absolute -left-3 -top-3 z-0 h-0 w-0 border-b-[30px] border-r-[30px] border-b-transparent ${index === 0
+                      ? 'border-r-[#00E5FF]/50'
+                      : 'border-r-[#FF6B00]/50'
+                    }`}
+                />
+
+                {/* Top-right triangular shadow */}
+                <span
+                  className={`absolute -right-3 -top-3 z-0 h-0 w-0 border-b-[30px] border-l-[30px] border-b-transparent ${index === 0
+                      ? 'border-l-[#FF6B00]/50'
+                      : 'border-l-[#00E5FF]/50'
+                    }`}
+                />
+
+                {/* Bottom-left triangular shadow */}
+                <span
+                  className={`absolute -bottom-3 -left-3 z-0 h-0 w-0 border-t-[30px] border-r-[30px] border-t-transparent ${index === 0
+                      ? 'border-r-[#FF6B00]/35'
+                      : 'border-r-[#00E5FF]/35'
+                    }`}
+                />
+
+                {/* Bottom-right triangular shadow */}
+                <span
+                  className={`absolute -bottom-3 -right-3 z-0 h-0 w-0 border-t-[30px] border-l-[30px] border-t-transparent ${index === 0
+                      ? 'border-l-[#00E5FF]/35'
+                      : 'border-l-[#FF6B00]/35'
+                    }`}
+                />
+
+
+
+                {/* ==================================================
+                    CARD
+                ================================================== */}
+
+                <div
+                  className="
+                    group
+                    relative
+                    z-10
+                    grid
+                    overflow-hidden
+                    bg-[#080A0F]
+                    shadow-[0_18px_45px_rgba(0,0,0,0.4)]
+                    transition-all
+                    duration-500
+                    hover:-translate-y-3
+                    hover:shadow-[0_35px_80px_rgba(0,0,0,0.6)]
+                    md:grid-cols-[0.72fr_1.28fr]
+                  "
+                >
+
+                  {/* Outer border */}
+                  <div className="pointer-events-none absolute inset-0 z-40 border border-white/20" />
+
+                  {/* Inner border */}
+                  <div className="pointer-events-none absolute inset-[4px] z-40 border border-white/5" />
+
+                  {/* Top accent */}
+                  <span className="absolute left-0 top-0 z-50 h-px w-36 bg-[#00E5FF]" />
+
+                  {/* Bottom accent */}
+                  <span className="absolute bottom-0 right-0 z-50 h-px w-36 bg-[#FF6B00]" />
+
+                  {/* Top-left corner */}
+                  <span className="absolute left-0 top-0 z-50 h-10 w-10 border-l-2 border-t-2 border-[#00E5FF]" />
+
+                  {/* Top-right corner */}
+                  <span className="absolute right-0 top-0 z-50 h-7 w-7 border-r border-t border-white/30" />
+
+                  {/* Bottom-left corner */}
+                  <span className="absolute bottom-0 left-0 z-50 h-7 w-7 border-b border-l border-white/30" />
+
+                  {/* Bottom-right corner */}
+                  <span className="absolute bottom-0 right-0 z-50 h-10 w-10 border-b-2 border-r-2 border-[#FF6B00]" />
+
+                  {/* Surface lighting */}
+                  <div className="pointer-events-none absolute inset-0 z-30 bg-gradient-to-br from-white/[0.045] via-transparent to-[#00E5FF]/[0.025]" />
+
+                  {/* ==================================================
+                      IMAGE AREA — SMALLER + CENTERED
+                  ================================================== */}
+
+                  <div className="relative flex min-h-[240px] items-center justify-center overflow-hidden bg-[#080A0F] p-6 md:min-h-[300px]">
+
+                    {card.image ? (
+                      <img
+                        src={`/src/assets/images/${card.image}`}
+                        alt={card.title}
+                        className="relative z-10 w-64 h-64 rounded-full object-center transition-transform duration-1000 ease-out group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="relative z-10 flex h-full min-h-[210px] w-full items-center justify-center border border-white/5">
+                        <div className="text-center">
+
+                          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]">
+                            Image 0{index + 1}
+                          </span>
+
+                          <p className="mt-2 text-[8px] uppercase tracking-[0.15em] text-slate-700">
+                            Add image filename
+                          </p>
+
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Image glow */}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#00E5FF]/10 via-transparent to-[#FF6B00]/10" />
+
+                    {/* Image bottom fade */}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050816]/60 via-transparent to-transparent" />
+
+                    {/* Image technical marker */}
+                    <span className="absolute bottom-4 left-5 z-20 font-mono text-[8px] uppercase tracking-[0.2em] text-white/30">
+                      IMG / 0{index + 1}
+                    </span>
+                  </div>
+
+                  {/* ==================================================
+                      LARGE MESSAGE AREA
+                  ================================================== */}
+
+                  <div className="relative z-30 flex flex-col justify-center p-8 md:p-12 lg:p-14">
+
+                    {/* Label */}
+                    <span className="mb-5 font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
+                      0{index + 1} / Message
+                    </span>
+
+                    {/* Title */}
+                    <h2 className="max-w-2xl text-3xl font-black uppercase tracking-tight md:text-4xl lg:text-5xl">
+                      {card.title}
+                    </h2>
+
+                    {/* Divider */}
+                    <div className="mt-6 flex items-center gap-3">
+                      <span className="h-px w-12 bg-[#00E5FF] transition-all duration-500 group-hover:w-24" />
+
+                      <span className="h-1 w-1 bg-[#FF6B00]" />
+
+                      <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-700">
+                        YT / 2026
+                      </span>
+                    </div>
+
+                    {/* Message */}
+                    <p className="mt-7 max-w-2xl text-sm leading-8 text-slate-400 md:text-base md:leading-8">
+                      {card.text}
+                    </p>
+
+                    {/* Technical bottom information */}
+                    <div className="mt-10 flex items-center gap-4">
+
+                      <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-700">
+                        Yantrotsav
+                      </span>
+
+                      <span className="h-px w-12 bg-white/10" />
+
+                      <span className="font-mono text-[8px] text-slate-700">
+                        2026
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.article>
+            )
+          })}
         </div>
       </section>
 
-      {/* MESSAGE CARDS */}
-      <section className="mx-auto max-w-[1400px] px-5 py-20 md:px-8 md:py-28">
-        <div className="space-y-8 md:space-y-[-80px]">
-          {messageCards.map((card, index) => (
-            <motion.article
-              key={card.title}
-              initial={{
-                opacity: 0,
-                y: 50,
-                x: index === 0 ? -30 : 30,
-              }}
-              whileInView={{
-                opacity: 1,
-                y: 0,
-                x: 0,
-              }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{
-                duration: 0.7,
-                ease: 'easeOut',
-              }}
-              className={`relative w-full max-w-3xl ${card.className}`}
-            >
-              <div className="group grid overflow-hidden border border-white/10 bg-[#080A0F] md:grid-cols-2">
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img
-                    src={card.image}
-                    alt=""
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                </div>
+      <div className="group relative mx-auto w-full max-w-6xl overflow-hidden bg-[#080A0F]">
 
-                <div className="flex flex-col justify-center p-7 md:p-10">
-                  <span className="mb-4 font-mono text-[9px] uppercase tracking-[0.2em] text-[#FF6B00]">
-                    0{index + 1} / Message
-                  </span>
+        {/* Outer technical border */}
+        <div className="pointer-events-none absolute inset-0 z-20 border border-white/20" />
 
-                  <h2 className="text-2xl font-bold uppercase tracking-tight md:text-3xl">
-                    {card.title}
-                  </h2>
+        {/* Inner border */}
+        <div className="pointer-events-none absolute inset-[4px] z-20 border border-white/5" />
 
-                  <p className="mt-4 text-sm leading-7 text-slate-500">
-                    {card.text}
-                  </p>
+        {/* Top accent */}
+        <span className="absolute left-0 top-0 z-30 h-px w-32 bg-[#00E5FF]" />
 
-                  <div className="mt-7 h-px w-12 bg-[#FF6B00] transition-all duration-500 group-hover:w-24" />
-                </div>
-              </div>
-            </motion.article>
-          ))}
+        {/* Bottom accent */}
+        <span className="absolute bottom-0 right-0 z-30 h-px w-32 bg-[#FF6B00]" />
+
+        {/* Corner brackets */}
+        <span className="absolute left-0 top-0 z-30 h-9 w-9 border-l-2 border-t-2 border-[#00E5FF]" />
+
+        <span className="absolute bottom-0 right-0 z-30 h-9 w-9 border-b-2 border-r-2 border-[#FF6B00]" />
+
+
+        {/* CARD CONTENT */}
+        <div className="grid min-h-[320px] md:grid-cols-[1.35fr_0.65fr]">
+
+
+          {/* =========================
+        TEXT — LEFT
+    ========================== */}
+
+          <div className="flex flex-col justify-center p-8 md:p-12 lg:p-14">
+
+            <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
+              01 / Message
+            </span>
+
+            <h2 className="mt-4 text-3xl font-black uppercase tracking-tight text-white md:text-4xl lg:text-5xl">
+              Your Heading
+            </h2>
+
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-400 md:text-base">
+              Write your message here. Add your introduction, announcement,
+              information, or any other content related to Yantrotsav.
+            </p>
+
+            {/* Technical line */}
+            <div className="mt-8 flex items-center gap-3">
+
+              <span className="h-px w-12 bg-[#00E5FF] transition-all duration-500 group-hover:w-24" />
+
+              <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-700">
+                Yantrotsav / 2026
+              </span>
+
+            </div>
+
+          </div>
+
+
+          {/* =========================
+        IMAGE — RIGHT
+    ========================== */}
+
+          <div className="relative flex min-h-[240px] items-center justify-center overflow-hidden bg-[#050816] p-8">
+
+            <img
+              src="/src/assets/images/YOUR_IMAGE.png"
+              alt="Yantrotsav"
+              className="relative z-10 h-auto max-h-[190px] w-auto max-w-[240px] object-contain object-center transition-transform duration-700 ease-out group-hover:scale-105"
+            />
+
+            {/* Image lighting */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#00E5FF]/10 via-transparent to-[#FF6B00]/10" />
+
+            {/* Image marker */}
+            <span className="absolute bottom-4 right-5 z-10 font-mono text-[8px] uppercase tracking-[0.2em] text-white/30">
+              IMG / 01
+            </span>
+
+          </div>
+
         </div>
-      </section>
+      </div>
 
-      {/* FEATURE HEADING */}
-      <section className="mx-auto max-w-[1400px] px-5 pb-12 md:px-8 md:pb-16">
+      {/* ======================================================
+          FEATURE HEADING
+      ====================================================== */}
+
+      <section className="mx-auto max-w-[1400px] px-5 pb-14 md:px-8 md:pb-20">
+
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.6 }}
-          className="border-b border-white/10 pb-6"
+          initial={{
+            opacity: 0,
+            y: 50,
+            scale: 0.95,
+            filter: 'blur(8px)',
+          }}
+          whileInView={{
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            filter: 'blur(0px)',
+          }}
+          viewport={{
+            once: true,
+            amount: 0.3,
+          }}
+          transition={{
+            duration: 0.8,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="relative border-b border-white/10 pb-7"
         >
-          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#FF6B00]">
+
+          <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
             03 / Discover
           </span>
 
           <h2 className="mt-3 text-4xl font-black uppercase tracking-tight md:text-6xl">
             Explore
           </h2>
+
+          <span className="absolute bottom-[-1px] left-0 h-px w-20 bg-[#00E5FF]" />
         </motion.div>
       </section>
 
-      {/* FEATURE CARDS */}
-      <section className="mx-auto max-w-[1400px] px-5 pb-24 md:px-8 md:pb-32">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {featureCards.map((card, index) => (
-            <motion.article
-              key={card.title}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{
-                duration: 0.6,
-                delay: index * 0.1,
-              }}
-              className="group overflow-hidden border border-white/10 bg-[#080A0F]"
-            >
-              <div className="aspect-[4/3] overflow-hidden">
-                <img
-                  src={card.image}
-                  alt=""
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+      {/* ======================================================
+          FEATURE CARDS
+      ====================================================== */}
+
+      <section className="mx-auto max-w-[1400px] px-5 pb-28 md:px-8 md:pb-40">
+
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+
+          {featureCards.map((card, index) => {
+
+            const animation =
+              index === 0
+                ? revealFromLeft
+                : index === 1
+                  ? revealFromDepth
+                  : revealFromRight
+
+            const accent =
+              card.accent === 'cyan'
+                ? '#00E5FF'
+                : card.accent === 'orange'
+                  ? '#FF6B00'
+                  : '#7C3AED'
+
+            return (
+              <motion.article
+                key={card.title}
+                variants={animation}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{
+                  once: true,
+                  amount: 0.2,
+                }}
+                transition={{
+                  duration: 0.85,
+                  delay: index * 0.12,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                style={{
+                  perspective: 1200,
+                }}
+                className="group relative"
+              >
+
+                {/* Deep shadow */}
+                <div className="absolute inset-2 translate-x-4 translate-y-4 bg-black/70 blur-[1px]" />
+
+                {/* Top-left triangular shadow */}
+                <span
+                  style={{
+                    borderRightColor: `${accent}66`,
+                  }}
+                  className="absolute -left-2 -top-2 z-0 h-0 w-0 border-b-[22px] border-r-[22px] border-b-transparent"
                 />
-              </div>
 
-              <div className="p-6 md:p-7">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[9px] text-[#FF6B00]">
-                    0{index + 1}
-                  </span>
+                {/* Bottom-right triangular shadow */}
+                <span
+                  style={{
+                    borderLeftColor: `${accent}44`,
+                  }}
+                  className="absolute -bottom-2 -right-2 z-0 h-0 w-0 border-t-[22px] border-l-[22px] border-t-transparent"
+                />
 
-                  <span className="text-xs text-slate-700 transition-colors duration-300 group-hover:text-cyan-400">
-                    ↗
-                  </span>
+                {/* Feature card */}
+                <div className="relative z-10 overflow-hidden bg-[#080A0F] shadow-[0_15px_35px_rgba(0,0,0,0.35)] transition-all duration-500 group-hover:-translate-y-3 group-hover:shadow-[0_30px_70px_rgba(0,0,0,0.55)]">
+
+                  {/* Outer frame */}
+                  <div className="pointer-events-none absolute inset-0 z-40 border border-white/20" />
+
+                  {/* Inner frame */}
+                  <div className="pointer-events-none absolute inset-[4px] z-40 border border-white/5" />
+
+                  {/* Accent line */}
+                  <span
+                    style={{
+                      backgroundColor: accent,
+                    }}
+                    className="absolute left-0 top-0 z-50 h-px w-28"
+                  />
+
+                  {/* Corner brackets */}
+                  <span
+                    style={{
+                      borderColor: accent,
+                    }}
+                    className="absolute left-0 top-0 z-50 h-8 w-8 border-l-2 border-t-2"
+                  />
+
+                  <span
+                    style={{
+                      borderColor: accent,
+                    }}
+                    className="absolute bottom-0 right-0 z-50 h-8 w-8 border-b-2 border-r-2"
+                  />
+
+                  {/* Surface lighting */}
+                  <div className="pointer-events-none absolute inset-0 z-30 bg-gradient-to-br from-white/[0.04] via-transparent to-white/[0.01]" />
+
+                  {/* Feature image */}
+                  <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-[#080A0F] p-5">
+
+                    {card.image ? (
+                      <img
+                        src={`/src/assets/images/${card.image}`}
+                        alt={card.title}
+                        className="relative z-10 h-full w-full object-contain object-center transition-transform duration-1000 ease-out group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center border border-white/5">
+
+                        <div className="text-center">
+
+                          <span
+                            style={{
+                              color: accent,
+                            }}
+                            className="font-mono text-[9px] uppercase tracking-[0.2em]"
+                          >
+                            Feature 0{index + 1}
+                          </span>
+
+                          <p className="mt-2 text-[8px] uppercase tracking-[0.15em] text-slate-700">
+                            Add image filename
+                          </p>
+
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Accent overlay */}
+                    <div
+                      style={{
+                        background: `linear-gradient(135deg, ${accent}18, transparent 50%, ${accent}12)`,
+                      }}
+                      className="pointer-events-none absolute inset-0"
+                    />
+
+                    {/* Bottom fade */}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050816]/80 via-transparent to-transparent" />
+
+                    <span className="absolute bottom-4 left-5 z-10 font-mono text-[8px] uppercase tracking-[0.2em] text-white/40">
+                      YT / 0{index + 1}
+                    </span>
+                  </div>
+
+                  {/* Feature content */}
+                  <div className="relative z-20 p-6 md:p-7">
+
+                    <div className="flex items-center justify-between">
+
+                      <span
+                        style={{
+                          color: accent,
+                        }}
+                        className="font-mono text-[9px]"
+                      >
+                        0{index + 1}
+                      </span>
+
+                      <span
+                        style={{
+                          color: accent,
+                        }}
+                        className="text-xs opacity-40 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100"
+                      >
+                        ↗
+                      </span>
+                    </div>
+
+                    <h3 className="mt-5 text-xl font-black uppercase tracking-tight">
+                      {card.title}
+                    </h3>
+
+                    <p className="mt-3 text-sm leading-6 text-slate-500">
+                      {card.text}
+                    </p>
+
+                    {/* Bottom technical line */}
+                    <div className="mt-6 flex items-center gap-2">
+
+                      <span
+                        style={{
+                          backgroundColor: accent,
+                        }}
+                        className="h-px w-8 transition-all duration-500 group-hover:w-16"
+                      />
+
+                      <span className="font-mono text-[8px] uppercase tracking-[0.18em] text-slate-700">
+                        Explore
+                      </span>
+                    </div>
+                  </div>
                 </div>
-
-                <h3 className="mt-5 text-xl font-bold uppercase tracking-tight">
-                  {card.title}
-                </h3>
-
-                <p className="mt-3 text-sm leading-6 text-slate-500">
-                  {card.text}
-                </p>
-              </div>
-            </motion.article>
-          ))}
+              </motion.article>
+            )
+          })}
         </div>
       </section>
     </div>
