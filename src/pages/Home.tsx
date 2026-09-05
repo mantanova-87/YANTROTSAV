@@ -1,6 +1,13 @@
 import { motion } from 'framer-motion'
 import poster from '../assets/images/poster.png'
-
+const images = import.meta.glob(
+  '../assets/images/*',
+  {
+    eager: true,
+    query: '?url',
+    import: 'default',
+  },
+) as Record<string, string>
 // ============================================================
 // ANIMATION PRESETS
 // ============================================================
@@ -314,7 +321,7 @@ function Home() {
 
                     {card.image ? (
                       <img
-                        src={`/src/assets/images/${card.image}`}
+                        src={images[`../assets/images/${card.image}`]}
                         alt={card.title}
                         className="relative z-10 w-64 h-64 rounded-full object-center transition-transform duration-1000 ease-out group-hover:scale-105"
                       />
