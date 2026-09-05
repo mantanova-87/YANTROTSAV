@@ -80,7 +80,7 @@ const messageCards = [
   {
     title: 'Message Title Two',
     text: 'Add your message or introduction here. This section can highlight the purpose, experience, or story behind Yantrotsav.',
-    image: 'drdineshcse.jpeg',
+    image: 'DRDINESHCSE.jpeg',
   },
 ]
 
