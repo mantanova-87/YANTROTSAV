@@ -242,6 +242,9 @@ export interface TeamInviteEmailPayload {
 
 export interface AdminAnalyticsKPI {
   totalRegistrations: number
+  eventName?: string
+  eventId?: string
+  eventRegistrationsMap?: Record<string, number>
   totalUsers?: number
   totalTeamsFormed: number
   activeEventsCount: number

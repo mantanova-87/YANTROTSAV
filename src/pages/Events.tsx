@@ -484,7 +484,7 @@ function Events() {
                                   }`}
                                 >
                                   {enrolledEventIds.has(event.$id)
-                                    ? 'Pass Confirmed'
+                                    ? 'Registered'
                                     : isRegistrationOpen
                                       ? 'Registration Active'
                                       : isDeadlinePassed

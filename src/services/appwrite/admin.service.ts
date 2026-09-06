@@ -137,9 +137,11 @@ export function addStoredDeletedUser(id: string): void {
 
 export class AdminService {
   /**
-   * Fetch core KPI statistics for the Admin Dashboard
+   * Fetch core KPI statistics for the Admin Dashboard.
+   * Calculates actual unique student registrations for a given event,
+   * dynamically resolving event name and per-event registration maps.
    */
-  async getAnalytics(): Promise<AdminAnalyticsKPI> {
+  async getAnalytics(targetEventId?: string): Promise<AdminAnalyticsKPI> {
     try {
       const [regResponse, teamResponse, eventResponse, inviteResponse, userResponse] = await Promise.all([
         databases.listDocuments(
@@ -173,33 +175,68 @@ export class AdminService {
       const deletedTeamIds = getStoredDeletedTeams()
       const deletedUserIds = getStoredDeletedUsers()
 
-      const activeRegs = regResponse.documents.filter((doc) => !deletedRegIds.has(doc.$id))
+      const allEvents = eventResponse.documents as unknown as EventDocument[]
+      const validEventMap = new Map<string, EventDocument>()
+      allEvents.forEach((e) => validEventMap.set(e.$id, e))
+
+      // Keep only registrations belonging to existing, valid events
+      const activeRegs = (regResponse.documents as unknown as EventRegistrationDocument[]).filter(
+        (doc) => !deletedRegIds.has(doc.$id) && validEventMap.has(doc.eventId),
+      )
       const activeTeams = teamResponse.documents.filter((t) => !deletedTeamIds.has(t.$id))
       const activeUsers = userResponse.documents.filter(
-        (u) => !deletedUserIds.has(u.$id) && !deletedUserIds.has((u as any).userId)
+        (u) => !deletedUserIds.has(u.$id) && !deletedUserIds.has((u as any).userId),
       )
 
-      // Count unique registrations per event so duplicates do not inflate KPI cards
-      const uniqueRegs = new Set<string>()
-      for (const doc of activeRegs) {
-        const d = doc as any
-        const idKey = ((d.userEmail || d.userId || d.$id) as string).trim().toLowerCase()
-        uniqueRegs.add(`${d.eventId}-${idKey}`)
+      // Map registrations per valid event with deduplicated unique student accounts
+      const eventRegistrationsMap: Record<string, number> = {}
+      for (const ev of allEvents) {
+        const evRegs = activeRegs.filter((d) => d.eventId === ev.$id)
+        const uniqueStudentsInEvent = new Set<string>()
+        for (const doc of evRegs) {
+          const d = doc as any
+          const idKey = (
+            (d.userEmail && d.userEmail.includes('@') ? d.userEmail : '') ||
+            d.userId ||
+            d.studentRollNumber ||
+            d.studentRollNo ||
+            d.$id
+          ).trim().toLowerCase()
+          uniqueStudentsInEvent.add(idKey)
+        }
+        eventRegistrationsMap[ev.$id] = uniqueStudentsInEvent.size
       }
-      const totalRegistrations = activeRegs.length > 0
-        ? uniqueRegs.size
-        : Math.max(0, (regResponse.total || 0) - deletedRegIds.size)
+
+      // Resolve the given / selected event dynamically
+      const publishedEvents = allEvents.filter((e: any) => e.status === 'published')
+      const targetEvent =
+        (targetEventId && validEventMap.get(targetEventId)) ||
+        publishedEvents[0] ||
+        allEvents[0] ||
+        null
+
+      const totalRegistrations = targetEvent
+        ? (eventRegistrationsMap[targetEvent.$id] || 0)
+        : 0
+
+      const eventName = targetEvent ? targetEvent.title : 'No Active Event'
+      const eventId = targetEvent ? targetEvent.$id : undefined
 
       return {
         totalRegistrations,
+        eventName,
+        eventId,
+        eventRegistrationsMap,
         totalUsers: activeUsers.length || Math.max(0, (userResponse.total || 0) - deletedUserIds.size),
         totalTeamsFormed:   activeTeams.filter((t: any) => t.status === 'confirmed').length,
-        activeEventsCount:  eventResponse.documents.filter((e: any) => e.status === 'published').length,
+        activeEventsCount:  publishedEvents.length,
         pendingInvitesCount: inviteResponse.documents.filter((i: any) => i.status === 'pending').length,
       }
     } catch {
       return {
         totalRegistrations: 0,
+        eventName: 'No Active Event',
+        eventRegistrationsMap: {},
         totalUsers: 0,
         totalTeamsFormed: 0,
         activeEventsCount: 0,

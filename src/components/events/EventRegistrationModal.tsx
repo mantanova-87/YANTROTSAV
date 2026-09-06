@@ -282,7 +282,7 @@ export default function EventRegistrationModal({
                 <p className="mt-2 text-xs leading-relaxed text-slate-400">
                   {isTeamEvent
                     ? `Team "${teamName}" created successfully with your registered teammates! You can track your team in your student dashboard.`
-                    : `You have successfully enrolled in ${event.title}. Your gate entry pass is ready in your student dashboard.`}
+                    : `You have successfully enrolled in ${event.title}. Your registration is confirmed in your student dashboard.`}
                 </p>
 
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
@@ -312,7 +312,7 @@ export default function EventRegistrationModal({
                   Student Sign In Required
                 </h3>
                 <p className="mt-2 text-xs text-slate-400">
-                  You need an active YANTROTSAV student identity pass to register for this event.
+                  You need an active YANTROTSAV student account to register for this event.
                 </p>
 
                 <button
@@ -355,7 +355,7 @@ export default function EventRegistrationModal({
                     onClick={handleClose}
                     className="flex items-center justify-center gap-2 border border-emerald-500 bg-emerald-500 px-6 py-2.5 font-mono text-xs font-bold uppercase tracking-[0.15em] text-black transition-all hover:bg-transparent hover:text-emerald-400"
                   >
-                    <span>View Pass on Dashboard</span>
+                    <span>View Registration on Dashboard</span>
                     <ArrowRight size={14} />
                   </Link>
                   <button
