@@ -257,9 +257,11 @@ export default function Contact() {
                     <p className="font-mono text-[8px] uppercase tracking-[0.15em] text-slate-600">
                       Location
                     </p>
-
                     <p className="mt-1 text-xs text-slate-300">
-                      Yantrotsav 2026
+                      Department of Computer Science and Engineering
+                    </p>
+                    <p className="mt-1 text-xs text-slate-300">
+                      Central University of Jammu
                     </p>
                   </div>
                 </div>
