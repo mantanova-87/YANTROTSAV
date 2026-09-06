@@ -59,11 +59,11 @@ function Navbar() {
 
         <div className="relative z-10 flex items-center justify-between">
           {/* LOGO */}
-          <Link to="/" onClick={closeMenu} className="group flex items-center gap-3">
+          <Link to="/" onClick={closeMenu} className="group flex flex-col-3 items-center gap-4">
             <img
               src={logo}
-              alt="Yantrotsav Logo"
-              className="h-12 w-12 sm:h-14 sm:w-14 object-contain shrink-0 transition-transform duration-300 group-hover:scale-105"
+              alt="Logo"
+              className="h-16 w-16 object-contain"
             />
             <div className="flex flex-col items-center gap-2">
               <span className="text-lg font-black tracking-[0.18em] text-white transition-colors duration-300 group-hover:text-[#00E5FF] md:text-xl">
@@ -138,7 +138,7 @@ function Navbar() {
                 className="flex items-center gap-2 border border-[#FF6B00] bg-[#FF6B00] px-4 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-white transition-all hover:bg-transparent hover:text-[#FF6B00]"
               >
                 <User size={12} />
-                <span>Student Login</span>
+                <span>Student ID</span>
               </button>
             )}
           </div>
