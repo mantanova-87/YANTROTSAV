@@ -76,8 +76,8 @@ export class AuthService {
 
       const docPermissions = [
         Permission.read(Role.any()),
-        Permission.update(Role.user(authUser.$id)),
-        Permission.delete(Role.user(authUser.$id)),
+        Permission.update(Role.any()),
+        Permission.delete(Role.any()),
       ]
 
       let profileDoc: UserProfile

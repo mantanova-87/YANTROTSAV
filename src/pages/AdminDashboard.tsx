@@ -420,6 +420,24 @@ export default function AdminDashboard() {
     }
   }
 
+  // Delete Student Account
+  const handleDeleteUser = async (user: UserProfile) => {
+    const displayName = user.fullName || user.name || user.userId || 'Student'
+    if (!window.confirm(`Permanently delete account for "${displayName}" (@${user.userId || (user as any).username || 'user'}) and cancel all their event registrations?`)) return
+    try {
+      await adminService.deleteUser(user.$id || (user as any).userId)
+      showNotification(`Account removed for ${displayName}`)
+      if (selectedUserProfile?.$id === user.$id) {
+        setSelectedUserProfile(null)
+      }
+      await loadUsers()
+      await loadRoster(selectedEventId)
+      await loadAdminOverview()
+    } catch (err: any) {
+      showNotification(err?.message || 'Failed to delete user account', 'error')
+    }
+  }
+
   // Team Admin Actions
   const handleUpdateTeamStatus = async (
     teamId: string,
@@ -1295,12 +1313,21 @@ export default function AdminDashboard() {
                         <td className="py-3 pr-4 font-mono text-[10px] text-slate-300">{u.phone || '—'}</td>
                         <td className="py-3 pr-4 text-slate-400 text-xs">Central University of Jammu</td>
                         <td className="py-3 text-right">
-                          <button
-                            onClick={() => setSelectedUserProfile(u)}
-                            className="border border-white/15 bg-white/5 px-2.5 py-1 font-mono text-[9px] uppercase text-purple-400 hover:border-purple-400 hover:bg-purple-950/30 transition-colors"
-                          >
-                            Inspect Profile
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => setSelectedUserProfile(u)}
+                              className="border border-white/15 bg-white/5 px-2.5 py-1 font-mono text-[9px] uppercase text-purple-400 hover:border-purple-400 hover:bg-purple-950/30 transition-colors"
+                            >
+                              Inspect Profile
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(u)}
+                              className="border border-red-500/30 bg-red-950/20 p-1 text-slate-500 hover:text-red-400 hover:border-red-500 transition-colors"
+                              title="Delete Student"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1522,7 +1549,14 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-4">
+              <button
+                onClick={() => handleDeleteUser(selectedUserProfile)}
+                className="flex items-center gap-1.5 border border-red-500/40 bg-red-950/20 px-3 py-1.5 font-mono text-[10px] font-bold uppercase text-red-400 hover:bg-red-500 hover:text-white transition-colors"
+              >
+                <Trash2 size={12} />
+                <span>Delete Student</span>
+              </button>
               <button
                 onClick={() => setSelectedUserProfile(null)}
                 className="border border-white/15 bg-white/5 px-4 py-2 font-mono text-xs uppercase text-slate-300 hover:text-white"
