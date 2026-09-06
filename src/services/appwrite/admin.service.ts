@@ -147,14 +147,26 @@ export class AdminService {
           (u) =>
             u.$id === doc.userId ||
             (u as any).userId === doc.userId ||
-            (u.email && doc.userEmail && u.email.toLowerCase() === doc.userEmail.toLowerCase())
+            (u.email && doc.userEmail && u.email.toLowerCase() === doc.userEmail.toLowerCase()) ||
+            ((u as any).userId && doc.userEmail && (u as any).userId.toLowerCase() === doc.userEmail.toLowerCase()) ||
+            (doc.userName && (u as any).userId && (u as any).userId.toLowerCase() === doc.userName.toLowerCase())
         )
         const team = doc.teamId ? allTeams.find((t) => t.$id === doc.teamId) : undefined
         const event = allEvents.find((e) => e.$id === doc.eventId)
 
-        const studentName = (user as any)?.fullName || (user as any)?.name || doc.userName || doc.studentName || 'Student'
-        const username = (user as any)?.userId || (user as any)?.username || (doc.userEmail ? doc.userEmail.split('@')[0] : '')
-        const studentRollNumber = (user as any)?.rollNumber || (user as any)?.rollNo || doc.studentRollNumber || doc.studentRollNo || 'N/A'
+        const studentName =
+          (user as any)?.fullName ||
+          (user as any)?.name ||
+          (doc.userName && doc.userName !== doc.userEmail ? doc.userName : undefined) ||
+          'Student'
+        const username =
+          (user as any)?.userId ||
+          (user as any)?.username ||
+          (doc.userEmail && doc.userEmail.includes('@') ? doc.userEmail.split('@')[0] : (doc.userName || ''))
+        const studentRollNumber =
+          (user as any)?.rollNumber || (user as any)?.rollNo || doc.studentRollNumber || doc.studentRollNo || 'N/A'
+        const studentEmail =
+          (user as any)?.email || (doc.userEmail && doc.userEmail.includes('@') ? doc.userEmail : 'N/A')
         const department = (user as any)?.department === 'OTHER'
           ? ((user as any)?.customDepartment || 'Other')
           : ((user as any)?.department || doc.department || 'Central University of Jammu')
@@ -170,7 +182,7 @@ export class AdminService {
           registrationType: (doc.teamId ? 'team' : 'solo') as 'solo' | 'team',
           studentName,
           username,
-          studentEmail: doc.userEmail || (user as any)?.email || 'N/A',
+          studentEmail,
           studentPhone,
           studentRollNumber,
           studentRollNo: studentRollNumber,
@@ -509,31 +521,66 @@ export class AdminService {
           invite.teamId,
         )) as unknown as TeamDocument
 
-        const existingRegs = await databases.listDocuments(
-          APPWRITE_CONFIG.databaseId,
-          APPWRITE_CONFIG.collections.eventRegistrations,
-          [Query.equal('teamId', teamDoc.$id), Query.equal('userEmail', invite.inviteeEmail)],
-        )
+        // Resolve actual student user profile
+        let resolvedUserId = ''
+        let resolvedUserName = invite.inviteeName || ''
+        let resolvedUserEmail = invite.inviteeEmail || ''
 
-        if (existingRegs.documents.length === 0) {
-          await databases.createDocument(
+        try {
+          const uRes = await databases.listDocuments(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.users,
+            [Query.limit(200)],
+          )
+          const target = (invite.inviteeEmail || '').trim().toLowerCase()
+          const matched = uRes.documents.find((u: any) => {
+            const uEmail = (u.email || '').toLowerCase()
+            const uUserId = (u.userId || '').toLowerCase()
+            return uEmail === target || uUserId === target || (uEmail.includes('@') && uEmail.split('@')[0] === target)
+          })
+          if (matched) {
+            resolvedUserId = matched.$id
+            resolvedUserName = (matched as any).fullName || (matched as any).name || resolvedUserName
+            resolvedUserEmail = (matched as any).email || resolvedUserEmail
+          }
+        } catch {
+          // ignore
+        }
+
+        if (!resolvedUserId) {
+          resolvedUserId = ID.unique()
+        }
+        if (!resolvedUserName) {
+          resolvedUserName = resolvedUserEmail.includes('@') ? resolvedUserEmail.split('@')[0] : 'Student'
+        }
+
+        if (resolvedUserEmail.includes('@')) {
+          const existingRegs = await databases.listDocuments(
             APPWRITE_CONFIG.databaseId,
             APPWRITE_CONFIG.collections.eventRegistrations,
-            ID.unique(),
-            {
-              eventId: teamDoc.eventId,
-              teamId: teamDoc.$id,
-              userId: invite.inviteeEmail,
-              userName: invite.inviteeName || invite.inviteeEmail.split('@')[0],
-              userEmail: invite.inviteeEmail,
-              registeredAt: new Date().toISOString(),
-            },
-            [
-              Permission.read(Role.any()),
-              Permission.update(Role.any()),
-              Permission.delete(Role.any()),
-            ],
+            [Query.equal('teamId', teamDoc.$id), Query.equal('userEmail', resolvedUserEmail)],
           )
+
+          if (existingRegs.documents.length === 0) {
+            await databases.createDocument(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.eventRegistrations,
+              ID.unique(),
+              {
+                eventId: teamDoc.eventId,
+                teamId: teamDoc.$id,
+                userId: resolvedUserId,
+                userName: resolvedUserName,
+                userEmail: resolvedUserEmail,
+                registeredAt: new Date().toISOString(),
+              },
+              [
+                Permission.read(Role.any()),
+                Permission.update(Role.any()),
+                Permission.delete(Role.any()),
+              ],
+            )
+          }
         }
 
         // Check if team meets target size

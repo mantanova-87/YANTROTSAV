@@ -32,6 +32,17 @@ export class TeamsService {
         throw new AppError('Registration is closed for this event.', 'EVENT_REGISTRATION_CLOSED', 400)
       }
 
+      // Strict validation: studentEmail must be a valid email
+      if (!data.userId || !data.userId.trim()) {
+        throw new AppError('Student User ID is required.', 'UNKNOWN_ERROR', 400)
+      }
+      if (!data.studentEmail || !data.studentEmail.includes('@')) {
+        throw new AppError('A valid student email address is required.', 'UNKNOWN_ERROR', 400)
+      }
+      if (!data.studentName || !data.studentName.trim()) {
+        throw new AppError('Student name is required.', 'UNKNOWN_ERROR', 400)
+      }
+
       // 2. Comprehensive check for duplicate registration (solo, team leader, or member)
       const isAlreadyEnrolled = await this.checkUserEventEnrollment(
         data.eventId,
@@ -118,6 +129,14 @@ export class TeamsService {
         throw new AppError('Registration is closed for this event.', 'EVENT_REGISTRATION_CLOSED', 400)
       }
 
+      // Validate leader credentials
+      if (!data.leaderEmail || !data.leaderEmail.includes('@')) {
+        throw new AppError('A valid leader email address is required.', 'UNKNOWN_ERROR', 400)
+      }
+      if (!data.leaderName || !data.leaderName.trim()) {
+        throw new AppError('Leader name is required.', 'UNKNOWN_ERROR', 400)
+      }
+
       // Filter out leader's own email/username if passed in members list
       const cleanMemberEmails = [
         ...new Set(
@@ -127,7 +146,89 @@ export class TeamsService {
         ),
       ]
 
-      const targetTeamSize = cleanMemberEmails.length + 1 // Including leader
+      // Fetch users list for resolving student handles (username, roll number, or email)
+      const allUsersRes = await databases.listDocuments(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.users,
+        [Query.limit(500)],
+      ).catch(() => ({ documents: [] }))
+
+      // Pre-resolve all teammates to guaranteed valid registered emails and student names
+      const resolvedMembers: Array<{
+        rawHandle: string
+        email: string
+        name: string
+        userId: string
+      }> = []
+
+      for (const rawMember of cleanMemberEmails) {
+        const cleanHandle = rawMember.replace(/^@/, '').trim()
+        let resolvedEmail = ''
+        let inviteeName = ''
+        let inviteeUserId = ''
+
+        if (cleanHandle.includes('@')) {
+          resolvedEmail = cleanHandle.toLowerCase()
+          const matched = allUsersRes.documents.find(
+            (u: any) => (u.email || '').toLowerCase() === resolvedEmail,
+          )
+          if (matched) {
+            inviteeName = (matched as any).fullName || (matched as any).name || cleanHandle.split('@')[0]
+            inviteeUserId = matched.$id
+          } else {
+            inviteeName = cleanHandle.split('@')[0]
+          }
+        } else {
+          // Username or rollNumber: match against registered student profiles
+          const target = cleanHandle.toLowerCase()
+          const matched = allUsersRes.documents.find((u: any) => {
+            const uUserId = (u.userId || '').toLowerCase()
+            const uRoll = (u.rollNumber || '').toLowerCase()
+            const uEmail = (u.email || '').toLowerCase()
+            const uName = (u.fullName || '').toLowerCase()
+            return (
+              uUserId === target ||
+              uRoll === target ||
+              uEmail === target ||
+              (uEmail.includes('@') && uEmail.split('@')[0] === target) ||
+              uName === target
+            )
+          })
+
+          if (matched && (matched as any).email && (matched as any).email.includes('@')) {
+            resolvedEmail = (matched as any).email.trim().toLowerCase()
+            inviteeName = (matched as any).fullName || (matched as any).name || cleanHandle
+            inviteeUserId = matched.$id
+          } else {
+            throw new AppError(
+              `Could not find registered student with username "@${cleanHandle}". Please verify their username or invite them using their registered email.`,
+              'UNKNOWN_ERROR',
+              404,
+            )
+          }
+        }
+
+        if (!resolvedEmail || !resolvedEmail.includes('@')) {
+          throw new AppError(
+            `Invalid email format for teammate "${rawMember}". Please enter a valid registered email or username.`,
+            'UNKNOWN_ERROR',
+            400,
+          )
+        }
+
+        if (resolvedEmail === data.leaderEmail.trim().toLowerCase()) {
+          throw new AppError('You cannot invite yourself as a teammate.', 'UNKNOWN_ERROR', 400)
+        }
+
+        resolvedMembers.push({
+          rawHandle: cleanHandle,
+          email: resolvedEmail,
+          name: inviteeName,
+          userId: inviteeUserId,
+        })
+      }
+
+      const targetTeamSize = resolvedMembers.length + 1 // Including leader
 
       if (targetTeamSize < event.minTeamSize) {
         throw new AppError(
@@ -222,76 +323,9 @@ export class TeamsService {
         console.warn('Leader registration note:', leaderRegErr)
       }
 
-      // 2. Batch create invitations for each member with user resolution
-      for (const invitee of cleanMemberEmails) {
+      // 2. Batch create invitations with validated emails and names
+      for (const member of resolvedMembers) {
         try {
-          const cleanHandle = invitee.replace(/^@/, '').trim()
-          let resolvedEmail = cleanHandle
-          let inviteeName = cleanHandle
-
-          // Try to look up user in users collection
-          try {
-            if (cleanHandle.includes('@')) {
-              const uRes = await databases.listDocuments(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.users,
-                [Query.equal('email', cleanHandle.toLowerCase()), Query.limit(1)],
-              )
-              if (uRes.documents.length > 0) {
-                resolvedEmail = (uRes.documents[0] as any).email
-                inviteeName = (uRes.documents[0] as any).fullName || cleanHandle
-              }
-            } else {
-              // 1. Lookup by userId (which stores the username!)
-              const uRes = await databases.listDocuments(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.users,
-                [Query.equal('userId', cleanHandle), Query.limit(1)],
-              )
-              if (uRes.documents.length > 0) {
-                resolvedEmail = (uRes.documents[0] as any).email
-                inviteeName = (uRes.documents[0] as any).fullName || cleanHandle
-              } else {
-                // 2. Lookup by rollNumber
-                const rollRes = await databases.listDocuments(
-                  APPWRITE_CONFIG.databaseId,
-                  APPWRITE_CONFIG.collections.users,
-                  [Query.equal('rollNumber', cleanHandle), Query.limit(1)],
-                )
-                if (rollRes.documents.length > 0) {
-                  resolvedEmail = (rollRes.documents[0] as any).email
-                  inviteeName = (rollRes.documents[0] as any).fullName || cleanHandle
-                } else {
-                  // 3. List users to match by userId, email, prefix or name
-                  const allUsersRes = await databases.listDocuments(
-                    APPWRITE_CONFIG.databaseId,
-                    APPWRITE_CONFIG.collections.users,
-                    [Query.limit(100)],
-                  )
-                  const foundUser = allUsersRes.documents.find((u: any) => {
-                    const uUserId = (u.userId || '').toLowerCase()
-                    const uEmail = (u.email || '').toLowerCase()
-                    const uName = (u.fullName || '').toLowerCase()
-                    const target = cleanHandle.toLowerCase()
-                    return (
-                      uUserId === target ||
-                      uEmail === target ||
-                      (uEmail.includes('@') && uEmail.split('@')[0] === target) ||
-                      uName === target
-                    )
-                  })
-                  if (foundUser) {
-                    resolvedEmail = (foundUser as any).email
-                    inviteeName = (foundUser as any).fullName || cleanHandle
-                  }
-                }
-              }
-            }
-          } catch (lookupErr) {
-            console.warn('Student lookup warning:', lookupErr)
-          }
-
-          // Permissions: allow any authenticated user to update their own invitation
           const invitePermissions = [
             Permission.read(Role.any()),
             Permission.update(Role.any()),
@@ -308,24 +342,22 @@ export class TeamsService {
               eventTitle: event.title,
               inviterId: data.leaderId,
               inviterName: data.leaderName.trim(),
-              inviteeEmail: resolvedEmail.toLowerCase(),
+              inviteeEmail: member.email,
               status: 'pending',
             },
             invitePermissions,
           )
 
-          // 3. Dispatch automated cyber-styled email via serverless function if email format
-          if (resolvedEmail.includes('@')) {
-            await this.dispatchInviteEmail({
-              toEmail: resolvedEmail.toLowerCase(),
-              inviteeName,
-              teamName: data.teamName.trim(),
-              eventTitle: event.title,
-              actionUrl: `${APPWRITE_CONFIG.appUrl}/dashboard`,
-            })
-          }
+          // 3. Dispatch automated cyber-styled email via serverless function
+          await this.dispatchInviteEmail({
+            toEmail: member.email,
+            inviteeName: member.name,
+            teamName: data.teamName.trim(),
+            eventTitle: event.title,
+            actionUrl: `${APPWRITE_CONFIG.appUrl}/dashboard`,
+          })
         } catch (inviteErr) {
-          console.warn(`Failed to process invitation for ${invitee}:`, inviteErr)
+          console.warn(`Failed to process invitation for ${member.email}:`, inviteErr)
         }
       }
 
@@ -405,45 +437,60 @@ export class TeamsService {
 
       // Immediately create registration for this accepted student (if not already registered)
       try {
-        const studentUserId = (params.student.userId || '').trim()
-        const studentEmail = (params.student.email || '').trim().toLowerCase()
-        const existing = await databases.listDocuments(
-          APPWRITE_CONFIG.databaseId,
-          APPWRITE_CONFIG.collections.eventRegistrations,
-          [
-            Query.equal('eventId', team.eventId),
-            Query.limit(100),
-          ],
-        )
+        let studentUserId = (params.student.userId || '').trim()
+        let studentEmail = (params.student.email || '').trim().toLowerCase()
+        let studentName = (params.student.name || '').trim()
 
-        const alreadyExists = existing.documents.some((d: any) => {
-          const dUserId = ((d as any).userId || '').toLowerCase()
-          const dEmail = ((d as any).userEmail || '').toLowerCase()
-          return (
-            (studentUserId && dUserId === studentUserId.toLowerCase()) ||
-            (studentEmail && dEmail === studentEmail)
-          )
-        })
+        // Fallback: If studentEmail does not contain @, try invite.inviteeEmail
+        if (!studentEmail.includes('@') && invite.inviteeEmail && invite.inviteeEmail.includes('@')) {
+          studentEmail = invite.inviteeEmail.trim().toLowerCase()
+        }
 
-        if (!alreadyExists) {
-          await databases.createDocument(
+        // If studentName is empty or equals email/userId, fetch from invite or username
+        if (!studentName || studentName === studentEmail || studentName === studentUserId) {
+          studentName = invite.inviteeName || (studentEmail.includes('@') ? studentEmail.split('@')[0] : 'Student')
+        }
+
+        // Only create registration if studentEmail is a valid email
+        if (studentEmail.includes('@')) {
+          const existing = await databases.listDocuments(
             APPWRITE_CONFIG.databaseId,
             APPWRITE_CONFIG.collections.eventRegistrations,
-            ID.unique(),
-            {
-              eventId: team.eventId,
-              teamId: team.$id,
-              userId: studentUserId,
-              userName: params.student.name || params.student.email.split('@')[0],
-              userEmail: params.student.email.trim().toLowerCase(),
-              registeredAt: new Date().toISOString(),
-            },
             [
-              Permission.read(Role.any()),
-              Permission.update(Role.any()),
-              Permission.delete(Role.any()),
+              Query.equal('eventId', team.eventId),
+              Query.limit(100),
             ],
           )
+
+          const alreadyExists = existing.documents.some((d: any) => {
+            const dUserId = ((d as any).userId || '').toLowerCase()
+            const dEmail = ((d as any).userEmail || '').toLowerCase()
+            return (
+              (studentUserId && dUserId === studentUserId.toLowerCase()) ||
+              (studentEmail && dEmail === studentEmail)
+            )
+          })
+
+          if (!alreadyExists) {
+            await databases.createDocument(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.eventRegistrations,
+              ID.unique(),
+              {
+                eventId: team.eventId,
+                teamId: team.$id,
+                userId: studentUserId,
+                userName: studentName,
+                userEmail: studentEmail,
+                registeredAt: new Date().toISOString(),
+              },
+              [
+                Permission.read(Role.any()),
+                Permission.update(Role.any()),
+                Permission.delete(Role.any()),
+              ],
+            )
+          }
         }
       } catch (regErr) {
         console.warn('Member event registration creation error:', regErr)
