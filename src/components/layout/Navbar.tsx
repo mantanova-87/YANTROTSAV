@@ -138,7 +138,7 @@ function Navbar() {
                 className="flex items-center gap-2 border border-[#FF6B00] bg-[#FF6B00] px-4 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-white transition-all hover:bg-transparent hover:text-[#FF6B00]"
               >
                 <User size={12} />
-                <span>Student ID</span>
+                <span>Login/SignUp</span>
               </button>
             )}
           </div>
@@ -223,7 +223,7 @@ function Navbar() {
                 className="mt-5 flex w-full items-center justify-center gap-2 border border-[#FF6B00] bg-[#FF6B00] py-3 font-mono text-xs font-bold uppercase tracking-[0.18em] text-white"
               >
                 <User size={14} />
-                <span>Student Sign In / Register</span>
+                <span>Login/SignUp</span>
               </button>
             )}
           </div>
