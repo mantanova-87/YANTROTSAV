@@ -196,10 +196,12 @@ export class AuthService {
       }
 
       let emailToUse = identifier.trim()
+      const isRealEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToUse)
 
-      // If user provided a username/userId or roll number without '@', look up their email
-      if (!emailToUse.includes('@')) {
+      // If user did not provide a well-formed email, treat identifier as Username or Roll Number
+      if (!isRealEmail) {
         const cleanHandle = emailToUse.toLowerCase().replace(/^@/, '')
+        const cleanRoll = emailToUse.toUpperCase()
         try {
           // 1. Check by userId (which stores username)
           const userDocQuery = await databases.listDocuments(
@@ -219,7 +221,7 @@ export class AuthService {
               APPWRITE_CONFIG.databaseId,
               APPWRITE_CONFIG.collections.users,
               [
-                Query.equal('rollNumber', emailToUse.trim().toUpperCase()),
+                Query.equal('rollNumber', cleanRoll),
                 Query.limit(1),
               ],
             ).catch(() => ({ documents: [] }))
@@ -236,18 +238,34 @@ export class AuthService {
 
               const matched = allUsers.documents.find((u: any) => {
                 const uId = (u.userId || '').toLowerCase().replace(/^@/, '')
-                const uRoll = (u.rollNumber || '').toLowerCase()
-                return uId === cleanHandle || uRoll === cleanHandle
+                const uRoll = (u.rollNumber || '').toUpperCase()
+                return uId === cleanHandle || uRoll === cleanRoll || (u.rollNumber || '').toLowerCase() === cleanHandle
               })
 
               if (matched && (matched as any).email) {
                 emailToUse = (matched as any).email
               } else {
-                throw new AppError(
-                  `No student account found with username / roll number "${identifier}". Please check or sign in with your email address.`,
-                  'AUTH_INVALID_CREDENTIALS',
-                  404,
-                )
+                // Determine user-friendly specific message based on input format
+                const hasRollPattern = /\d/.test(identifier)
+                if (hasRollPattern) {
+                  throw new AppError(
+                    `No student registered with Roll Number "${identifier}". Please verify your roll number or log in with your email address.`,
+                    'AUTH_INVALID_CREDENTIALS',
+                    404,
+                  )
+                } else if (identifier.startsWith('@') || !identifier.includes('@')) {
+                  throw new AppError(
+                    `No student registered with Username "${identifier}". Please check your username or log in with your email address.`,
+                    'AUTH_INVALID_CREDENTIALS',
+                    404,
+                  )
+                } else {
+                  throw new AppError(
+                    `"${identifier}" is not a valid email, username, or roll number. Please enter a valid email address (e.g. name@example.com).`,
+                    'AUTH_INVALID_CREDENTIALS',
+                    400,
+                  )
+                }
               }
             }
           }
@@ -257,7 +275,29 @@ export class AuthService {
         }
       }
 
-      return await account.createEmailPasswordSession(emailToUse, password)
+      try {
+        return await account.createEmailPasswordSession(emailToUse, password)
+      } catch (sessionErr: any) {
+        const errCode = sessionErr?.code || sessionErr?.status
+        const errMsg = sessionErr?.message || ''
+        if (errCode === 401 || errMsg.toLowerCase().includes('invalid credentials')) {
+          throw new AppError(
+            'Invalid credentials. The password entered is incorrect for this account.',
+            'AUTH_INVALID_CREDENTIALS',
+            401,
+            sessionErr,
+          )
+        }
+        if (errCode === 400 && errMsg.toLowerCase().includes('email')) {
+          throw new AppError(
+            `"${identifier}" was not recognized as a registered student account. Please check your roll number, username, or email.`,
+            'AUTH_INVALID_CREDENTIALS',
+            400,
+            sessionErr,
+          )
+        }
+        throw sessionErr
+      }
     } catch (error) {
       throw mapAppwriteError(error, 'AuthService.login')
     }
