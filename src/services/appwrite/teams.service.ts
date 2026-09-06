@@ -935,7 +935,7 @@ export class TeamsService {
         const leaderTeamsRes = await databases.listDocuments(
           APPWRITE_CONFIG.databaseId,
           APPWRITE_CONFIG.collections.teams,
-          [Query.equal('leaderId', userId), Query.notEqual('status', 'disbanded'), Query.limit(50)],
+          [Query.equal('leaderId', userId), Query.notEqual('status', 'cancelled'), Query.limit(50)],
         )
 
         for (const tDoc of leaderTeamsRes.documents) {
@@ -1052,7 +1052,7 @@ export class TeamsService {
           [
             Query.equal('eventId', eventId),
             Query.equal('leaderId', userId),
-            Query.notEqual('status', 'disbanded'),
+            Query.notEqual('status', 'cancelled'),
           ],
         )
         if (teamRes.documents.length > 0) {

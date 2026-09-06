@@ -89,7 +89,7 @@ export default function AdminDashboard() {
   const [teamsList, setTeamsList] = useState<TeamDocument[]>([])
   const [loadingTeams, setLoadingTeams] = useState(false)
   const [teamsSearch, setTeamsSearch] = useState('')
-  const [teamsStatusFilter, setTeamsStatusFilter] = useState<'all' | 'confirmed' | 'pending' | 'disbanded'>('all')
+  const [teamsStatusFilter, setTeamsStatusFilter] = useState<'all' | 'confirmed' | 'pending' | 'cancelled' | 'disbanded'>('all')
 
   // Squad Inspector State
   const [inspectingTeamId, setInspectingTeamId] = useState<string | null>(null)
@@ -421,11 +421,15 @@ export default function AdminDashboard() {
   }
 
   // Team Admin Actions
-  const handleUpdateTeamStatus = async (teamId: string, status: 'confirmed' | 'pending' | 'disbanded') => {
+  const handleUpdateTeamStatus = async (
+    teamId: string,
+    status: 'confirmed' | 'pending' | 'cancelled' | 'disbanded',
+  ) => {
     try {
       await adminService.updateTeamStatus(teamId, status)
-      showNotification(`Team status updated to "${status.toUpperCase()}"`)
+      showNotification(`Team status updated to "${status === 'disbanded' || status === 'cancelled' ? 'CANCELLED' : status.toUpperCase()}".`)
       await loadTeams()
+      await loadRoster(selectedEventId)
       await loadAdminOverview()
     } catch (err: any) {
       showNotification(err?.message || 'Failed to update team', 'error')
@@ -434,11 +438,12 @@ export default function AdminDashboard() {
 
   const handleDeleteTeam = async (team: TeamDocument) => {
     const displayName = team.name || team.teamName || 'Team'
-    if (!window.confirm(`Permanently delete team "${displayName}" and all member invitations?`)) return
+    if (!window.confirm(`Permanently delete team "${displayName}", its event passes, and all member invitations?`)) return
     try {
       await adminService.deleteTeam(team.$id)
-      showNotification(`Team "${displayName}" removed`)
+      showNotification(`Team "${displayName}" and associated passes removed`)
       await loadTeams()
+      await loadRoster(selectedEventId)
       await loadAdminOverview()
     } catch (err: any) {
       showNotification(err?.message || 'Failed to delete team', 'error')
@@ -1344,7 +1349,7 @@ export default function AdminDashboard() {
                   <option value="all">All Statuses</option>
                   <option value="confirmed">Confirmed</option>
                   <option value="pending">Pending Invites</option>
-                  <option value="disbanded">Disbanded</option>
+                  <option value="cancelled">Cancelled / Disbanded</option>
                 </select>
               </div>
             </div>
@@ -1385,7 +1390,7 @@ export default function AdminDashboard() {
                                 : 'border-red-500/40 bg-red-950/30 text-red-400'
                             }`}
                           >
-                            {team.status === 'confirmed' ? 'CONFIRMED' : team.status === 'pending' ? 'WAITING' : 'DISBANDED'}
+                            {team.status === 'confirmed' ? 'CONFIRMED' : team.status === 'pending' ? 'WAITING' : 'CANCELLED'}
                           </span>
                         </div>
 
@@ -1430,9 +1435,9 @@ export default function AdminDashboard() {
                               Force Confirm
                             </button>
                           )}
-                          {team.status !== 'disbanded' && (
+                          {team.status !== 'cancelled' && (team.status as any) !== 'disbanded' && (
                             <button
-                              onClick={() => handleUpdateTeamStatus(team.$id, 'disbanded')}
+                              onClick={() => handleUpdateTeamStatus(team.$id, 'cancelled')}
                               className="border border-amber-500/40 bg-amber-950/20 px-2 py-1 font-mono text-[9px] uppercase text-amber-400 hover:bg-amber-500 hover:text-black transition-colors"
                             >
                               Disband
@@ -1810,10 +1815,10 @@ export default function AdminDashboard() {
                         Force Confirm Squad
                       </button>
                     )}
-                    {squadDetails.team.status !== 'disbanded' && (
+                    {squadDetails.team.status !== 'cancelled' && (squadDetails.team.status as any) !== 'disbanded' && (
                       <button
                         onClick={async () => {
-                          await handleUpdateTeamStatus(squadDetails.team.$id, 'disbanded')
+                          await handleUpdateTeamStatus(squadDetails.team.$id, 'cancelled')
                           const updated = await adminService.getSquadDetails(squadDetails.team.$id)
                           setSquadDetails(updated)
                         }}

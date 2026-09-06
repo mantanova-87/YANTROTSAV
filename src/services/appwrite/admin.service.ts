@@ -608,27 +608,90 @@ export class AdminService {
   }
 
   /**
-   * Update team status (e.g. force confirm or disband)
+   * Update team status (e.g. force confirm or cancel/disband).
+   * Note: In Appwrite database schema, the status attribute enum accepts:
+   * ('pending', 'confirmed', 'cancelled')
    */
-  async updateTeamStatus(teamId: string, status: 'confirmed' | 'pending' | 'disbanded'): Promise<void> {
+  async updateTeamStatus(
+    teamId: string,
+    status: 'confirmed' | 'pending' | 'cancelled' | 'disbanded',
+  ): Promise<void> {
+    const validStatus = status === 'disbanded' ? 'cancelled' : status
     try {
       await databases.updateDocument(
         APPWRITE_CONFIG.databaseId,
         APPWRITE_CONFIG.collections.teams,
         teamId,
-        { status },
+        { status: validStatus },
       )
+
+      // If team is cancelled/disbanded, cleanup its event_registrations and pending invitations
+      if (validStatus === 'cancelled') {
+        try {
+          const regs = await databases.listDocuments(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.eventRegistrations,
+            [Query.equal('teamId', teamId), Query.limit(100)],
+          )
+          for (const reg of regs.documents) {
+            await databases
+              .deleteDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.eventRegistrations,
+                reg.$id,
+              )
+              .catch(() => {})
+          }
+
+          const invites = await databases.listDocuments(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.teamInvitations,
+            [Query.equal('teamId', teamId), Query.limit(100)],
+          )
+          for (const inv of invites.documents) {
+            await databases
+              .deleteDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.teamInvitations,
+                inv.$id,
+              )
+              .catch(() => {})
+          }
+        } catch {
+          // ignore cleanup failures
+        }
+      }
     } catch (error) {
       throw mapAppwriteError(error, 'AdminService.updateTeamStatus')
     }
   }
 
   /**
-   * Delete a team document and associated invitations
+   * Delete a team document, cascade-deleting associated registrations and invitations
    */
   async deleteTeam(teamId: string): Promise<void> {
     try {
-      // 1. Delete invitations for this team
+      // 1. Delete associated registrations for this team
+      try {
+        const regs = await databases.listDocuments(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.eventRegistrations,
+          [Query.equal('teamId', teamId), Query.limit(100)],
+        )
+        for (const reg of regs.documents) {
+          await databases
+            .deleteDocument(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.eventRegistrations,
+              reg.$id,
+            )
+            .catch(() => {})
+        }
+      } catch {
+        // ignore
+      }
+
+      // 2. Delete invitations for this team
       try {
         const invites = await databases.listDocuments(
           APPWRITE_CONFIG.databaseId,
@@ -636,17 +699,19 @@ export class AdminService {
           [Query.equal('teamId', teamId), Query.limit(100)],
         )
         for (const inv of invites.documents) {
-          await databases.deleteDocument(
-            APPWRITE_CONFIG.databaseId,
-            APPWRITE_CONFIG.collections.teamInvitations,
-            inv.$id,
-          )
+          await databases
+            .deleteDocument(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.teamInvitations,
+              inv.$id,
+            )
+            .catch(() => {})
         }
       } catch {
         // Continue even if deleting invites fails
       }
 
-      // 2. Delete team
+      // 3. Delete team document
       await databases.deleteDocument(
         APPWRITE_CONFIG.databaseId,
         APPWRITE_CONFIG.collections.teams,

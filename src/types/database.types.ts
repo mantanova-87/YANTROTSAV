@@ -8,7 +8,7 @@ export type EventFormat = 'solo' | 'team'
 export type EventCategory = 'coding' | 'robotics' | 'gaming' | 'design' | 'workshop' | 'other'
 export type EventStatus = 'draft' | 'published' | 'closed'
 
-export type TeamStatus = 'pending' | 'confirmed' | 'disbanded'
+export type TeamStatus = 'pending' | 'confirmed' | 'cancelled' | 'disbanded'
 export type InvitationStatus = 'pending' | 'accepted' | 'declined'
 export type RegistrationType = 'solo' | 'team'
 
