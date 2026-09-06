@@ -199,16 +199,17 @@ export class AuthService {
 
       // If user provided a username/userId or roll number without '@', look up their email
       if (!emailToUse.includes('@')) {
+        const cleanHandle = emailToUse.toLowerCase().replace(/^@/, '')
         try {
           // 1. Check by userId (which stores username)
           const userDocQuery = await databases.listDocuments(
             APPWRITE_CONFIG.databaseId,
             APPWRITE_CONFIG.collections.users,
             [
-              Query.equal('userId', emailToUse),
+              Query.equal('userId', cleanHandle),
               Query.limit(1),
             ],
-          )
+          ).catch(() => ({ documents: [] }))
 
           if (userDocQuery.documents.length > 0) {
             emailToUse = (userDocQuery.documents[0] as any).email
@@ -218,15 +219,40 @@ export class AuthService {
               APPWRITE_CONFIG.databaseId,
               APPWRITE_CONFIG.collections.users,
               [
-                Query.equal('rollNumber', emailToUse),
+                Query.equal('rollNumber', emailToUse.trim().toUpperCase()),
                 Query.limit(1),
               ],
-            )
+            ).catch(() => ({ documents: [] }))
+
             if (rollQuery.documents.length > 0) {
               emailToUse = (rollQuery.documents[0] as any).email
+            } else {
+              // 3. Fallback: Search all recent users case-insensitively
+              const allUsers = await databases.listDocuments(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.users,
+                [Query.limit(100)],
+              ).catch(() => ({ documents: [] }))
+
+              const matched = allUsers.documents.find((u: any) => {
+                const uId = (u.userId || '').toLowerCase().replace(/^@/, '')
+                const uRoll = (u.rollNumber || '').toLowerCase()
+                return uId === cleanHandle || uRoll === cleanHandle
+              })
+
+              if (matched && (matched as any).email) {
+                emailToUse = (matched as any).email
+              } else {
+                throw new AppError(
+                  `No student account found with username / roll number "${identifier}". Please check or sign in with your email address.`,
+                  'AUTH_INVALID_CREDENTIALS',
+                  404,
+                )
+              }
             }
           }
-        } catch {
+        } catch (lookupErr: any) {
+          if (lookupErr instanceof AppError) throw lookupErr
           // Fall back to direct login attempt
         }
       }
