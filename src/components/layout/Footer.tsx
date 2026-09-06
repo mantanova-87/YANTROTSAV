@@ -105,7 +105,7 @@ function Footer() {
 
               <div className="mt-3 flex items-center gap-3">
                 <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]">
-                  <i>Were Texh Meets Innovation</i>
+                  <i>Were Tech Meets Innovation</i>
                 </span>
 
                 <span className="h-px w-8 bg-white/15" />
@@ -160,7 +160,7 @@ function Footer() {
               02 / Connect
             </p>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col flex-wrap gap-2">
               {socialLinks.map((social) => (
                 <a
                   key={social.name}
@@ -189,25 +189,7 @@ function Footer() {
               </a>
             </div>
 
-            {/* Status panel */}
-            <div className="relative mt-7 border border-white/10 bg-[#080A0F] p-4">
-              {/* Accent corner */}
-              <span className="absolute left-0 top-0 h-5 w-5 border-l border-t border-[#00E5FF]" />
-
-              <span className="absolute bottom-0 right-0 h-5 w-5 border-b border-r border-[#FF6B00]" />
-
-              <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-slate-700">
-                Event Status
-              </p>
-
-              <div className="mt-2 flex items-center gap-3">
-                <span className="h-1.5 w-1.5 bg-[#FF6B00]" />
-
-                <p className="text-xs uppercase tracking-[0.1em] text-slate-400">
-                  Registration Opens Soon
-                </p>
-              </div>
-            </div>
+            
           </div>
         </div>
 
