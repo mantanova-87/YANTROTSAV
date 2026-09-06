@@ -1,8 +1,6 @@
 import { motion } from 'framer-motion'
-import { useState } from 'react'
 import poster from '../assets/images/poster.png'
 import logo from "../assets/images/logo.png";
-import HomeIntro from '../components/HomeIntro'
 const images = import.meta.glob(
   '../assets/images/*',
   {
@@ -129,14 +127,9 @@ const featureCards = [
 // ============================================================
 
 function Home() {
-  const [introComplete, setIntroComplete] = useState(false)
   return (
     <>
-      {!introComplete && (<HomeIntro
-        onComplete={() => setIntroComplete(true)}
-      />)}
-      {introComplete && (
-        <div className="min-h-screen mt-10 overflow-hidden bg-[#050816] text-white">
+            <div className="min-h-screen mt-10 overflow-hidden bg-[#050816] text-white">
 
           {/* ======================================================
           HERO
@@ -744,7 +737,7 @@ function Home() {
             </div>
           </section>
         </div>
-      )}
+      )
     </>)
 }
 

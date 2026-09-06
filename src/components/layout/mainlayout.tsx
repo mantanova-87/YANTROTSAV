@@ -1,18 +1,39 @@
+import { useLocation } from 'react-router-dom'
+import { useState } from 'react'
+import Navbar from '../layout/Navbar'
+import Footer from '../layout/Footer'
+import HomeIntro from '../HomeIntro'
 import { Outlet } from 'react-router-dom'
-import Navbar from './Navbar'
-import Footer from './Footer'
 
 function MainLayout() {
+  const location = useLocation()
+
+  const isHome = location.pathname === '/'
+
+  const [introComplete, setIntroComplete] = useState(() => {
+    if (!isHome || typeof window === 'undefined') {
+      return true
+    }
+
+    return Boolean(sessionStorage.getItem('yantrotsav-intro-shown'))
+  })
+
+  if (isHome && !introComplete) {
+    return (
+      <HomeIntro
+        onComplete={() => setIntroComplete(true)}
+      />
+    )
+  }
+
   return (
-    <div className="min-h-screen">
+    <>
       <Navbar />
 
-      <main>
-        <Outlet />
-      </main>
+      <Outlet />
 
       <Footer />
-    </div>
+    </>
   )
 }
 
