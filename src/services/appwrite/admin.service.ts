@@ -497,53 +497,92 @@ export class AdminService {
   }
 
   /**
-   * Delete student profile and cascade delete their event registrations
+   * Delete student profile and cascade delete their event registrations and invitations
    */
-  async deleteUser(userId: string): Promise<void> {
-    addStoredDeletedUser(userId)
+  async deleteUser(
+    userIdOrDocId: string,
+    extraInfo?: { docId?: string; userId?: string; email?: string },
+  ): Promise<void> {
+    const docId = extraInfo?.docId || userIdOrDocId
+    const userId = extraInfo?.userId || userIdOrDocId
+    const email = extraInfo?.email
+
+    addStoredDeletedUser(docId)
+    if (userId) addStoredDeletedUser(userId)
+    if (email) addStoredDeletedUser(email)
 
     try {
-      // 1. Delete associated registrations for this user
-      try {
-        const regs = await databases.listDocuments(
-          APPWRITE_CONFIG.databaseId,
-          APPWRITE_CONFIG.collections.eventRegistrations,
-          [Query.equal('userId', userId), Query.limit(100)],
-        )
-        for (const reg of regs.documents) {
-          await this.deleteRegistration(reg.$id, reg.eventId).catch(() => {})
+      // 1. Delete associated registrations for this user (by userId, docId, and userEmail)
+      const queryVals = [userId, docId, email].filter(Boolean) as string[]
+      for (const val of queryVals) {
+        try {
+          const isEmailVal = val.includes('@')
+          const queryAttr = isEmailVal ? 'userEmail' : 'userId'
+          const regs = await databases.listDocuments(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.eventRegistrations,
+            [Query.equal(queryAttr, val), Query.limit(100)],
+          )
+          for (const reg of regs.documents) {
+            await this.deleteRegistration(reg.$id, reg.eventId).catch(() => {})
+          }
+        } catch {
+          // ignore
         }
-      } catch {
-        // ignore
       }
 
-      // 2. Delete user profile document
-      try {
-        await databases.deleteDocument(
-          APPWRITE_CONFIG.databaseId,
-          APPWRITE_CONFIG.collections.users,
-          userId,
-        )
-      } catch {
+      // 2. Also delete/cleanup any team invitations where this user was invitee
+      if (email) {
         try {
-          await databases.updateDocument(
+          const invites = await databases.listDocuments(
             APPWRITE_CONFIG.databaseId,
-            APPWRITE_CONFIG.collections.users,
-            userId,
-            {},
-            [
-              Permission.read(Role.any()),
-              Permission.update(Role.any()),
-              Permission.delete(Role.any()),
-            ],
+            APPWRITE_CONFIG.collections.teamInvitations,
+            [Query.equal('inviteeEmail', email), Query.limit(100)],
           )
+          for (const inv of invites.documents) {
+            await databases
+              .deleteDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.teamInvitations,
+                inv.$id,
+              )
+              .catch(() => {})
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      // 3. Delete user profile document from users collection (try docId first, then userId)
+      const idsToDelete = Array.from(new Set([docId, userId].filter(Boolean) as string[]))
+      for (const targetId of idsToDelete) {
+        try {
           await databases.deleteDocument(
             APPWRITE_CONFIG.databaseId,
             APPWRITE_CONFIG.collections.users,
-            userId,
+            targetId,
           )
         } catch {
-          console.warn('User marked deleted locally; Appwrite document delete had permissions restriction:', userId)
+          try {
+            await databases.updateDocument(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.users,
+              targetId,
+              {},
+              [
+                Permission.read(Role.any()),
+                Permission.update(Role.any()),
+                Permission.delete(Role.any()),
+              ],
+            )
+            await databases.deleteDocument(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.users,
+              targetId,
+            )
+          } catch {
+            console.warn('User document delete had permissions restriction:', targetId)
+          }
         }
       }
     } catch (error) {

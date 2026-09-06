@@ -3,6 +3,7 @@ import { databases } from './client'
 import { APPWRITE_CONFIG } from '../../config/appwrite.config'
 import { mapAppwriteError, AppError } from './errorMapper'
 import { storageService } from './storage.service'
+import { addStoredDeletedReg, addStoredDeletedTeam } from './admin.service'
 import type { EventDocument, CreateEventDTO, UpdateEventDTO, EventStatus } from '../../types/database.types'
 
 // Only valid attributes in the Appwrite `events` collection schema:
@@ -197,6 +198,7 @@ export class EventsService {
           }
           await Promise.all(
             regsRes.documents.map(async (doc) => {
+              addStoredDeletedReg(doc.$id)
               try {
                 await databases.deleteDocument(
                   APPWRITE_CONFIG.databaseId,
@@ -303,6 +305,7 @@ export class EventsService {
           }
           await Promise.all(
             teamsRes.documents.map(async (tDoc) => {
+              addStoredDeletedTeam(tDoc.$id)
               // Delete any lingering invitations by teamId
               try {
                 const lingering = await databases.listDocuments(

@@ -425,7 +425,11 @@ export default function AdminDashboard() {
     const displayName = user.fullName || user.name || user.userId || 'Student'
     if (!window.confirm(`Permanently delete account for "${displayName}" (@${user.userId || (user as any).username || 'user'}) and cancel all their event registrations?`)) return
     try {
-      await adminService.deleteUser(user.$id || (user as any).userId)
+      await adminService.deleteUser(user.$id, {
+        docId: user.$id,
+        userId: user.userId,
+        email: user.email,
+      })
       showNotification(`Account removed for ${displayName}`)
       if (selectedUserProfile?.$id === user.$id) {
         setSelectedUserProfile(null)
