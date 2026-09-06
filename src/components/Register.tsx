@@ -172,7 +172,7 @@ export default function Register() {
               Student Registration
             </h1>
             <p className="mt-2 text-xs text-slate-400">
-              Create your official participant profile to enroll in solo challenges and form teams.
+              Create your participant profile to enroll in solo challenges and form teams.
             </p>
           </div>
 
@@ -263,7 +263,7 @@ export default function Register() {
               {/* Email */}
               <div>
                 <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                  Official / Primary Email *
+                  Email Address *
                 </label>
                 <div className="relative mt-1">
                   <Mail size={15} className="absolute left-3.5 top-3.5 text-slate-500" />

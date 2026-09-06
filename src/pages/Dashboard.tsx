@@ -896,14 +896,14 @@ export default function Dashboard() {
             </section>
 
             {/* =========================================================================
-                WIDGET 5: DIGITAL STUDENT ID
+                WIDGET 5: PARTICIPANT CARD
             ========================================================================= */}
             <section className="relative overflow-hidden border border-white/10 bg-[#080A0F] p-6 shadow-xl">
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div className="flex items-center gap-2">
                   <QrCode size={16} className="text-[#FF6B00]" />
                   <h3 className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-white">
-                    Digital Student ID
+                    Participant Card
                   </h3>
                 </div>
                 <span className="font-mono text-[9px] text-[#00E5FF] uppercase">
@@ -918,13 +918,13 @@ export default function Dashboard() {
                     {badgeQrUrl ? (
                       <img
                         src={badgeQrUrl}
-                        alt={`Digital Student ID QR - ${passIdentifier}`}
+                        alt={`Participant QR - ${passIdentifier}`}
                         className="w-36 h-36 sm:w-40 sm:h-40 block object-contain mx-auto"
                       />
                     ) : (
                       <div className="w-36 h-36 flex flex-col items-center justify-center text-slate-800 font-mono text-xs gap-2">
                         <Loader2 size={24} className="animate-spin text-[#00E5FF]" />
-                        <span className="text-[10px] text-slate-500">Generating ID...</span>
+                        <span className="text-[10px] text-slate-500">Generating...</span>
                       </div>
                     )}
                   </div>
@@ -937,7 +937,7 @@ export default function Dashboard() {
                   {profile?.rollNumber || profile?.rollNo || `ID: ${user.$id.slice(0, 10)}`}
                 </div>
                 <p className="mt-1 font-mono text-[8px] uppercase tracking-widest text-slate-400">
-                  Official Digital ID for student verification & event check-in
+                  Scan QR code for quick event check-in and attendance
                 </p>
 
                 <div className="mt-3 flex items-center justify-center gap-2 pt-2 border-t border-white/10">
@@ -946,7 +946,7 @@ export default function Dashboard() {
                     onClick={() => {
                       if (badgeQrUrl) {
                         setActivePassData({
-                          title: 'DIGITAL STUDENT ID CARD',
+                          title: 'PARTICIPANT CARD',
                           code: passIdentifier,
                           name: profile?.fullName || user.name,
                           roll: profile?.rollNumber || profile?.rollNo || 'N/A',
@@ -959,17 +959,17 @@ export default function Dashboard() {
                     className="flex items-center gap-1.5 border border-[#00E5FF]/40 bg-[#00E5FF]/10 px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase text-[#00E5FF] hover:bg-[#00E5FF] hover:text-black transition-colors"
                   >
                     <Maximize2 size={11} />
-                    <span>View ID Card</span>
+                    <span>View Card</span>
                   </button>
 
                   {badgeQrUrl && (
                     <a
                       href={badgeQrUrl}
-                      download={`Student_ID_${passIdentifier || 'badge'}.png`}
+                      download={`Participant_Card_${passIdentifier || 'card'}.png`}
                       className="flex items-center gap-1.5 border border-white/20 bg-white/5 px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase text-slate-300 hover:border-white hover:text-white transition-colors"
                     >
                       <Download size={11} />
-                      <span>Save ID QR</span>
+                      <span>Save QR</span>
                     </a>
                   )}
                 </div>
@@ -1188,9 +1188,9 @@ export default function Dashboard() {
               </button>
 
               <div className="flex items-center justify-center gap-2 mb-2">
-                <ShieldCheck size={16} className="text-[#00E5FF]" />
+                <QrCode size={16} className="text-[#00E5FF]" />
                 <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#00E5FF] font-bold">
-                  Digital Student ID
+                  Yantrotsav 2026
                 </span>
               </div>
 
@@ -1208,7 +1208,7 @@ export default function Dashboard() {
               <div className="mx-auto my-5 p-3 bg-white rounded-lg border-4 border-[#00E5FF] shadow-[0_0_30px_rgba(0,229,255,0.5)] inline-block">
                 <img
                   src={activePassData.qrUrl}
-                  alt={`Digital ID QR for ${activePassData.code}`}
+                  alt={`QR code for ${activePassData.code}`}
                   className="w-56 h-56 block object-contain mx-auto"
                 />
               </div>
@@ -1222,22 +1222,22 @@ export default function Dashboard() {
                   ROLL / ID: {activePassData.roll}
                 </div>
                 <div className="text-emerald-400 text-[11px] font-bold tracking-widest pt-1 border-t border-white/10">
-                  IDENTIFIER: {activePassData.code}
+                  CODE: {activePassData.code}
                 </div>
               </div>
 
               <p className="mt-3 font-mono text-[9px] uppercase tracking-widest text-slate-400">
-                Scan this QR code at campus gates or event desks to instantly verify student credentials
+                Show this QR code at event desks for quick verification and check-in
               </p>
 
               <div className="mt-4 flex items-center justify-center gap-2">
                 <a
                   href={activePassData.qrUrl}
-                  download={`STUDENT_ID_${activePassData.code}.png`}
+                  download={`Participant_Card_${activePassData.code}.png`}
                   className="flex items-center justify-center gap-2 w-full border border-[#00E5FF] bg-[#00E5FF] px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-black hover:bg-transparent hover:text-[#00E5FF] transition-colors"
                 >
                   <Download size={14} />
-                  <span>Download ID QR</span>
+                  <span>Download QR</span>
                 </a>
                 <button
                   type="button"
