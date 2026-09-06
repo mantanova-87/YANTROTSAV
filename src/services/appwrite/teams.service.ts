@@ -648,7 +648,20 @@ export class TeamsService {
         // Safe to ignore if broad pending list is restricted
       }
 
-      const results = Array.from(foundDocsMap.values())
+      const allEvents = await eventsService.getEvents().catch(() => [])
+      const results = Array.from(foundDocsMap.values()).filter((inv) => {
+        const evt = allEvents.find((e) => e.$id === inv.eventId)
+        if (!evt) {
+          // Event was deleted; clean up invitation
+          databases.deleteDocument(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.teamInvitations,
+            inv.$id,
+          ).catch(() => {})
+          return false
+        }
+        return true
+      })
       results.sort((a, b) => new Date(b.$createdAt).getTime() - new Date(a.$createdAt).getTime())
       return results
     } catch (error) {
@@ -690,12 +703,26 @@ export class TeamsService {
         )
         for (const doc of leaderRes.documents) {
           const t = doc as unknown as TeamDocument
+          // Filter out cancelled or disbanded teams
+          if (t.status === 'cancelled' || (t.status as any) === 'disbanded') {
+            continue
+          }
           const evt = allEvents.find((e) => e.$id === t.eventId)
+          // If the event no longer exists, clean up orphaned team and do not display
+          if (!evt) {
+            databases.deleteDocument(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.teams,
+              t.$id,
+            ).catch(() => {})
+            continue
+          }
+
           teamsMap.set(t.$id, {
             ...t,
             userRole: 'Leader',
             teamName: t.name || t.teamName || 'Team',
-            eventTitle: evt?.title || t.eventId,
+            eventTitle: evt.title,
           })
         }
       } catch (err) {
@@ -739,15 +766,34 @@ export class TeamsService {
                 invData.teamId,
               )) as unknown as TeamDocument
 
+              if (teamDoc.status === 'cancelled' || (teamDoc.status as any) === 'disbanded') {
+                continue
+              }
+
               const evt = allEvents.find((e) => e.$id === teamDoc.eventId)
+              if (!evt) {
+                // Event was deleted; purge orphaned invitation
+                databases.deleteDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.teamInvitations,
+                  invData.$id,
+                ).catch(() => {})
+                continue
+              }
+
               teamsMap.set(teamDoc.$id, {
                 ...teamDoc,
                 userRole: teamDoc.leaderId === userId ? 'Leader' : 'Member',
                 teamName: teamDoc.name || teamDoc.teamName || 'Team',
-                eventTitle: evt?.title || invData.eventTitle || teamDoc.eventId,
+                eventTitle: evt.title,
               })
             } catch (teamFetchErr) {
-              console.warn(`Could not load team ${invData.teamId}:`, teamFetchErr)
+              // Team document was deleted; clean up orphaned invitation
+              databases.deleteDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.teamInvitations,
+                invData.$id,
+              ).catch(() => {})
             }
           }
         }
@@ -776,12 +822,14 @@ export class TeamsService {
 
           for (const inv of invites.documents) {
             const i = inv as unknown as TeamInvitationDocument
-            members.push({
-              name: i.inviteeName || i.inviteeEmail.split('@')[0],
-              email: i.inviteeEmail,
-              role: 'Member',
-              status: i.status,
-            })
+            if (i.status === 'accepted') {
+              members.push({
+                name: i.inviteeName || i.inviteeEmail.split('@')[0],
+                email: i.inviteeEmail,
+                role: 'Member',
+                status: i.status,
+              })
+            }
           }
 
           team.members = members
@@ -891,20 +939,35 @@ export class TeamsService {
           )
 
           if (isMatch && invData.eventId) {
+            const matchingEvt = allEvents.find((e) => e.$id === invData.eventId)
+            // If the event was deleted, skip and clean up invitation
+            if (!matchingEvt) {
+              databases.deleteDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.teamInvitations,
+                invData.$id,
+              ).catch(() => {})
+              continue
+            }
+
             if (!regMap.has(invData.eventId)) {
               let teamName = invData.teamName || 'Team'
               try {
-                const teamDoc = await databases.getDocument(
+                const teamDoc = (await databases.getDocument(
                   APPWRITE_CONFIG.databaseId,
                   APPWRITE_CONFIG.collections.teams,
                   invData.teamId,
-                )
-                teamName = (teamDoc as any).name || teamName
+                )) as any
+
+                if (teamDoc.status === 'cancelled' || teamDoc.status === 'disbanded') {
+                  continue
+                }
+                teamName = teamDoc.name || teamName
               } catch {
-                // fallback
+                // Team document was deleted; skip
+                continue
               }
 
-              const matchingEvt = allEvents.find((e) => e.$id === invData.eventId)
               regMap.set(invData.eventId, {
                 $id: `syn-${invData.$id}`,
                 $collectionId: APPWRITE_CONFIG.collections.eventRegistrations,
@@ -919,7 +982,7 @@ export class TeamsService {
                 userName: invData.inviteeName || invData.inviteeEmail.split('@')[0],
                 userEmail: invData.inviteeEmail,
                 registeredAt: invData.$createdAt || new Date().toISOString(),
-                eventTitle: matchingEvt?.title || invData.eventTitle || invData.eventId,
+                eventTitle: matchingEvt.title,
                 registrationType: 'team',
               } as unknown as EventRegistrationDocument)
             }
@@ -942,6 +1005,11 @@ export class TeamsService {
           const t = tDoc as unknown as TeamDocument
           if (t.eventId && !regMap.has(t.eventId)) {
             const matchingEvt = allEvents.find((e) => e.$id === t.eventId)
+            if (!matchingEvt) {
+              // Event was deleted; skip
+              continue
+            }
+
             regMap.set(t.eventId, {
               $id: `syn-${t.$id}`,
               $collectionId: APPWRITE_CONFIG.collections.eventRegistrations,
@@ -956,7 +1024,7 @@ export class TeamsService {
               userName: t.leaderName,
               userEmail: t.leaderEmail,
               registeredAt: t.$createdAt || new Date().toISOString(),
-              eventTitle: matchingEvt?.title || t.eventId,
+              eventTitle: matchingEvt.title,
               registrationType: 'team',
             } as unknown as EventRegistrationDocument)
           }
@@ -965,28 +1033,59 @@ export class TeamsService {
         console.warn('Error checking leader teams for registration sync:', leaderHealErr)
       }
 
-      // 5. Enrich all registrations with event title and team name
+      // 5. Enrich all registrations with event title and team name, filtering out deleted events and cancelled teams
       const result: EventRegistrationDocument[] = []
       for (const [_, reg] of regMap) {
         const matchingEvt = allEvents.find((e) => e.$id === reg.eventId)
-        let teamName = reg.teamName
+        // If the event does not exist, it was deleted! Purge orphaned record and skip.
+        if (!matchingEvt) {
+          if (!reg.$id.startsWith('syn-')) {
+            databases.deleteDocument(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.eventRegistrations,
+              reg.$id,
+            ).catch(() => {})
+          }
+          continue
+        }
 
-        if (reg.teamId && !teamName) {
+        let teamName = reg.teamName
+        if (reg.teamId) {
           try {
-            const teamDoc = await databases.getDocument(
+            const teamDoc = (await databases.getDocument(
               APPWRITE_CONFIG.databaseId,
               APPWRITE_CONFIG.collections.teams,
               reg.teamId,
-            )
-            teamName = (teamDoc as any).name
+            )) as any
+
+            // If the team was cancelled/disbanded, this registration is no longer active
+            if (!teamDoc || teamDoc.status === 'cancelled' || teamDoc.status === 'disbanded') {
+              if (!reg.$id.startsWith('syn-')) {
+                databases.deleteDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.eventRegistrations,
+                  reg.$id,
+                ).catch(() => {})
+              }
+              continue
+            }
+            teamName = teamDoc.name || teamName
           } catch {
-            // ignore
+            // Team document was deleted from database! Purge orphaned registration
+            if (!reg.$id.startsWith('syn-')) {
+              databases.deleteDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.eventRegistrations,
+                reg.$id,
+              ).catch(() => {})
+            }
+            continue
           }
         }
 
         result.push({
           ...reg,
-          eventTitle: matchingEvt?.title || reg.eventTitle || reg.eventId,
+          eventTitle: matchingEvt.title,
           registrationType: reg.teamId ? 'team' : 'solo',
           teamName: teamName || (reg.teamId ? 'Team Squad' : undefined),
         } as EventRegistrationDocument)

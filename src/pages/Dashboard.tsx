@@ -81,9 +81,14 @@ export default function Dashboard() {
         teamsService.getUserRegistrations(user.$id, userIdentifiers),
         teamsService.getUserTeams(user.$id, userIdentifiers),
       ])
+
+      // Sanitize: ensure no orphaned registrations (e.g. where eventTitle is a raw hex ID matching eventId) or cancelled teams leak in
+      const validRegs = regs.filter((r) => r.eventTitle && r.eventTitle !== r.eventId)
+      const validTeams = teams.filter((t) => t.status !== 'cancelled' && (t.status as any) !== 'disbanded' && t.eventTitle && t.eventTitle !== t.eventId)
+
       setInvitations(invites)
-      setRegistrations(regs)
-      setUserTeams(teams)
+      setRegistrations(validRegs)
+      setUserTeams(validTeams)
     } catch (err) {
       console.error('Error fetching dashboard records:', err)
     } finally {
