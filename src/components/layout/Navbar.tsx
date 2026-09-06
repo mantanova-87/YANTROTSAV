@@ -138,7 +138,7 @@ function Navbar() {
                 className="flex items-center gap-2 border border-[#FF6B00] bg-[#FF6B00] px-4 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-white transition-all hover:bg-transparent hover:text-[#FF6B00]"
               >
                 <User size={12} />
-                <span>Student Login</span>
+                <span>Student ID</span>
               </button>
             )}
           </div>
