@@ -131,7 +131,7 @@ export class AdminService {
       const allUsers = usersRes.documents as unknown as UserProfile[]
       const allTeams = teamsRes.documents as unknown as TeamDocument[]
 
-      return documents.map((doc) => {
+      const rawRoster = documents.map((doc) => {
         const user = allUsers.find(
           (u) =>
             u.$id === doc.userId ||
@@ -172,6 +172,30 @@ export class AdminService {
           registeredAt: doc.registeredAt,
         }
       })
+
+      // Deduplicate so an attendee never repeats for the same event
+      const seen = new Map<string, EventRosterEntry>()
+      for (const entry of rawRoster) {
+        const idKey = (
+          (entry.studentEmail && entry.studentEmail !== 'N/A' ? entry.studentEmail : '') ||
+          (entry.username ? entry.username : '') ||
+          (entry.studentRollNumber && entry.studentRollNumber !== 'N/A' ? entry.studentRollNumber : '') ||
+          entry.registrationId
+        ).toLowerCase()
+
+        const key = `${entry.eventId}-${idKey}`
+        if (!seen.has(key)) {
+          seen.set(key, entry)
+        } else {
+          // If already seen, preserve the checked-in record if one is checked in
+          const existing = seen.get(key)!
+          if (!existing.checkedIn && entry.checkedIn) {
+            seen.set(key, entry)
+          }
+        }
+      }
+
+      return Array.from(seen.values())
     } catch (error) {
       throw mapAppwriteError(error, 'AdminService.getEventRoster')
     }

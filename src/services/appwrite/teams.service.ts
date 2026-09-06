@@ -46,7 +46,32 @@ export class TeamsService {
         )
       }
 
-      // 3. Create registration document
+      // 3. Ensure document does not already exist before creating
+      try {
+        const existingCheck = await databases.listDocuments(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.eventRegistrations,
+          [Query.equal('eventId', data.eventId), Query.limit(100)],
+        )
+        const alreadyExists = existingCheck.documents.some((d: any) => {
+          const dUserId = ((d as any).userId || '').toLowerCase()
+          const dEmail = ((d as any).userEmail || '').toLowerCase()
+          return (
+            (data.userId && dUserId === data.userId.toLowerCase()) ||
+            (data.studentEmail && dEmail === data.studentEmail.trim().toLowerCase())
+          )
+        })
+        if (alreadyExists) {
+          throw new AppError(
+            'You are already registered for this event. Duplicate registrations are not permitted.',
+            'ALREADY_REGISTERED',
+            409,
+          )
+        }
+      } catch (err: any) {
+        if (err instanceof AppError) throw err
+      }
+
       const docPermissions = [
         Permission.read(Role.any()),
         Permission.update(Role.user(data.userId)),
@@ -156,26 +181,43 @@ export class TeamsService {
         docPermissions,
       )
 
-      // Register leader immediately in event_registrations
+      // Register leader immediately in event_registrations (if not already registered)
       try {
-        await databases.createDocument(
+        const existingLeaderReg = await databases.listDocuments(
           APPWRITE_CONFIG.databaseId,
           APPWRITE_CONFIG.collections.eventRegistrations,
-          ID.unique(),
-          {
-            eventId: data.eventId,
-            teamId: teamDoc.$id,
-            userId: data.leaderId,
-            userName: data.leaderName.trim(),
-            userEmail: data.leaderEmail.trim().toLowerCase(),
-            registeredAt: new Date().toISOString(),
-          },
-          [
-            Permission.read(Role.any()),
-            Permission.update(Role.any()),
-            Permission.delete(Role.user(data.leaderId)),
-          ],
-        )
+          [Query.equal('eventId', data.eventId), Query.limit(100)],
+        ).catch(() => ({ documents: [] }))
+
+        const alreadyRegistered = existingLeaderReg.documents.some((d: any) => {
+          const dUserId = ((d as any).userId || '').toLowerCase()
+          const dEmail = ((d as any).userEmail || '').toLowerCase()
+          return (
+            (data.leaderId && dUserId === data.leaderId.toLowerCase()) ||
+            (data.leaderEmail && dEmail === data.leaderEmail.trim().toLowerCase())
+          )
+        })
+
+        if (!alreadyRegistered) {
+          await databases.createDocument(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.eventRegistrations,
+            ID.unique(),
+            {
+              eventId: data.eventId,
+              teamId: teamDoc.$id,
+              userId: data.leaderId,
+              userName: data.leaderName.trim(),
+              userEmail: data.leaderEmail.trim().toLowerCase(),
+              registeredAt: new Date().toISOString(),
+            },
+            [
+              Permission.read(Role.any()),
+              Permission.update(Role.any()),
+              Permission.delete(Role.user(data.leaderId)),
+            ],
+          )
+        }
       } catch (leaderRegErr) {
         console.warn('Leader registration note:', leaderRegErr)
       }
@@ -361,19 +403,29 @@ export class TeamsService {
 
       const totalAccepted = acceptedInvitesRes.total + 1 // +1 for leader
 
-      // Immediately create registration for this accepted student
+      // Immediately create registration for this accepted student (if not already registered)
       try {
-        const studentUserId = params.student.userId
+        const studentUserId = (params.student.userId || '').trim()
+        const studentEmail = (params.student.email || '').trim().toLowerCase()
         const existing = await databases.listDocuments(
           APPWRITE_CONFIG.databaseId,
           APPWRITE_CONFIG.collections.eventRegistrations,
           [
             Query.equal('eventId', team.eventId),
-            Query.equal('userId', studentUserId),
+            Query.limit(100),
           ],
         )
 
-        if (existing.documents.length === 0) {
+        const alreadyExists = existing.documents.some((d: any) => {
+          const dUserId = ((d as any).userId || '').toLowerCase()
+          const dEmail = ((d as any).userEmail || '').toLowerCase()
+          return (
+            (studentUserId && dUserId === studentUserId.toLowerCase()) ||
+            (studentEmail && dEmail === studentEmail)
+          )
+        })
+
+        if (!alreadyExists) {
           await databases.createDocument(
             APPWRITE_CONFIG.databaseId,
             APPWRITE_CONFIG.collections.eventRegistrations,
@@ -397,17 +449,27 @@ export class TeamsService {
         console.warn('Member event registration creation error:', regErr)
       }
 
-      // Also ensure leader is registered
+      // Also ensure leader is registered (if not already registered)
       try {
+        const leaderId = (team.leaderId || '').trim().toLowerCase()
+        const leaderEmail = (team.leaderEmail || '').trim().toLowerCase()
         const leaderCheck = await databases.listDocuments(
           APPWRITE_CONFIG.databaseId,
           APPWRITE_CONFIG.collections.eventRegistrations,
           [
             Query.equal('eventId', team.eventId),
-            Query.equal('userId', team.leaderId),
+            Query.limit(100),
           ],
         )
-        if (leaderCheck.documents.length === 0) {
+        const leaderAlreadyRegistered = leaderCheck.documents.some((d: any) => {
+          const dUserId = ((d as any).userId || '').toLowerCase()
+          const dEmail = ((d as any).userEmail || '').toLowerCase()
+          return (
+            (leaderId && dUserId === leaderId) ||
+            (leaderEmail && dEmail === leaderEmail)
+          )
+        })
+        if (!leaderAlreadyRegistered) {
           await databases.createDocument(
             APPWRITE_CONFIG.databaseId,
             APPWRITE_CONFIG.collections.eventRegistrations,
@@ -422,7 +484,7 @@ export class TeamsService {
             },
             [
               Permission.read(Role.any()),
-              Permission.update(Role.any()),
+              Permission.update(Role.user(team.leaderId)),
               Permission.delete(Role.user(team.leaderId)),
             ],
           )
@@ -727,7 +789,7 @@ export class TeamsService {
         console.warn('Error querying registrations by userId:', err)
       }
 
-      // 2. Also check eventRegistrations by user email if available
+      // 2. Also check eventRegistrations by user email and identifiers
       for (const id of cleanIds) {
         if (id.includes('@')) {
           try {
@@ -744,11 +806,26 @@ export class TeamsService {
           } catch {
             // continue
           }
+        } else if (id !== userId) {
+          try {
+            const idRes = await databases.listDocuments(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.eventRegistrations,
+              [Query.equal('userId', id), Query.limit(50)],
+            )
+            for (const doc of idRes.documents) {
+              if (!regMap.has(doc.eventId)) {
+                regMap.set(doc.eventId, doc as unknown as EventRegistrationDocument)
+              }
+            }
+          } catch {
+            // continue
+          }
         }
       }
 
-      // 3. Auto-heal: Check accepted team invitations.
-      // If user accepted an invitation but event_registrations row doesn't exist, create & add it!
+      // 3. Fallback in-memory synthesis: Check accepted team invitations.
+      // If user accepted an invitation but event_registrations row doesn't exist, synthesize pass in-memory (DO NOT MUTATE DB)
       try {
         const acceptedInvites = await databases.listDocuments(
           APPWRITE_CONFIG.databaseId,
@@ -780,33 +857,9 @@ export class TeamsService {
                 // fallback
               }
 
-              let newRegDoc: any = null
-              try {
-                newRegDoc = await databases.createDocument(
-                  APPWRITE_CONFIG.databaseId,
-                  APPWRITE_CONFIG.collections.eventRegistrations,
-                  ID.unique(),
-                  {
-                    eventId: invData.eventId,
-                    teamId: invData.teamId,
-                    userId,
-                    userName: invData.inviteeName || invData.inviteeEmail.split('@')[0],
-                    userEmail: invData.inviteeEmail,
-                    registeredAt: invData.$createdAt || new Date().toISOString(),
-                  },
-                  [
-                    Permission.read(Role.any()),
-                    Permission.update(Role.any()),
-                    Permission.delete(Role.any()),
-                  ],
-                )
-              } catch {
-                // If create failed, synthetic object will be used
-              }
-
               const matchingEvt = allEvents.find((e) => e.$id === invData.eventId)
               regMap.set(invData.eventId, {
-                $id: newRegDoc?.$id || `syn-${invData.$id}`,
+                $id: `syn-${invData.$id}`,
                 $collectionId: APPWRITE_CONFIG.collections.eventRegistrations,
                 $databaseId: APPWRITE_CONFIG.databaseId,
                 $createdAt: invData.$createdAt || new Date().toISOString(),
@@ -829,8 +882,8 @@ export class TeamsService {
         console.warn('Error checking accepted invitations for registration sync:', autoHealErr)
       }
 
-      // 4. Auto-heal: Check leader teams.
-      // If user leads an active team but event_registrations row doesn't exist, create & add it!
+      // 4. Fallback in-memory synthesis: Check leader teams.
+      // If user leads an active team but event_registrations row doesn't exist, synthesize pass in-memory (DO NOT MUTATE DB)
       try {
         const leaderTeamsRes = await databases.listDocuments(
           APPWRITE_CONFIG.databaseId,
@@ -841,33 +894,9 @@ export class TeamsService {
         for (const tDoc of leaderTeamsRes.documents) {
           const t = tDoc as unknown as TeamDocument
           if (t.eventId && !regMap.has(t.eventId)) {
-            let newRegDoc: any = null
-            try {
-              newRegDoc = await databases.createDocument(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.eventRegistrations,
-                ID.unique(),
-                {
-                  eventId: t.eventId,
-                  teamId: t.$id,
-                  userId,
-                  userName: t.leaderName,
-                  userEmail: t.leaderEmail,
-                  registeredAt: t.$createdAt || new Date().toISOString(),
-                },
-                [
-                  Permission.read(Role.any()),
-                  Permission.update(Role.user(userId)),
-                  Permission.delete(Role.user(userId)),
-                ],
-              )
-            } catch {
-              // fallback
-            }
-
             const matchingEvt = allEvents.find((e) => e.$id === t.eventId)
             regMap.set(t.eventId, {
-              $id: newRegDoc?.$id || `syn-${t.$id}`,
+              $id: `syn-${t.$id}`,
               $collectionId: APPWRITE_CONFIG.collections.eventRegistrations,
               $databaseId: APPWRITE_CONFIG.databaseId,
               $createdAt: t.$createdAt || new Date().toISOString(),
