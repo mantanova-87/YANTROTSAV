@@ -46,19 +46,7 @@ const socialLinks = [
       </svg>
     ),
   },
-  {
-    name: 'GitHub',
-    href: '#',
-    icon: (
-      <svg
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        className="h-4 w-4"
-      >
-        <path d="M12 .8a11.2 11.2 0 0 0-3.54 21.83c.56.1.77-.24.77-.54v-2.1c-3.14.68-3.8-1.33-3.8-1.33-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.73 1.16 1.73 1.16 1 1.72 2.63 1.22 3.27.93.1-.73.39-1.22.71-1.5-2.51-.29-5.15-1.25-5.15-5.58 0-1.23.44-2.23 1.16-3.02-.12-.29-.5-1.43.11-2.98 0 0 .95-.3 3.08 1.15a10.7 10.7 0 0 1 5.6 0c2.13-1.45 3.08-1.15 3.08-1.15.61 1.55.23 2.69.11 2.98.72.79 1.16 1.79 1.16 3.02 0 4.34-2.64 5.29-5.16 5.57.4.35.76 1.04.76 2.1v3.11c0 .3.2.65.78.54A11.2 11.2 0 0 0 12 .8Z" />
-      </svg>
-    ),
-  },
+  
 ]
 
 const footerReveal = {
@@ -148,7 +136,7 @@ function Footer() {
             <div className="pl-5">
               <div className="flex items-center gap-3">
                 <span className="text-2xl font-black tracking-[0.16em] text-white md:text-3xl">
-                  YANTROTSAV
+                  YANTROTSAV 2026
                 </span>
 
                 <span className="h-2 w-2 bg-[#FF6B00]" />
@@ -156,7 +144,7 @@ function Footer() {
 
               <div className="mt-3 flex items-center gap-3">
                 <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]">
-                  Tech Fest
+                  <i>Were Texh Meets Innovation</i>
                 </span>
 
                 <span className="h-px w-8 bg-white/15" />
@@ -167,36 +155,9 @@ function Footer() {
               </div>
 
               <p className="mt-6 max-w-md text-sm leading-7 text-slate-500">
-                Technology. Engineering. Creativity.
+                Technology | Engineering | Creativity
                 <br />
-                Ideas built for tomorrow.
               </p>
-
-              {/* Technical identity block */}
-              <div className="mt-8 flex max-w-sm items-center border border-white/10 bg-[#080A0F]">
-                <div className="flex h-12 w-12 items-center justify-center border-r border-white/10">
-                  <span className="font-mono text-[10px] text-[#00E5FF]">
-                    YT
-                  </span>
-                </div>
-
-                <div className="px-4">
-                  <p className="font-mono text-[8px] uppercase tracking-[0.18em] text-slate-700">
-                    System Status
-                  </p>
-
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping bg-[#FF6B00] opacity-50" />
-                      <span className="relative h-1.5 w-1.5 bg-[#FF6B00]" />
-                    </span>
-
-                    <span className="text-[9px] uppercase tracking-[0.15em] text-slate-500">
-                      Registration Opens Soon
-                    </span>
-                  </div>
-                </div>
-              </div>
             </div>
           </motion.div>
 
@@ -333,13 +294,13 @@ function Footer() {
           className="relative flex flex-col gap-4 py-5 text-[9px] uppercase tracking-[0.15em] text-slate-700 sm:flex-row sm:items-center sm:justify-between"
         >
           <p>© 2026 YANTROTSAV</p>
-
+          {/*<p>Designed and Developed by Mantavya and Priyanshu</p>*/}
           <div className="flex items-center gap-3">
             <span>Built for builders</span>
 
             <span className="h-1 w-1 bg-[#FF6B00]" />
 
-            <span>Tech Fest / 2026</span>
+            <span>Yantrotsav / 2026</span>
           </div>
         </motion.div>
       </div>
