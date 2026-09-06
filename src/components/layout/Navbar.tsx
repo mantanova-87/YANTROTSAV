@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X, User, LogOut } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import logo from 'E:/YANTROTSAV/src/assets/images/logo.png'
+import logo from "../../assets/images/logo.png";
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const location = useLocation()
@@ -19,7 +19,7 @@ function Navbar() {
     ...(user ? [{ name: 'Dashboard', path: '/dashboard' }] : []),
     ...(isAdmin ? [{ name: 'Admin', path: '/admin' }] : []),
   ]
-  
+
 
   return (
     <motion.header
@@ -62,8 +62,8 @@ function Navbar() {
           <Link to="/" onClick={closeMenu} className="group flex flex-col-3 items-center gap-4">
             <img
               src={logo}
-              alt="logo"
-              className="relative z-10 h-16 w-16 object-contain object-center transition-transform duration-1000 ease-out group-hover:scale-105"
+              alt="Logo"
+              className="h-16 w-16 object-contain"
             />
             <div className="flex flex-col items-center gap-2">
               <span className="text-lg font-black tracking-[0.18em] text-white transition-colors duration-300 group-hover:text-[#00E5FF] md:text-xl">
