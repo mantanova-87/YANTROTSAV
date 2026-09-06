@@ -491,7 +491,7 @@ function Home() {
         </div>
 
         {/* ======================================================
-          FEATURE HEADING
+          Watcher HEADING
       ====================================================== */}
 
         <section className="mx-auto flex items-center justify-center max-w-[1400px] px-5 pb-14 md:px-8 md:pb-20">
@@ -533,7 +533,7 @@ function Home() {
         </section>
 
         {/* ======================================================
-          FEATURE CARDS
+          Watcher CARDS
       ====================================================== */}
 
         <section className="mx-auto max-w-[1400px] px-5 pb-28 md:px-8 md:pb-40">
@@ -596,7 +596,7 @@ function Home() {
                     className="absolute -bottom-2 -right-2 z-0 h-0 w-0 border-t-[22px] border-l-[22px] border-t-transparent"
                   />
 
-                  {/* Feature card */}
+                  {/* Watcher card */}
                   <div className="relative z-10 overflow-hidden bg-[#080A0F] shadow-[0_15px_35px_rgba(0,0,0,0.35)] transition-all duration-500 group-hover:-translate-y-3 group-hover:shadow-[0_30px_70px_rgba(0,0,0,0.55)]">
 
                     {/* Outer frame */}
@@ -636,7 +636,7 @@ function Home() {
 
                       {card.image ? (
                         <img
-                          src={`/src/assets/images/${card.image}`}
+                          src={images[`../assets/images/${card.image}`]}
                           alt={card.title}
                           className="relative z-10 h-full w-full object-contain object-center transition-transform duration-1000 ease-out group-hover:scale-105"
                         />
@@ -678,7 +678,7 @@ function Home() {
                       </span>
                     </div>
 
-                    {/* Feature content */}
+                    {/* Watcher content */}
                     <div className="relative z-20 p-6 md:p-7">
 
                       <div className="flex items-center justify-between">
