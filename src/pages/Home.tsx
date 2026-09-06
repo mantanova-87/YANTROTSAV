@@ -81,13 +81,17 @@ const revealFromDepth = {
 
 const messageCards = [
   {
-    title: 'Message Title One',
-    text: 'Add your message or introduction here. This section can be used for a welcome message, vision, or important announcement.',
+    title: "Hon'ble Vice-Chancellor's Message",
+    text: 'It gives me immense pleasure to extend my best wishes on the occasion of Yantrotsav at Central University of Jammu. This event celebrates technology, innovation, creativity, and the talent of our young minds. I hope Yantrotsav inspires students to explore, innovate, and transform ideas into meaningful solutions. I congratulate the organizers and wish the event great success.',
+    text1: "Prof. Dr. Sanjeev Jain",
+    text2: "Hon'ble Vice Chancellor",
     image: 'vc.jpg',
   },
   {
-    title: 'Message Title Two',
-    text: 'Add your message or introduction here. This section can highlight the purpose, experience, or story behind Yantrotsav.',
+    title: 'Message from the HOD',
+    text: 'It gives me immense pleasure to extend my warm wishes on the occasion of Yantrotsav at Central University of Jammu. This event provides a wonderful platform for our students to showcase their creativity, technical skills, and innovative ideas. I hope Yantrotsav inspires our students to learn, explore, and contribute to the ever-evolving world of technology. I congratulate the organizing team and wish the event great success.',
+    text1:'Dr. Dinesh Kumar',
+    text2:'Head of Department(CSE)',
     image: 'DRDINESHCSE.jpeg',
   },
 ]
@@ -99,22 +103,22 @@ const messageCards = [
 
 const featureCards = [
   {
-    title: 'Feature One',
-    text: 'Add feature information here.',
-    image: '',
+    title: 'Dr. Jasvinder Pal Singh',
+    text: 'Assistant Professor',
+    image: 'JPsir.jpeg',
     accent: 'cyan',
   },
   {
-    title: 'Feature Two',
-    text: 'Add feature information here.',
-    image: '',
-    accent: 'orange',
+    title: 'Dr. Harnain Kour',
+    text: 'Assistant Professor',
+    image: 'Harnain_Kour.jpeg',
+    accent: 'violet',
   },
   {
-    title: 'Feature Three',
-    text: 'Add feature information here.',
-    image: '',
-    accent: 'violet',
+    title: 'Dr. Gourav Kumar',
+    text: 'Assistant Professor',
+    image: 'Gourav_Kumar.jpg',
+    accent: 'orange',
   },
 ]
 
@@ -320,7 +324,7 @@ function Home() {
                       IMAGE AREA — SMALLER + CENTERED
                   ================================================== */}
 
-                    <div className="relative flex min-h-[240px] items-center justify-center overflow-hidden bg-[#080A0F] p-6 md:min-h-[300px]">
+                    <div className="relative flex flex-col min-h-[240px] items-center justify-center overflow-hidden bg-[#080A0F] p-6 md:min-h-[300px]">
 
                       {card.image ? (
                         <img
@@ -328,21 +332,22 @@ function Home() {
                           alt={card.title}
                           className="relative z-10 w-64 h-64 rounded-full object-center transition-transform duration-1000 ease-out group-hover:scale-105"
                         />
+
                       ) : (
                         <div className="relative z-10 flex h-full min-h-[210px] w-full items-center justify-center border border-white/5">
                           <div className="text-center">
-
-                            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#00E5FF]">
-                              Image 0{index + 1}
-                            </span>
-
-                            <p className="mt-2 text-[8px] uppercase tracking-[0.15em] text-slate-700">
-                              Add image filename
-                            </p>
-
+                            <p>Image</p>
                           </div>
                         </div>
                       )}
+                      <div className='text-center'>
+                        <p className="mt-3 max-w-2xl  font-bold text-lg leading-8 md:text-base md:leading-8">
+                        {card.text1}
+                        </p>
+                        <p className="mt-1 max-w-2xl  font-bold leading-8   text-lg md:text-base md:leading-8">
+                          {card.text2}
+                        </p>
+                      </div>
 
                       {/* Image glow */}
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#00E5FF]/10 via-transparent to-[#FF6B00]/10" />
@@ -350,17 +355,15 @@ function Home() {
                       {/* Image bottom fade */}
                       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050816]/60 via-transparent to-transparent" />
 
-                      {/* Image technical marker */}
-                      <span className="absolute bottom-4 left-5 z-20 font-mono text-[8px] uppercase tracking-[0.2em] text-white/30">
-                        IMG / 0{index + 1}
-                      </span>
+
+
                     </div>
 
                     {/* ==================================================
                       LARGE MESSAGE AREA
                   ================================================== */}
 
-                    <div className="relative z-30 flex flex-col justify-center p-8 md:p-12 lg:p-14">
+                    <div className="relative z-30 flex flex-col justify-center p-2 md:p-4 lg:p-6">
 
                       {/* Label */}
                       <span className="mb-5 font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
@@ -368,7 +371,7 @@ function Home() {
                       </span>
 
                       {/* Title */}
-                      <h2 className="max-w-2xl text-3xl font-black uppercase tracking-tight md:text-4xl lg:text-5xl">
+                      <h2 className="max-w-2xl text-2xl font-black uppercase tracking-tight md:text-2xl lg:text-3xl">
                         {card.title}
                       </h2>
 
@@ -378,15 +381,14 @@ function Home() {
 
                         <span className="h-1 w-1 bg-[#FF6B00]" />
 
-                        <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-700">
-                          YT / 2026
-                        </span>
+
                       </div>
 
                       {/* Message */}
                       <p className="mt-7 max-w-2xl text-sm leading-8 text-slate-400 md:text-base md:leading-8">
                         {card.text}
                       </p>
+
 
                       {/* Technical bottom information */}
                       <div className="mt-10 flex items-center gap-4">
@@ -440,16 +442,16 @@ function Home() {
             <div className="flex flex-col justify-center p-8 md:p-12 lg:p-14">
 
               <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
-                01 / Message
+                03/About The Event
               </span>
 
               <h2 className="mt-4 text-3xl font-black uppercase tracking-tight text-white md:text-4xl lg:text-5xl">
-                Your Heading
+                Yantrotsav
               </h2>
+              <h4><i>Where Tech Meets Innovation</i></h4>
 
               <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-400 md:text-base">
-                Write your message here. Add your introduction, announcement,
-                information, or any other content related to Yantrotsav.
+                YANTROTSAV 2026 is a university-level technology fest organised by the Department of Computer Science & Engineering, Central University of Jammu, as part of the celebration of Engineers' Day. The fest brings together students for technical, creative, analytical and competitive activities.
               </p>
 
               {/* Technical line */}
@@ -481,10 +483,7 @@ function Home() {
               {/* Image lighting */}
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#00E5FF]/10 via-transparent to-[#FF6B00]/10" />
 
-              {/* Image marker */}
-              <span className="absolute bottom-4 right-5 z-10 font-mono text-[8px] uppercase tracking-[0.2em] text-white/30">
-                IMG / 01
-              </span>
+              
 
             </div>
 
@@ -495,7 +494,7 @@ function Home() {
           FEATURE HEADING
       ====================================================== */}
 
-        <section className="mx-auto max-w-[1400px] px-5 pb-14 md:px-8 md:pb-20">
+        <section className="mx-auto flex items-center justify-center max-w-[1400px] px-5 pb-14 md:px-8 md:pb-20">
 
           <motion.div
             initial={{
@@ -521,12 +520,12 @@ function Home() {
             className="relative border-b border-white/10 pb-7"
           >
 
-            <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
-              03 / Discover
+            <span className="font-mono  text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
+              04 / The Watcher
             </span>
 
             <h2 className="mt-3 text-4xl font-black uppercase tracking-tight md:text-6xl">
-              Explore
+              Our Convenors
             </h2>
 
             <span className="absolute bottom-[-1px] left-0 h-px w-20 bg-[#00E5FF]" />
@@ -722,7 +721,7 @@ function Home() {
                         />
 
                         <span className="font-mono text-[8px] uppercase tracking-[0.18em] text-slate-700">
-                          Explore
+                          Dept. of Computer Science and Engineering
                         </span>
                       </div>
                     </div>

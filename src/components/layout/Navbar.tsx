@@ -66,7 +66,7 @@ function Navbar() {
             <div className="flex items-center gap-2">
 
               <span className="text-lg font-black tracking-[0.18em] text-white transition-colors duration-300 group-hover:text-[#00E5FF] md:text-xl">
-                YANTROTSAV
+                YANTROTSAV 2026
               </span>
 
               <span className="h-1.5 w-1.5 bg-[#FF6B00] transition-all duration-300 group-hover:scale-150 group-hover:bg-[#00E5FF]" />
@@ -74,7 +74,7 @@ function Navbar() {
             </div>
 
             <span className="hidden border-l border-white/15 pl-4 text-[10px] font-medium uppercase tracking-[0.22em] text-slate-500 sm:block">
-              Tech Fest / 2026
+              <i>Where Tech Meets Innovation</i>
             </span>
           </Link>
 
