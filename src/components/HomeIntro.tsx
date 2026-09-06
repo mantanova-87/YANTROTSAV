@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import poster from '../assets/images/poster.png'
+import logo from '../assets/images/logo.png'
 
 const words = ['LADIES', 'AND', 'GENTLEMEN,', 'ARE', 'YOU', 'READY?']
 
@@ -146,7 +146,7 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
                     <span className="absolute -bottom-4 -right-4 h-5 w-5 border-b-2 border-r-2 border-[#00E5FF]" />
 
                     <img
-                      src={poster}
+                      src={logo}
                       alt="Yantrotsav 2026"
                       className="h-32 w-32 object-contain md:h-44 md:w-44"
                     />
