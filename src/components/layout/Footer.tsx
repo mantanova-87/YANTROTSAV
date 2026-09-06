@@ -1,6 +1,6 @@
 import { Mail, ArrowUpRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
-
+import logo from "../../assets/images/logo.png";
 const footerLinks = [
   { name: 'Home', path: '/' },
   { name: 'Events', path: '/events' },
@@ -45,7 +45,7 @@ const socialLinks = [
       </svg>
     ),
   },
-  
+
 ]
 
 function Footer() {
@@ -95,6 +95,11 @@ function Footer() {
             <span className="absolute left-0 top-0 h-20 w-px bg-gradient-to-b from-[#00E5FF] to-transparent" />
 
             <div className="pl-5">
+              <img
+                src={logo}
+                alt="Logo"
+                className="h-32 w-32 object-contain"
+              />
               <div className="flex items-center gap-3">
                 <span className="text-2xl font-black tracking-[0.16em] text-white md:text-3xl">
                   YANTROTSAV 2026
@@ -189,7 +194,7 @@ function Footer() {
               </a>
             </div>
 
-            
+
           </div>
         </div>
 
@@ -199,7 +204,7 @@ function Footer() {
 
         <div className="relative flex flex-col gap-4 py-5 text-[9px] uppercase tracking-[0.15em] text-slate-700 sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 YANTROTSAV</p>
-          {/*<p>Designed and Developed by Mantavya and Priyanshu</p>*/}
+          <p>Designed and Developed by Mantavya and Priyanshu</p>
           <div className="flex items-center gap-3">
             <span>Built for builders</span>
 
