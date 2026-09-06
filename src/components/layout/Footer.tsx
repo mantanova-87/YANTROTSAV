@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion'
 import { Mail, ArrowUpRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -61,39 +60,9 @@ const socialLinks = [
   },
 ]
 
-const footerReveal = {
-  hidden: {
-    opacity: 0,
-    y: 60,
-    rotateX: 12,
-    scale: 0.96,
-    filter: 'blur(8px)',
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    rotateX: 0,
-    scale: 1,
-    filter: 'blur(0px)',
-  },
-}
-
 function Footer() {
   return (
-    <motion.footer
-      initial="hidden"
-      whileInView="visible"
-      viewport={{
-        once: true,
-        amount: 0.12,
-      }}
-      variants={footerReveal}
-      transition={{
-        duration: 1,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      className="relative overflow-hidden border-t border-white/10 bg-[#050816] text-white"
-    >
+    <footer className="relative overflow-hidden border-t border-white/10 bg-[#050816] text-white">
       {/* =========================================================
           TECHNICAL TOP FRAME
       ========================================================= */}
@@ -133,15 +102,7 @@ function Footer() {
         <div className="grid border-b border-white/10 py-16 md:grid-cols-[1.5fr_1fr_1fr] md:py-20">
 
           {/* BRAND */}
-          <motion.div
-            variants={footerReveal}
-            transition={{
-              duration: 0.8,
-              delay: 0.05,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-            className="relative pr-8"
-          >
+          <div className="relative pr-8">
             {/* Decorative vertical line */}
             <span className="absolute left-0 top-0 h-20 w-px bg-gradient-to-b from-[#00E5FF] to-transparent" />
 
@@ -198,18 +159,10 @@ function Footer() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* EXPLORE */}
-          <motion.div
-            variants={footerReveal}
-            transition={{
-              duration: 0.8,
-              delay: 0.15,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-            className="mt-12 md:mt-0"
-          >
+          <div className="mt-12 md:mt-0">
             <p className="mb-6 font-mono text-[9px] uppercase tracking-[0.2em] text-[#FF6B00]">
               01 / Explore
             </p>
@@ -238,63 +191,41 @@ function Footer() {
                 </Link>
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* CONNECT */}
-          <motion.div
-            variants={footerReveal}
-            transition={{
-              duration: 0.8,
-              delay: 0.25,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-            className="mt-12 md:mt-0"
-          >
+          <div className="mt-12 md:mt-0">
             <p className="mb-6 font-mono text-[9px] uppercase tracking-[0.2em] text-[#FF6B00]">
               02 / Connect
             </p>
 
             <div className="flex flex-wrap gap-2">
               {socialLinks.map((social) => (
-                <motion.a
+                <a
                   key={social.name}
                   href={social.href}
                   aria-label={social.name}
-                  whileHover={{
-                    y: -4,
-                    scale: 1.03,
-                  }}
-                  transition={{
-                    duration: 0.25,
-                  }}
-                  className="flex items-center gap-2 border border-white/10 bg-[#080A0F] px-3 py-2 text-slate-500 transition-colors duration-300 hover:border-[#FF6B00]/50 hover:text-white"
+                  className="flex items-center gap-2 border border-white/10 bg-[#080A0F] px-3 py-2 text-slate-500 transition-all duration-200 hover:-translate-y-1 hover:border-[#FF6B00]/50 hover:text-white"
                 >
                   {social.icon}
 
                   <span className="text-[9px] uppercase tracking-[0.12em]">
                     {social.name}
                   </span>
-                </motion.a>
+                </a>
               ))}
 
-              <motion.a
+              <a
                 href="mailto:"
                 aria-label="Email"
-                whileHover={{
-                  y: -4,
-                  scale: 1.03,
-                }}
-                transition={{
-                  duration: 0.25,
-                }}
-                className="flex items-center gap-2 border border-white/10 bg-[#080A0F] px-3 py-2 text-slate-500 transition-colors duration-300 hover:border-[#00E5FF]/50 hover:text-white"
+                className="flex items-center gap-2 border border-white/10 bg-[#080A0F] px-3 py-2 text-slate-500 transition-all duration-200 hover:-translate-y-1 hover:border-[#00E5FF]/50 hover:text-white"
               >
                 <Mail size={16} />
 
                 <span className="text-[9px] uppercase tracking-[0.12em]">
                   Email
                 </span>
-              </motion.a>
+              </a>
             </div>
 
             {/* Status panel */}
@@ -316,22 +247,14 @@ function Footer() {
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* =======================================================
             BOTTOM BAR
         ======================================================= */}
 
-        <motion.div
-          variants={footerReveal}
-          transition={{
-            duration: 0.8,
-            delay: 0.35,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="relative flex flex-col gap-4 py-5 text-[9px] uppercase tracking-[0.15em] text-slate-700 sm:flex-row sm:items-center sm:justify-between"
-        >
+        <div className="relative flex flex-col gap-4 py-5 text-[9px] uppercase tracking-[0.15em] text-slate-700 sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 YANTROTSAV</p>
 
           <div className="flex items-center gap-3">
@@ -341,9 +264,9 @@ function Footer() {
 
             <span>Tech Fest / 2026</span>
           </div>
-        </motion.div>
+        </div>
       </div>
-    </motion.footer>
+    </footer>
   )
 }
 
