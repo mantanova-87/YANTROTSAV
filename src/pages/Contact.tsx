@@ -259,7 +259,7 @@ export default function Contact() {
                     </p>
 
                     <p className="mt-1 text-xs text-slate-300">
-                      Yantrotsav 2026
+                      Central University of Jammu, Samba, J&K
                     </p>
                   </div>
                 </div>
@@ -402,7 +402,7 @@ export default function Contact() {
                         event.target.value.replace(/\D/g, ''),
                       )
                     }
-                    placeholder="10-digit number"
+                    placeholder="Enter your phone number"
                     className={inputClass('phone')}
                   />
 
