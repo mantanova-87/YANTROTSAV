@@ -89,6 +89,10 @@ export default function EventRegistrationModal({
   if (!isOpen || !event) return null
 
   const isTeamEvent = (event.eventType || event.format) === 'team' || (event.minTeamSize || 1) > 1
+  const isDeadlinePassed = Boolean(
+    event.registrationDeadline && new Date(event.registrationDeadline).getTime() < Date.now()
+  )
+  const isRegistrationClosed = event.status !== 'published' || isDeadlinePassed
   const requiredAdditionalMembers = Math.max(1, (event.minTeamSize || 2) - 1)
   const maxAdditionalMembers = Math.max(1, (event.maxTeamSize || 4) - 1)
 
@@ -122,6 +126,16 @@ export default function EventRegistrationModal({
       setError(
         `You are already enrolled in this event (${existingEnrollment.reason}). Duplicate registrations are not permitted.`,
       )
+      return
+    }
+
+    if (event.status !== 'published') {
+      setError('Registration is closed for this event.')
+      return
+    }
+
+    if (event.registrationDeadline && new Date(event.registrationDeadline).getTime() < Date.now()) {
+      setError('Registration deadline for this event has passed.')
       return
     }
 
@@ -344,6 +358,17 @@ export default function EventRegistrationModal({
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
+                {isRegistrationClosed && (
+                  <div className="flex items-center gap-3 border border-amber-500/40 bg-amber-950/30 p-3 text-xs text-amber-400">
+                    <AlertCircle size={16} className="shrink-0" />
+                    <span>
+                      {isDeadlinePassed
+                        ? 'Registration deadline has passed for this event. New registrations cannot be submitted.'
+                        : 'Registration is currently closed for this event.'}
+                    </span>
+                  </div>
+                )}
+
                 {error && (
                   <div className="flex items-center gap-3 border border-red-500/40 bg-red-950/30 p-3 text-xs text-red-400">
                     <AlertCircle size={16} className="shrink-0" />
@@ -543,7 +568,7 @@ export default function EventRegistrationModal({
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || isRegistrationClosed}
                   className="mt-6 flex w-full items-center justify-center gap-2 border border-[#00E5FF] bg-[#00E5FF] py-3 text-xs font-black uppercase tracking-[0.18em] text-black transition-all hover:bg-transparent hover:text-[#00E5FF] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading ? (
@@ -551,6 +576,8 @@ export default function EventRegistrationModal({
                       <Loader2 size={16} className="animate-spin" />
                       <span>Transmitting Registration...</span>
                     </>
+                  ) : isRegistrationClosed ? (
+                    <span>{isDeadlinePassed ? 'Registration Deadline Passed' : 'Registration Closed'}</span>
                   ) : isTeamEvent ? (
                     <>
                       <Users size={16} />

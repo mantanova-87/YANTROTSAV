@@ -456,57 +456,68 @@ function Events() {
                         </div>
 
                         {/* Footer Action */}
-                        <div className="mt-7 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                          <div className="flex items-center gap-3">
-                            <span
-                              className={`h-1.5 w-1.5 ${
-                                enrolledEventIds.has(event.$id)
-                                  ? 'bg-emerald-400'
-                                  : event.status === 'published'
-                                    ? 'animate-pulse bg-emerald-400'
-                                    : 'bg-red-400'
-                              }`}
-                            />
-                            <span
-                              className={`font-mono text-[9px] uppercase tracking-[0.2em] ${
-                                enrolledEventIds.has(event.$id)
-                                  ? 'text-emerald-400'
-                                  : event.status === 'published'
-                                    ? 'text-emerald-400'
-                                    : 'text-red-400'
-                              }`}
-                            >
-                              {enrolledEventIds.has(event.$id)
-                                ? 'Pass Confirmed'
-                                : event.status === 'published'
-                                  ? 'Registration Active'
-                                  : 'Registration Closed'}
-                            </span>
-                          </div>
+                        {(() => {
+                          const isDeadlinePassed = Boolean(
+                            event.registrationDeadline && new Date(event.registrationDeadline).getTime() < Date.now()
+                          )
+                          const isRegistrationOpen = event.status === 'published' && !isDeadlinePassed
 
-                          {enrolledEventIds.has(event.$id) ? (
-                            <Link
-                              to="/dashboard"
-                              className="flex cursor-pointer items-center justify-center gap-2 border border-emerald-500/60 bg-emerald-500/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-400 transition-all hover:bg-emerald-500 hover:text-black shadow-[0_0_15px_rgba(16,185,129,0.15)]"
-                            >
-                              <CheckCircle2 size={13} />
-                              <span>Already Enrolled ✓</span>
-                            </Link>
-                          ) : event.status === 'published' ? (
-                            <button
-                              type="button"
-                              onClick={() => handleOpenRegistration(event)}
-                              className="flex cursor-pointer items-center justify-center gap-3 border border-[#00E5FF] bg-[#00E5FF]/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-[#00E5FF] transition-all hover:bg-[#00E5FF] hover:text-black"
-                            >
-                              <span>Register Now</span>
-                              {isReversed ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-                            </button>
-                          ) : (
-                            <span className="font-mono text-[9px] uppercase tracking-wider text-slate-500 border border-white/10 px-4 py-2">
-                              Registrations Closed
-                            </span>
-                          )}
-                        </div>
+                          return (
+                            <div className="mt-7 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                              <div className="flex items-center gap-3">
+                                <span
+                                  className={`h-1.5 w-1.5 ${
+                                    enrolledEventIds.has(event.$id)
+                                      ? 'bg-emerald-400'
+                                      : isRegistrationOpen
+                                        ? 'animate-pulse bg-emerald-400'
+                                        : 'bg-red-400'
+                                  }`}
+                                />
+                                <span
+                                  className={`font-mono text-[9px] uppercase tracking-[0.2em] ${
+                                    enrolledEventIds.has(event.$id)
+                                      ? 'text-emerald-400'
+                                      : isRegistrationOpen
+                                        ? 'text-emerald-400'
+                                        : 'text-red-400'
+                                  }`}
+                                >
+                                  {enrolledEventIds.has(event.$id)
+                                    ? 'Pass Confirmed'
+                                    : isRegistrationOpen
+                                      ? 'Registration Active'
+                                      : isDeadlinePassed
+                                        ? 'Deadline Passed'
+                                        : 'Registration Closed'}
+                                </span>
+                              </div>
+
+                              {enrolledEventIds.has(event.$id) ? (
+                                <Link
+                                  to="/dashboard"
+                                  className="flex cursor-pointer items-center justify-center gap-2 border border-emerald-500/60 bg-emerald-500/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-400 transition-all hover:bg-emerald-500 hover:text-black shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                                >
+                                  <CheckCircle2 size={13} />
+                                  <span>Already Enrolled ✓</span>
+                                </Link>
+                              ) : isRegistrationOpen ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenRegistration(event)}
+                                  className="flex cursor-pointer items-center justify-center gap-3 border border-[#00E5FF] bg-[#00E5FF]/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-[#00E5FF] transition-all hover:bg-[#00E5FF] hover:text-black"
+                                >
+                                  <span>Register Now</span>
+                                  {isReversed ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                                </button>
+                              ) : (
+                                <span className="font-mono text-[9px] uppercase tracking-wider text-slate-500 border border-white/10 px-4 py-2">
+                                  {isDeadlinePassed ? 'Deadline Passed' : 'Registrations Closed'}
+                                </span>
+                              )}
+                            </div>
+                          )
+                        })()}
 
                         <span className="pointer-events-none absolute bottom-0 left-0 h-px w-0 bg-[#00E5FF] transition-all duration-700 group-hover:w-full" />
                         <span className="pointer-events-none absolute right-0 top-0 h-px w-0 bg-[#FF6B00] transition-all duration-700 group-hover:w-1/2" />

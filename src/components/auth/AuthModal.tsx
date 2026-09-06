@@ -282,14 +282,18 @@ export default function AuthModal() {
 
               <div>
                 <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                  Email Address *
+                  {authModalMode === 'login' ? 'Email, Username, or Roll Number *' : 'Email Address *'}
                 </label>
                 <div className="relative mt-1">
                   <Mail size={15} className="absolute left-3.5 top-3 text-slate-500" />
                   <input
-                    type="email"
+                    type={authModalMode === 'login' ? 'text' : 'email'}
                     required
-                    placeholder="enrno.dep@cujammu.ac.in"
+                    placeholder={
+                      authModalMode === 'login'
+                        ? 'Email, @username, or roll number'
+                        : 'enrno.dep@cujammu.ac.in'
+                    }
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full border border-white/10 bg-[#050816] py-2.5 pl-10 pr-3 text-xs text-white placeholder-slate-600 outline-none transition-colors focus:border-[#00E5FF]"

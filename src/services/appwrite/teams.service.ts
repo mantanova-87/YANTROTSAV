@@ -711,7 +711,9 @@ export class TeamsService {
         [Query.equal('leaderId', leaderId), Query.orderDesc('$createdAt')],
       )
 
-      return response.documents as unknown as TeamDocument[]
+      return (response.documents as unknown as TeamDocument[]).filter(
+        (t) => t.status !== 'cancelled' && (t.status as any) !== 'disbanded',
+      )
     } catch (error) {
       throw mapAppwriteError(error, 'TeamsService.getLeaderTeams')
     }
