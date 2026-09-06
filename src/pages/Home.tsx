@@ -132,11 +132,16 @@ function Home() {
   const [introComplete, setIntroComplete] = useState(false)
   return (
     <>
+<<<<<<< HEAD
       {!introComplete && (<HomeIntro
         onComplete={() => setIntroComplete(true)}
       />)}
       {introComplete && (
         <div className="min-h-screen mt-10 overflow-hidden bg-[#050816] text-white">
+=======
+      <HomeIntro />
+      <div className="min-h-screen mt-10 overflow-hidden bg-[#050816] text-white">
+>>>>>>> e9381decfad4f40713019c5e7f47bc89c2e89df0
 
           {/* ======================================================
           HERO
@@ -144,6 +149,7 @@ function Home() {
 
           <section className="relative w-full pt-[72px]">
 
+<<<<<<< HEAD
             <motion.div
               initial={{
                 opacity: 0,
@@ -162,6 +168,26 @@ function Home() {
               }}
               className="relative mx-auto w-[80vw] max-w-[1600px] p-2"
             >
+=======
+          <motion.div
+            initial={{
+              opacity: 0,
+              x: -120,
+              scale: 1.08,
+            }}
+            animate={{
+              opacity: 1,
+              x: 0,
+              scale: 1,
+            }}
+            transition={{
+              delay:5,
+              duration: 2,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            className="relative mx-auto w-[80vw] max-w-[1600px] p-2"
+          >
+>>>>>>> e9381decfad4f40713019c5e7f47bc89c2e89df0
 
               {/* Hero shadow */}
               <div className="pointer-events-none absolute inset-2 translate-x-4 translate-y-4 bg-black/50 blur-xl" />
