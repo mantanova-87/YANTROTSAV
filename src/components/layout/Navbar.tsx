@@ -59,11 +59,11 @@ function Navbar() {
 
         <div className="relative z-10 flex items-center justify-between">
           {/* LOGO */}
-          <Link to="/" onClick={closeMenu} className="group flex flex-col-3 items-center gap-4">
+          <Link to="/" onClick={closeMenu} className="group flex items-center gap-3">
             <img
               src={logo}
-              alt="Logo"
-              className="h-16 w-16 object-contain"
+              alt="Yantrotsav Logo"
+              className="h-12 w-12 sm:h-14 sm:w-14 object-contain shrink-0 transition-transform duration-300 group-hover:scale-105"
             />
             <div className="flex flex-col items-center gap-2">
               <span className="text-lg font-black tracking-[0.18em] text-white transition-colors duration-300 group-hover:text-[#00E5FF] md:text-xl">
