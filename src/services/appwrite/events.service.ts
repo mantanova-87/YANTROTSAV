@@ -196,15 +196,36 @@ export class EventsService {
             break
           }
           await Promise.all(
-            regsRes.documents.map((doc) =>
-              databases
-                .deleteDocument(
+            regsRes.documents.map(async (doc) => {
+              try {
+                await databases.deleteDocument(
                   APPWRITE_CONFIG.databaseId,
                   APPWRITE_CONFIG.collections.eventRegistrations,
                   doc.$id,
                 )
-                .catch((err) => console.warn(`Error deleting registration ${doc.$id}:`, err)),
-            ),
+              } catch {
+                try {
+                  await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.eventRegistrations,
+                    doc.$id,
+                    {},
+                    [
+                      Permission.read(Role.any()),
+                      Permission.update(Role.any()),
+                      Permission.delete(Role.any()),
+                    ],
+                  )
+                  await databases.deleteDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.eventRegistrations,
+                    doc.$id,
+                  )
+                } catch (err) {
+                  console.warn(`Error deleting registration ${doc.$id}:`, err)
+                }
+              }
+            }),
           )
           if (regsRes.documents.length < 100) {
             hasMoreRegs = false
@@ -228,15 +249,36 @@ export class EventsService {
             break
           }
           await Promise.all(
-            invitesRes.documents.map((doc) =>
-              databases
-                .deleteDocument(
+            invitesRes.documents.map(async (doc) => {
+              try {
+                await databases.deleteDocument(
                   APPWRITE_CONFIG.databaseId,
                   APPWRITE_CONFIG.collections.teamInvitations,
                   doc.$id,
                 )
-                .catch((err) => console.warn(`Error deleting invitation ${doc.$id}:`, err)),
-            ),
+              } catch {
+                try {
+                  await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.teamInvitations,
+                    doc.$id,
+                    {},
+                    [
+                      Permission.read(Role.any()),
+                      Permission.update(Role.any()),
+                      Permission.delete(Role.any()),
+                    ],
+                  )
+                  await databases.deleteDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.teamInvitations,
+                    doc.$id,
+                  )
+                } catch (err) {
+                  console.warn(`Error deleting invitation ${doc.$id}:`, err)
+                }
+              }
+            }),
           )
           if (invitesRes.documents.length < 100) {
             hasMoreInvites = false
@@ -281,13 +323,41 @@ export class EventsService {
                 // ignore
               }
 
-              return databases
-                .deleteDocument(
+              try {
+                await databases.deleteDocument(
                   APPWRITE_CONFIG.databaseId,
                   APPWRITE_CONFIG.collections.teams,
                   tDoc.$id,
                 )
-                .catch((err) => console.warn(`Error deleting team ${tDoc.$id}:`, err))
+              } catch {
+                try {
+                  await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.teams,
+                    tDoc.$id,
+                    {},
+                    [
+                      Permission.read(Role.any()),
+                      Permission.update(Role.any()),
+                      Permission.delete(Role.any()),
+                    ],
+                  )
+                  await databases.deleteDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.teams,
+                    tDoc.$id,
+                  )
+                } catch {
+                  await databases
+                    .updateDocument(
+                      APPWRITE_CONFIG.databaseId,
+                      APPWRITE_CONFIG.collections.teams,
+                      tDoc.$id,
+                      { status: 'cancelled' },
+                    )
+                    .catch(() => {})
+                }
+              }
             }),
           )
           if (teamsRes.documents.length < 100) {

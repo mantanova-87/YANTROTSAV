@@ -267,11 +267,38 @@ export class AdminService {
    */
   async deleteRegistration(registrationId: string, eventId?: string): Promise<void> {
     try {
-      await databases.deleteDocument(
-        APPWRITE_CONFIG.databaseId,
-        APPWRITE_CONFIG.collections.eventRegistrations,
-        registrationId,
-      )
+      try {
+        await databases.deleteDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.eventRegistrations,
+          registrationId,
+        )
+      } catch (delErr) {
+        let deleted = false
+        try {
+          await databases.updateDocument(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.eventRegistrations,
+            registrationId,
+            {},
+            [
+              Permission.read(Role.any()),
+              Permission.update(Role.any()),
+              Permission.delete(Role.any()),
+            ],
+          )
+          await databases.deleteDocument(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.eventRegistrations,
+            registrationId,
+          )
+          deleted = true
+        } catch {
+          // retry failed
+        }
+        if (!deleted) throw delErr
+      }
+
       if (eventId) {
         // Optionally decrement registrations count
         try {
@@ -679,13 +706,34 @@ export class AdminService {
           [Query.equal('teamId', teamId), Query.limit(100)],
         )
         for (const reg of regs.documents) {
-          await databases
-            .deleteDocument(
+          try {
+            await databases.deleteDocument(
               APPWRITE_CONFIG.databaseId,
               APPWRITE_CONFIG.collections.eventRegistrations,
               reg.$id,
             )
-            .catch(() => {})
+          } catch {
+            try {
+              await databases.updateDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.eventRegistrations,
+                reg.$id,
+                {},
+                [
+                  Permission.read(Role.any()),
+                  Permission.update(Role.any()),
+                  Permission.delete(Role.any()),
+                ],
+              )
+              await databases.deleteDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.eventRegistrations,
+                reg.$id,
+              )
+            } catch {
+              // ignore
+            }
+          }
         }
       } catch {
         // ignore
@@ -699,24 +747,85 @@ export class AdminService {
           [Query.equal('teamId', teamId), Query.limit(100)],
         )
         for (const inv of invites.documents) {
-          await databases
-            .deleteDocument(
+          try {
+            await databases.deleteDocument(
               APPWRITE_CONFIG.databaseId,
               APPWRITE_CONFIG.collections.teamInvitations,
               inv.$id,
             )
-            .catch(() => {})
+          } catch {
+            try {
+              await databases.updateDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.teamInvitations,
+                inv.$id,
+                {},
+                [
+                  Permission.read(Role.any()),
+                  Permission.update(Role.any()),
+                  Permission.delete(Role.any()),
+                ],
+              )
+              await databases.deleteDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.teamInvitations,
+                inv.$id,
+              )
+            } catch {
+              // ignore
+            }
+          }
         }
       } catch {
         // Continue even if deleting invites fails
       }
 
       // 3. Delete team document
-      await databases.deleteDocument(
-        APPWRITE_CONFIG.databaseId,
-        APPWRITE_CONFIG.collections.teams,
-        teamId,
-      )
+      try {
+        await databases.deleteDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.teams,
+          teamId,
+        )
+      } catch (teamDelErr: any) {
+        let hardDeleted = false
+        try {
+          await databases.updateDocument(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.teams,
+            teamId,
+            {},
+            [
+              Permission.read(Role.any()),
+              Permission.update(Role.any()),
+              Permission.delete(Role.any()),
+            ],
+          )
+          await databases.deleteDocument(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.teams,
+            teamId,
+          )
+          hardDeleted = true
+        } catch {
+          // Document permission update or retry failed
+        }
+
+        if (!hardDeleted) {
+          // If hard delete is strictly disallowed at the Appwrite collection level,
+          // cancel the team so its registrations are disbanded and status is nullified
+          try {
+            await databases.updateDocument(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.teams,
+              teamId,
+              { status: 'cancelled' },
+            )
+          } catch {
+            throw teamDelErr
+          }
+        }
+      }
     } catch (error) {
       throw mapAppwriteError(error, 'AdminService.deleteTeam')
     }

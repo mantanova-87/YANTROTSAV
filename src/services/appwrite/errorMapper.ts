@@ -88,11 +88,39 @@ export function mapAppwriteError(error: unknown, context?: string): AppError {
     const message = error.message || 'An unexpected Appwrite error occurred.'
 
     switch (status) {
-      case 401:
+      case 401: {
+        const errorType = (error as any)?.type || ''
+        const lowerMsg = (message || '').toLowerCase()
+
+        if (
+          errorType === 'user_unauthorized' ||
+          errorType === 'general_unauthorized_scope' ||
+          lowerMsg.includes('not authorized') ||
+          lowerMsg.includes('permission') ||
+          lowerMsg.includes('forbidden')
+        ) {
+          mappedError = new AppError(
+            'You do not have permission to perform this action.',
+            'AUTH_UNAUTHORIZED',
+            403,
+            error,
+          )
+        } else {
+          mappedError = new AppError(
+            'Invalid credentials or session expired. Please log in again.',
+            'AUTH_SESSION_EXPIRED',
+            401,
+            error,
+          )
+        }
+        break
+      }
+
+      case 403:
         mappedError = new AppError(
-          'Invalid credentials or session expired. Please log in again.',
+          'You do not have permission to perform this action.',
           'AUTH_UNAUTHORIZED',
-          401,
+          403,
           error,
         )
         break

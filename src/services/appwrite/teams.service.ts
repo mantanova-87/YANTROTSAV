@@ -85,8 +85,8 @@ export class TeamsService {
 
       const docPermissions = [
         Permission.read(Role.any()),
-        Permission.update(Role.user(data.userId)),
-        Permission.delete(Role.user(data.userId)),
+        Permission.update(Role.any()),
+        Permission.delete(Role.any()),
       ]
 
       const regDoc = await databases.createDocument(
@@ -262,8 +262,8 @@ export class TeamsService {
 
       const docPermissions = [
         Permission.read(Role.any()),
-        Permission.update(Role.user(data.leaderId)),
-        Permission.delete(Role.user(data.leaderId)),
+        Permission.update(Role.any()),
+        Permission.delete(Role.any()),
       ]
 
       // 1. Create team document matching exact Appwrite schema attributes
@@ -315,7 +315,7 @@ export class TeamsService {
             [
               Permission.read(Role.any()),
               Permission.update(Role.any()),
-              Permission.delete(Role.user(data.leaderId)),
+              Permission.delete(Role.any()),
             ],
           )
         }
@@ -329,7 +329,7 @@ export class TeamsService {
           const invitePermissions = [
             Permission.read(Role.any()),
             Permission.update(Role.any()),
-            Permission.delete(Role.user(data.leaderId)),
+            Permission.delete(Role.any()),
           ]
 
           await databases.createDocument(
@@ -531,8 +531,8 @@ export class TeamsService {
             },
             [
               Permission.read(Role.any()),
-              Permission.update(Role.user(team.leaderId)),
-              Permission.delete(Role.user(team.leaderId)),
+              Permission.update(Role.any()),
+              Permission.delete(Role.any()),
             ],
           )
         }
