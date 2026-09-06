@@ -2,6 +2,7 @@ import { ID, Query, Permission, Role } from 'appwrite'
 import { databases } from './client'
 import { APPWRITE_CONFIG } from '../../config/appwrite.config'
 import { mapAppwriteError, AppError } from './errorMapper'
+import { storageService } from './storage.service'
 import type { EventDocument, CreateEventDTO, UpdateEventDTO, EventStatus } from '../../types/database.types'
 
 // Only valid attributes in the Appwrite `events` collection schema:
@@ -163,9 +164,153 @@ export class EventsService {
     }
   }
 
-  /** Delete an event by ID */
+  /**
+   * Permanently delete an event by ID, cascade-deleting all associated records:
+   * 1. event_registrations (all enrolled students)
+   * 2. team_invitations (all pending/accepted invites)
+   * 3. teams (all formed teams for this event)
+   * 4. uploaded storage banner asset
+   * 5. the event document itself
+   */
   async deleteEvent(eventId: string): Promise<void> {
     try {
+      // 1. Fetch event metadata to locate storage banner
+      let eventDoc: EventDocument | null = null
+      try {
+        eventDoc = await this.getEventById(eventId)
+      } catch {
+        // continue if getEventById fails
+      }
+
+      // 2. Cascade delete all event_registrations for this event
+      try {
+        let hasMoreRegs = true
+        while (hasMoreRegs) {
+          const regsRes = await databases.listDocuments(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.eventRegistrations,
+            [Query.equal('eventId', eventId), Query.limit(100)],
+          )
+          if (regsRes.documents.length === 0) {
+            hasMoreRegs = false
+            break
+          }
+          await Promise.all(
+            regsRes.documents.map((doc) =>
+              databases
+                .deleteDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.eventRegistrations,
+                  doc.$id,
+                )
+                .catch((err) => console.warn(`Error deleting registration ${doc.$id}:`, err)),
+            ),
+          )
+          if (regsRes.documents.length < 100) {
+            hasMoreRegs = false
+          }
+        }
+      } catch (regsErr) {
+        console.warn('Error during registrations cascade deletion:', regsErr)
+      }
+
+      // 3. Cascade delete all team_invitations for this event
+      try {
+        let hasMoreInvites = true
+        while (hasMoreInvites) {
+          const invitesRes = await databases.listDocuments(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.teamInvitations,
+            [Query.equal('eventId', eventId), Query.limit(100)],
+          )
+          if (invitesRes.documents.length === 0) {
+            hasMoreInvites = false
+            break
+          }
+          await Promise.all(
+            invitesRes.documents.map((doc) =>
+              databases
+                .deleteDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.teamInvitations,
+                  doc.$id,
+                )
+                .catch((err) => console.warn(`Error deleting invitation ${doc.$id}:`, err)),
+            ),
+          )
+          if (invitesRes.documents.length < 100) {
+            hasMoreInvites = false
+          }
+        }
+      } catch (invErr) {
+        console.warn('Error during invitations cascade deletion:', invErr)
+      }
+
+      // 4. Cascade delete all teams for this event
+      try {
+        let hasMoreTeams = true
+        while (hasMoreTeams) {
+          const teamsRes = await databases.listDocuments(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.teams,
+            [Query.equal('eventId', eventId), Query.limit(100)],
+          )
+          if (teamsRes.documents.length === 0) {
+            hasMoreTeams = false
+            break
+          }
+          await Promise.all(
+            teamsRes.documents.map(async (tDoc) => {
+              // Delete any lingering invitations by teamId
+              try {
+                const lingering = await databases.listDocuments(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.teamInvitations,
+                  [Query.equal('teamId', tDoc.$id), Query.limit(100)],
+                )
+                for (const li of lingering.documents) {
+                  await databases
+                    .deleteDocument(
+                      APPWRITE_CONFIG.databaseId,
+                      APPWRITE_CONFIG.collections.teamInvitations,
+                      li.$id,
+                    )
+                    .catch(() => {})
+                }
+              } catch {
+                // ignore
+              }
+
+              return databases
+                .deleteDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.teams,
+                  tDoc.$id,
+                )
+                .catch((err) => console.warn(`Error deleting team ${tDoc.$id}:`, err))
+            }),
+          )
+          if (teamsRes.documents.length < 100) {
+            hasMoreTeams = false
+          }
+        }
+      } catch (teamsErr) {
+        console.warn('Error during teams cascade deletion:', teamsErr)
+      }
+
+      // 5. Delete banner file from Storage bucket if exists
+      if (eventDoc?.bannerUrl) {
+        try {
+          const fileMatch = eventDoc.bannerUrl.match(/\/files\/([a-zA-Z0-9_-]+)\/(view|preview|download)/)
+          if (fileMatch && fileMatch[1]) {
+            await storageService.deleteEventBanner(fileMatch[1])
+          }
+        } catch (storageErr) {
+          console.warn('Error deleting event banner asset:', storageErr)
+        }
+      }
+
+      // 6. Delete the event document itself
       await databases.deleteDocument(
         APPWRITE_CONFIG.databaseId,
         APPWRITE_CONFIG.collections.events,

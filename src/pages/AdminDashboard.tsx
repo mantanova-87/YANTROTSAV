@@ -364,10 +364,12 @@ export default function AdminDashboard() {
     try {
       await eventsService.deleteEvent(eventToDelete.$id)
       dispatch(invalidateEventsCache())
-      showNotification(`Event "${eventToDelete.title}" deleted successfully!`)
+      showNotification(`Event "${eventToDelete.title}" and all related teams, passes, and invites deleted successfully!`)
       setDeleteModalOpen(false)
       setEventToDelete(null)
       await loadAdminOverview()
+      if (activeTab === 'roster') await loadRoster(selectedEventId)
+      if (activeTab === 'teams') await loadTeams()
     } catch (err: any) {
       showNotification(err?.message || 'Failed to delete event', 'error')
     } finally {
@@ -2315,7 +2317,7 @@ export default function AdminDashboard() {
 
             <p className="mt-3 text-xs leading-relaxed text-slate-300">
               Are you sure you want to permanently delete event{' '}
-              <strong className="text-white">"{eventToDelete.title}"</strong>? This will remove the event record from database and cannot be undone.
+              <strong className="text-white">"{eventToDelete.title}"</strong>? This will permanently delete the event along with all its registered attendees, teams, invitations, and uploaded assets.
             </p>
 
             <div className="mt-6 flex items-center justify-end gap-3 border-t border-white/10 pt-4">
