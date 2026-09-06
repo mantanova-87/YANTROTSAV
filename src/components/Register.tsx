@@ -20,7 +20,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom'
 import { authService } from '../services/appwrite/auth.service'
 import { useAuth } from '../context/AuthContext'
-import { DEPARTMENT_OPTIONS, type RegisterPayload } from '../types/database.types'
+import { DEPARTMENT_OPTIONS, SEMESTER_OPTIONS, type RegisterPayload } from '../types/database.types'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -104,7 +104,13 @@ export default function Register() {
     }
 
     if (!formData.semester.trim()) {
-      setError('Please select or specify your current semester.')
+      setError('Please select your current semester.')
+      return
+    }
+
+    const semVal = parseInt(formData.semester, 10)
+    if (isNaN(semVal) || semVal < 1 || semVal > 8) {
+      setError('Semester must be between 1 and 8.')
       return
     }
 
@@ -397,18 +403,25 @@ export default function Register() {
 
                 <div>
                   <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                    Current Semester *
+                    Current Semester * (Max 8)
                   </label>
                   <div className="relative mt-1">
-                    <BookOpen size={15} className="absolute left-3.5 top-3.5 text-slate-500" />
-                    <input
-                      type="text"
+                    <BookOpen size={15} className="absolute left-3.5 top-3.5 text-slate-500 pointer-events-none" />
+                    <select
                       required
                       value={formData.semester}
                       onChange={(e) => updateField('semester', e.target.value)}
-                      placeholder="Enter your semester"
-                      className="w-full border border-white/10 bg-[#050816] py-3 pl-10 pr-3 text-xs text-white placeholder-slate-600 outline-none transition-colors focus:border-[#00E5FF]"
-                    />
+                      className="w-full border border-white/10 bg-[#050816] py-3 pl-10 pr-3 text-xs text-white outline-none transition-colors focus:border-[#00E5FF]"
+                    >
+                      <option value="" disabled className="bg-[#080A0F] text-slate-500">
+                        Select Semester (1 - 8)
+                      </option>
+                      {SEMESTER_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value} className="bg-[#080A0F] text-white">
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>

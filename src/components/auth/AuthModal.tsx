@@ -15,7 +15,7 @@ import {
   AtSign,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
-import { DEPARTMENT_OPTIONS } from '../../types/database.types'
+import { DEPARTMENT_OPTIONS, SEMESTER_OPTIONS } from '../../types/database.types'
 
 export default function AuthModal() {
   const { authModalOpen, authModalMode, closeAuthModal, openAuthModal, login, registerStudent } =
@@ -80,6 +80,12 @@ export default function AuthModal() {
         }
         if (branch === 'OTHER' && !customDepartment.trim()) {
           throw new Error('Please specify your custom department name.')
+        }
+        if (semester.trim()) {
+          const semNum = parseInt(semester, 10)
+          if (isNaN(semNum) || semNum < 1 || semNum > 8) {
+            throw new Error('Semester must be between 1 and 8.')
+          }
         }
         await registerStudent({
           fullName: name.trim(),
@@ -407,15 +413,22 @@ export default function AuthModal() {
 
                     <div>
                       <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                        Current Semester
+                        Current Semester (Max 8)
                       </label>
-                      <input
-                        type="text"
+                      <select
                         value={semester}
                         onChange={(e) => setSemester(e.target.value)}
-                        placeholder="Enter your semester"
-                        className="mt-1 w-full border border-white/10 bg-[#050816] px-3 py-2.5 text-xs text-white placeholder-slate-600 outline-none transition-colors focus:border-[#FF6B00]"
-                      />
+                        className="mt-1 w-full border border-white/10 bg-[#050816] px-3 py-2.5 text-xs text-white outline-none transition-colors focus:border-[#FF6B00]"
+                      >
+                        <option value="" className="bg-[#080A0F] text-slate-500">
+                          Select Semester
+                        </option>
+                        {SEMESTER_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value} className="bg-[#080A0F] text-white">
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 

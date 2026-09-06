@@ -22,7 +22,7 @@ import { useAuth } from '../context/AuthContext'
 import { teamsService, type UserTeamInfo } from '../services/appwrite/teams.service'
 import { client } from '../services/appwrite/client'
 import { APPWRITE_CONFIG } from '../config/appwrite.config'
-import { DEPARTMENT_OPTIONS } from '../types/database.types'
+import { DEPARTMENT_OPTIONS, SEMESTER_OPTIONS } from '../types/database.types'
 import type {
   TeamInvitationDocument,
   EventRegistrationDocument,
@@ -157,6 +157,11 @@ export default function Dashboard() {
   // Pre-fill edit modal when opened
   const handleOpenEditModal = () => {
     const userPrefs = (user?.prefs as Record<string, any>) || {}
+    // Extract numeric semester or default to '4'
+    const rawSem = profile?.semester || ''
+    const match = rawSem.match(/\d+/)
+    const normSem = match && parseInt(match[0], 10) >= 1 && parseInt(match[0], 10) <= 8 ? match[0] : (rawSem || '4')
+
     setEditFormData({
       fullName: profile?.fullName || profile?.name || user?.name || '',
       username: profile?.username || userPrefs.username || user?.email?.split('@')[0] || '',
@@ -164,7 +169,7 @@ export default function Dashboard() {
       rollNumber: profile?.rollNumber || profile?.rollNo || '',
       department: profile?.department || profile?.branch || 'CSE',
       customDepartment: profile?.customDepartment || '',
-      semester: profile?.semester || 'Semester 4',
+      semester: normSem,
     })
     setIsEditModalOpen(true)
   }
@@ -174,6 +179,12 @@ export default function Dashboard() {
     setIsSavingProfile(true)
     setFeedback(null)
     try {
+      if (editFormData.semester.trim()) {
+        const semNum = parseInt(editFormData.semester, 10)
+        if (isNaN(semNum) || semNum < 1 || semNum > 8) {
+          throw new Error('Semester must be between 1 and 8.')
+        }
+      }
       await updateProfile({
         fullName: editFormData.fullName.trim(),
         username: editFormData.username.trim(),
@@ -961,16 +972,23 @@ export default function Dashboard() {
 
                   <div>
                     <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                      Current Semester *
+                      Current Semester * (Max 8)
                     </label>
-                    <input
-                      type="text"
+                    <select
                       required
                       value={editFormData.semester}
                       onChange={(e) => setEditFormData({ ...editFormData, semester: e.target.value })}
-                      placeholder="e.g. Semester 4, 6th Sem, 1st Year"
                       className="mt-1 w-full border border-white/10 bg-[#050816] px-3 py-2 text-xs text-white outline-none focus:border-[#00E5FF]"
-                    />
+                    >
+                      <option value="" disabled className="bg-[#080A0F] text-slate-500">
+                        Select Semester (1 - 8)
+                      </option>
+                      {SEMESTER_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value} className="bg-[#080A0F] text-white">
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 

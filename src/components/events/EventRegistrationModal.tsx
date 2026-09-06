@@ -129,6 +129,12 @@ export default function EventRegistrationModal({
 
     try {
       if (!isTeamEvent) {
+        if (studentSemester) {
+          const semNum = parseInt(studentSemester, 10)
+          if (isNaN(semNum) || semNum < 1 || semNum > 8) {
+            throw new Error('Please enter a valid semester number between 1 and 8.')
+          }
+        }
         // Solo Registration with complete student profile attributes
         await teamsService.registerSolo({
           eventId: event.$id,
@@ -481,13 +487,27 @@ export default function EventRegistrationModal({
                       </div>
                       <div>
                         <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                          Current Semester
+                          Current Semester (1 - 8)
                         </label>
                         <input
-                          type="text"
+                          type="number"
+                          min={1}
+                          max={8}
                           value={studentSemester}
-                          onChange={(e) => setStudentSemester(e.target.value)}
-                          placeholder="Enter current semester or year"
+                          onChange={(e) => {
+                            const val = e.target.value
+                            if (val === '') {
+                              setStudentSemester('')
+                              return
+                            }
+                            const num = parseInt(val, 10)
+                            if (!isNaN(num)) {
+                              if (num < 1) setStudentSemester('1')
+                              else if (num > 8) setStudentSemester('8')
+                              else setStudentSemester(String(num))
+                            }
+                          }}
+                          placeholder="1 to 8"
                           className="mt-1 w-full border border-white/10 bg-[#050816] px-3 py-2 text-xs text-white placeholder-slate-600 outline-none transition-colors focus:border-[#FF6B00]"
                         />
                       </div>
