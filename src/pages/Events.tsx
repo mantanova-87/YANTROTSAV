@@ -192,7 +192,7 @@ function Events() {
             className="max-w-2xl text-sm leading-7 text-slate-400 md:text-base"
           >
             High-pressure technology challenges, robotics arenas, coding battles, and innovation stages.
-            Explore the official Yantrotsav 2026 event catalogue and enroll solo or with your team.
+            Explore the Yantrotsav 2026 event catalogue and enroll solo or with your team.
           </motion.p>
         </div>
       </section>

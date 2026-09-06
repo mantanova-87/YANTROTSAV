@@ -522,6 +522,17 @@ export class AdminService {
     if (userId) addStoredDeletedUser(userId)
     if (email) addStoredDeletedUser(email)
 
+    // 0. Trigger server-side user deletion (deletes from Appwrite Auth and Database via master API key)
+    try {
+      await fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, docId, email }),
+      })
+    } catch {
+      // serverless call is best-effort; continue client cascade below
+    }
+
     try {
       // 1. Delete associated registrations for this user (by userId, docId, and userEmail)
       const queryVals = [userId, docId, email].filter(Boolean) as string[]
@@ -536,6 +547,24 @@ export class AdminService {
           )
           for (const reg of regs.documents) {
             await this.deleteRegistration(reg.$id, reg.eventId).catch(() => {})
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      // 1.5. Disband teams where this user was the leader
+      for (const val of queryVals) {
+        try {
+          const isEmailVal = val.includes('@')
+          const queryAttr = isEmailVal ? 'leaderEmail' : 'leaderId'
+          const ledTeams = await databases.listDocuments(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.teams,
+            [Query.equal(queryAttr, val), Query.limit(50)],
+          )
+          for (const team of ledTeams.documents) {
+            await this.updateTeamStatus(team.$id, 'disbanded').catch(() => {})
           }
         } catch {
           // ignore

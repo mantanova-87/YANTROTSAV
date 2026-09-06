@@ -40,6 +40,28 @@ export default function AuthModal() {
   const [regSuccess, setRegSuccess] = useState(false)
   const [countdown, setCountdown] = useState(2)
 
+  const resetForm = () => {
+    setEmail('')
+    setPassword('')
+    setConfirmPassword('')
+    setShowPassword(false)
+    setShowConfirmPassword(false)
+    setName('')
+    setUsername('')
+    setPhone('')
+    setRollNo('')
+    setBranch('')
+    setCustomDepartment('')
+    setSemester('')
+    setError(null)
+  }
+
+  useEffect(() => {
+    if (!authModalOpen) {
+      resetForm()
+    }
+  }, [authModalOpen])
+
   useEffect(() => {
     if (regSuccess) {
       if (countdown > 0) {
@@ -47,6 +69,7 @@ export default function AuthModal() {
         return () => clearTimeout(timer)
       } else {
         setRegSuccess(false)
+        resetForm()
         closeAuthModal()
       }
     }
@@ -62,9 +85,10 @@ export default function AuthModal() {
     try {
       if (authModalMode === 'login') {
         if (!email.trim() || !password) {
-          throw new Error('Please enter both email and password.')
+          throw new Error('Please enter both email/username and password.')
         }
         await login(email.trim(), password)
+        resetForm()
       } else {
         if (!name.trim() || !email.trim() || !password) {
           throw new Error('Name, email, and password are required.')
@@ -106,12 +130,26 @@ export default function AuthModal() {
     } catch (err: unknown) {
       if (err instanceof Error) {
         const msg = err.message
-        if (msg.toLowerCase().includes('roll') || msg.toLowerCase().includes('idx_rollnumber')) {
-          setError('A student with this Roll Number is already registered.')
-        } else if (msg.toLowerCase().includes('email') || msg.toLowerCase().includes('user_already_exists')) {
-          setError('An account with this email address already exists.')
+        if (authModalMode === 'register') {
+          if (msg.toLowerCase().includes('roll') || msg.toLowerCase().includes('idx_rollnumber')) {
+            setError('A student with this Roll Number is already registered.')
+          } else if (msg.toLowerCase().includes('email') || msg.toLowerCase().includes('user_already_exists')) {
+            setError('An account with this email address already exists. Try signing in.')
+          } else {
+            setError(msg)
+          }
         } else {
-          setError(msg)
+          // Login mode error mapping
+          if (
+            msg.toLowerCase().includes('invalid credentials') ||
+            msg.toLowerCase().includes('invalid email') ||
+            msg.toLowerCase().includes('invalid password') ||
+            msg.toLowerCase().includes('user_invalid_credentials')
+          ) {
+            setError('Invalid credentials. Please verify your email / username and password.')
+          } else {
+            setError(msg)
+          }
         }
       } else {
         setError('Authentication failed. Please check credentials.')
@@ -175,7 +213,7 @@ export default function AuthModal() {
               type="button"
               onClick={() => {
                 openAuthModal('login')
-                setError(null)
+                resetForm()
               }}
               className={`py-3 text-center transition-colors ${
                 authModalMode === 'login'
@@ -189,7 +227,7 @@ export default function AuthModal() {
               type="button"
               onClick={() => {
                 openAuthModal('register')
-                setError(null)
+                resetForm()
               }}
               className={`py-3 text-center transition-colors ${
                 authModalMode === 'register'

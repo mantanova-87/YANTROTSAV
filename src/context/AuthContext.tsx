@@ -68,7 +68,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setAccount(currentAccount)
-      setUserProfile(profileDoc)
+
+      if (currentAccount && !profileDoc) {
+        // If auth user exists but database document was missing/deleted, provide safe fallback
+        const safeName =
+          currentAccount.name ||
+          (currentAccount.prefs as any)?.username ||
+          currentAccount.email.split('@')[0]
+        const fallbackProfile: UserProfile = {
+          $id: currentAccount.$id,
+          $createdAt: currentAccount.$createdAt,
+          $updatedAt: currentAccount.$updatedAt,
+          userId: (currentAccount.prefs as any)?.username || currentAccount.email.split('@')[0],
+          username: (currentAccount.prefs as any)?.username || currentAccount.email.split('@')[0],
+          fullName: safeName,
+          name: safeName,
+          email: currentAccount.email,
+          phone: currentAccount.phone || '',
+          rollNumber: '',
+          department: '',
+          semester: '',
+          college: 'Central University of Jammu',
+        } as unknown as UserProfile
+        setUserProfile(fallbackProfile)
+      } else {
+        setUserProfile(profileDoc)
+      }
 
       if (currentAccount) {
         const adminStatus = await authService.checkIsAdmin()
@@ -164,6 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAccount(null)
       setUserProfile(null)
       setIsAdmin(false)
+      setAuthModalOpen(false)
     } finally {
       setLoading(false)
     }

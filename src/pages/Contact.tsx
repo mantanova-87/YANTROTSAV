@@ -64,6 +64,7 @@ export default function Contact() {
   const [form, setForm] = useState<FormData>(initialForm)
   const [errors, setErrors] = useState<FormErrors>({})
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSending, setIsSending] = useState(false)
 
   const updateField = (
@@ -85,6 +86,7 @@ export default function Contact() {
 
     if (status !== 'idle') {
       setStatus('idle')
+      setErrorMessage(null)
     }
   }
 
@@ -115,6 +117,7 @@ export default function Contact() {
     event.preventDefault()
 
     setStatus('idle')
+    setErrorMessage(null)
 
     // Validate with Zod before sending anything.
     if (!validateForm()) {
@@ -132,7 +135,17 @@ export default function Contact() {
         body: JSON.stringify(form),
       })
 
-      const data = await response.json()
+      const contentType = response.headers.get('content-type') || ''
+      let data: any = {}
+      if (contentType.includes('application/json')) {
+        data = await response.json()
+      } else {
+        throw new Error(
+          response.status === 404
+            ? 'Contact API endpoint is not available. Please restart the dev server or contact support.'
+            : `Server returned HTTP ${response.status}`,
+        )
+      }
 
       if (!response.ok || !data.success) {
         throw new Error(data.message || 'Failed to send query.')
@@ -141,8 +154,9 @@ export default function Contact() {
       setStatus('success')
       setForm(initialForm)
       setErrors({})
-    } catch (error) {
+    } catch (error: any) {
       console.error('Contact form error:', error)
+      setErrorMessage(error?.message || 'Something went wrong. Please try again.')
       setStatus('error')
     } finally {
       setIsSending(false)
@@ -520,7 +534,7 @@ export default function Contact() {
                   />
 
                   <p className="text-[10px] uppercase tracking-[0.08em] text-red-400">
-                    Something went wrong. Please try again.
+                    {errorMessage || 'Something went wrong. Please try again.'}
                   </p>
                 </div>
               )}

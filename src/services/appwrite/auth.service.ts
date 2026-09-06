@@ -37,16 +37,54 @@ export class AuthService {
     if (!department) throw new AppError('Department is required.', 'UNKNOWN_ERROR', 400)
 
     try {
-      // 1. Generate primary auth user
-      const authUser = await account.create(
-        ID.unique(),
-        email,
-        password,
-        fullName,
-      )
+      // 1. Generate primary auth user or recover existing auth user if table profile was deleted
+      let authUser: Models.User<Models.Preferences>
+      let isExistingAuthUser = false
 
-      // 2. Automatically sign in to establish active session token
-      await account.createEmailPasswordSession(email, password)
+      try {
+        authUser = await account.create(
+          ID.unique(),
+          email,
+          password,
+          fullName,
+        )
+      } catch (authErr: any) {
+        const errType = authErr?.type || ''
+        const errMsg = authErr?.message?.toLowerCase() || ''
+        if (errType === 'user_already_exists' || errMsg.includes('already exists')) {
+          // Attempt to log in with provided password to verify if this user is recovering a deleted table profile
+          try {
+            await account.createEmailPasswordSession(email, password)
+            const currentAcc = await account.get()
+            const existingDoc = await databases
+              .getDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.users,
+                currentAcc.$id,
+              )
+              .catch(() => null)
+
+            if (!existingDoc) {
+              // The user account exists in Appwrite Auth, but their database table document was deleted!
+              // Seamlessly recreate their profile in the database table and finish registration.
+              authUser = currentAcc
+              isExistingAuthUser = true
+            } else {
+              await account.deleteSession('current').catch(() => {})
+              throw authErr
+            }
+          } catch (sessionErr: any) {
+            throw authErr
+          }
+        } else {
+          throw authErr
+        }
+      }
+
+      // 2. If new auth user, sign in to establish active session token
+      if (!isExistingAuthUser) {
+        await account.createEmailPasswordSession(email, password)
+      }
 
       // Save username in account preferences if provided
       if (payload.username?.trim()) {
@@ -158,19 +196,22 @@ export class AuthService {
       }
 
       let emailToUse = identifier.trim()
+      const isRealEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToUse)
 
-      // If user provided a username/userId or roll number without '@', look up their email
-      if (!emailToUse.includes('@')) {
+      // If user did not provide a well-formed email, treat identifier as Username or Roll Number
+      if (!isRealEmail) {
+        const cleanHandle = emailToUse.toLowerCase().replace(/^@/, '')
+        const cleanRoll = emailToUse.toUpperCase()
         try {
           // 1. Check by userId (which stores username)
           const userDocQuery = await databases.listDocuments(
             APPWRITE_CONFIG.databaseId,
             APPWRITE_CONFIG.collections.users,
             [
-              Query.equal('userId', emailToUse),
+              Query.equal('userId', cleanHandle),
               Query.limit(1),
             ],
-          )
+          ).catch(() => ({ documents: [] }))
 
           if (userDocQuery.documents.length > 0) {
             emailToUse = (userDocQuery.documents[0] as any).email
@@ -180,20 +221,83 @@ export class AuthService {
               APPWRITE_CONFIG.databaseId,
               APPWRITE_CONFIG.collections.users,
               [
-                Query.equal('rollNumber', emailToUse),
+                Query.equal('rollNumber', cleanRoll),
                 Query.limit(1),
               ],
-            )
+            ).catch(() => ({ documents: [] }))
+
             if (rollQuery.documents.length > 0) {
               emailToUse = (rollQuery.documents[0] as any).email
+            } else {
+              // 3. Fallback: Search all recent users case-insensitively
+              const allUsers = await databases.listDocuments(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.users,
+                [Query.limit(100)],
+              ).catch(() => ({ documents: [] }))
+
+              const matched = allUsers.documents.find((u: any) => {
+                const uId = (u.userId || '').toLowerCase().replace(/^@/, '')
+                const uRoll = (u.rollNumber || '').toUpperCase()
+                return uId === cleanHandle || uRoll === cleanRoll || (u.rollNumber || '').toLowerCase() === cleanHandle
+              })
+
+              if (matched && (matched as any).email) {
+                emailToUse = (matched as any).email
+              } else {
+                // Determine user-friendly specific message based on input format
+                const hasRollPattern = /\d/.test(identifier)
+                if (hasRollPattern) {
+                  throw new AppError(
+                    `No student registered with Roll Number "${identifier}". Please verify your roll number or log in with your email address.`,
+                    'AUTH_INVALID_CREDENTIALS',
+                    404,
+                  )
+                } else if (identifier.startsWith('@') || !identifier.includes('@')) {
+                  throw new AppError(
+                    `No student registered with Username "${identifier}". Please check your username or log in with your email address.`,
+                    'AUTH_INVALID_CREDENTIALS',
+                    404,
+                  )
+                } else {
+                  throw new AppError(
+                    `"${identifier}" is not a valid email, username, or roll number. Please enter a valid email address (e.g. name@example.com).`,
+                    'AUTH_INVALID_CREDENTIALS',
+                    400,
+                  )
+                }
+              }
             }
           }
-        } catch {
+        } catch (lookupErr: any) {
+          if (lookupErr instanceof AppError) throw lookupErr
           // Fall back to direct login attempt
         }
       }
 
-      return await account.createEmailPasswordSession(emailToUse, password)
+      try {
+        return await account.createEmailPasswordSession(emailToUse, password)
+      } catch (sessionErr: any) {
+        const errCode = sessionErr?.code || sessionErr?.status
+        const errMsg = sessionErr?.message || ''
+        if (errCode === 401 || errMsg.toLowerCase().includes('invalid credentials')) {
+          throw new AppError(
+            'Invalid credentials. The password entered is incorrect for this account.',
+            'AUTH_INVALID_CREDENTIALS',
+            401,
+            sessionErr,
+          )
+        }
+        if (errCode === 400 && errMsg.toLowerCase().includes('email')) {
+          throw new AppError(
+            `"${identifier}" was not recognized as a registered student account. Please check your roll number, username, or email.`,
+            'AUTH_INVALID_CREDENTIALS',
+            400,
+            sessionErr,
+          )
+        }
+        throw sessionErr
+      }
     } catch (error) {
       throw mapAppwriteError(error, 'AuthService.login')
     }

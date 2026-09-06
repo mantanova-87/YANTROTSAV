@@ -152,6 +152,7 @@ export interface UserProfile extends Models.Document {
   name?: string
   rollNo?: string
   branch?: string
+  collegeName?: string
   qrCode?: string
   isAdmin?: boolean
 }
