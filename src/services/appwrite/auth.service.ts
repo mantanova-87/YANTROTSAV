@@ -37,16 +37,54 @@ export class AuthService {
     if (!department) throw new AppError('Department is required.', 'UNKNOWN_ERROR', 400)
 
     try {
-      // 1. Generate primary auth user
-      const authUser = await account.create(
-        ID.unique(),
-        email,
-        password,
-        fullName,
-      )
+      // 1. Generate primary auth user or recover existing auth user if table profile was deleted
+      let authUser: Models.User<Models.Preferences>
+      let isExistingAuthUser = false
 
-      // 2. Automatically sign in to establish active session token
-      await account.createEmailPasswordSession(email, password)
+      try {
+        authUser = await account.create(
+          ID.unique(),
+          email,
+          password,
+          fullName,
+        )
+      } catch (authErr: any) {
+        const errType = authErr?.type || ''
+        const errMsg = authErr?.message?.toLowerCase() || ''
+        if (errType === 'user_already_exists' || errMsg.includes('already exists')) {
+          // Attempt to log in with provided password to verify if this user is recovering a deleted table profile
+          try {
+            await account.createEmailPasswordSession(email, password)
+            const currentAcc = await account.get()
+            const existingDoc = await databases
+              .getDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.users,
+                currentAcc.$id,
+              )
+              .catch(() => null)
+
+            if (!existingDoc) {
+              // The user account exists in Appwrite Auth, but their database table document was deleted!
+              // Seamlessly recreate their profile in the database table and finish registration.
+              authUser = currentAcc
+              isExistingAuthUser = true
+            } else {
+              await account.deleteSession('current').catch(() => {})
+              throw authErr
+            }
+          } catch (sessionErr: any) {
+            throw authErr
+          }
+        } else {
+          throw authErr
+        }
+      }
+
+      // 2. If new auth user, sign in to establish active session token
+      if (!isExistingAuthUser) {
+        await account.createEmailPasswordSession(email, password)
+      }
 
       // Save username in account preferences if provided
       if (payload.username?.trim()) {

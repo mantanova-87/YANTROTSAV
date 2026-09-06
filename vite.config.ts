@@ -212,6 +212,111 @@ This message was submitted through the Yantrotsav website.
           })
           return
         }
+
+        if (req.method === 'POST' && req.url === '/api/admin/delete-user') {
+          let body = ''
+          req.on('data', (chunk: any) => {
+            body += chunk
+          })
+          req.on('end', async () => {
+            try {
+              const env = loadEnv('', process.cwd(), '')
+              const endpoint = env.VITE_APPWRITE_ENDPOINT || process.env.VITE_APPWRITE_ENDPOINT || 'https://sgp.cloud.appwrite.io/v1'
+              const projectId = env.VITE_APPWRITE_PROJECT_ID || process.env.VITE_APPWRITE_PROJECT_ID || '6a9be53300040e6fd485'
+              const databaseId = env.VITE_APPWRITE_DATABASE_ID || process.env.VITE_APPWRITE_DATABASE_ID || '6a9be599001bf72a4855'
+              const apiKey = env.APPWRITE_API_KEY || process.env.APPWRITE_API_KEY || env.VITE_APPWRITE_API_KEY
+
+              const { userId, docId, email } = JSON.parse(body || '{}')
+
+              let authDeleted = false
+              let tableDeleted = false
+              const errors: string[] = []
+
+              if (apiKey) {
+                try {
+                  let targetAuthId = userId
+                  if (email) {
+                    try {
+                      const listRes = await fetch(`${endpoint}/users?search=${encodeURIComponent(email)}`, {
+                        headers: {
+                          'X-Appwrite-Project': projectId,
+                          'X-Appwrite-Key': apiKey,
+                        },
+                      })
+                      if (listRes.ok) {
+                        const listData = (await listRes.json()) as any
+                        const matched = listData.users?.find(
+                          (u: any) => u.email?.toLowerCase() === email.toLowerCase(),
+                        )
+                        if (matched) {
+                          targetAuthId = matched.$id
+                        }
+                      }
+                    } catch (e: any) {
+                      console.warn('Dev search user by email error:', e.message)
+                    }
+                  }
+
+                  if (targetAuthId) {
+                    const delAuthRes = await fetch(`${endpoint}/users/${targetAuthId}`, {
+                      method: 'DELETE',
+                      headers: {
+                        'X-Appwrite-Project': projectId,
+                        'X-Appwrite-Key': apiKey,
+                      },
+                    })
+                    if (delAuthRes.ok || delAuthRes.status === 404) {
+                      authDeleted = true
+                    } else {
+                      const errText = await delAuthRes.text()
+                      errors.push(`Auth delete status: ${delAuthRes.status} ${errText}`)
+                    }
+                  }
+
+                  const targetDocId = docId || userId
+                  if (targetDocId) {
+                    const delDocRes = await fetch(
+                      `${endpoint}/databases/${databaseId}/collections/users/documents/${targetDocId}`,
+                      {
+                        method: 'DELETE',
+                        headers: {
+                          'X-Appwrite-Project': projectId,
+                          'X-Appwrite-Key': apiKey,
+                        },
+                      },
+                    )
+                    if (delDocRes.ok || delDocRes.status === 404) {
+                      tableDeleted = true
+                    } else {
+                      const errText = await delDocRes.text()
+                      errors.push(`Table delete status: ${delDocRes.status} ${errText}`)
+                    }
+                  }
+                } catch (err: any) {
+                  errors.push(`Server API error: ${err.message}`)
+                }
+              } else {
+                errors.push('APPWRITE_API_KEY is not configured in environment. Auth deletion skipped.')
+              }
+
+              res.statusCode = 200
+              res.setHeader('Content-Type', 'application/json')
+              res.end(
+                JSON.stringify({
+                  success: true,
+                  authDeleted,
+                  tableDeleted,
+                  warnings: errors.length > 0 ? errors : undefined,
+                }),
+              )
+            } catch (err: any) {
+              res.statusCode = 500
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: false, message: err.message }))
+            }
+          })
+          return
+        }
         next()
       })
     },
