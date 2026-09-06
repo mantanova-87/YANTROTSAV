@@ -130,7 +130,7 @@ function Home() {
   return (
     <>
       <HomeIntro />
-      <div className="min-h-screen overflow-hidden bg-[#050816] text-white">
+      <div className="min-h-screen mt-10 overflow-hidden bg-[#050816] text-white">
 
         {/* ======================================================
           HERO
@@ -150,7 +150,8 @@ function Home() {
               scale: 1,
             }}
             transition={{
-              duration: 1.4,
+              delay:5,
+              duration: 2,
               ease: [0.22, 1, 0.36, 1],
             }}
             className="relative mx-auto w-[80vw] max-w-[1600px] p-2"
