@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Users, User, Plus, Trash2, CheckCircle2, AlertCircle, Loader2, ArrowRight } from 'lucide-react'
@@ -21,6 +21,7 @@ export default function EventRegistrationModal({
   onSuccess,
 }: EventRegistrationModalProps) {
   const { user, profile, openAuthModal } = useAuth()
+  const isSubmittingRef = useRef(false)
 
   // Form states matching database attributes
   const [teamName, setTeamName] = useState('')
@@ -115,6 +116,7 @@ export default function EventRegistrationModal({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (isSubmittingRef.current) return
     setError(null)
 
     if (!user) {
@@ -139,6 +141,7 @@ export default function EventRegistrationModal({
       return
     }
 
+    isSubmittingRef.current = true
     setLoading(true)
 
     try {
@@ -153,22 +156,29 @@ export default function EventRegistrationModal({
         await teamsService.registerSolo({
           eventId: event.$id,
           userId: user.$id,
-          studentName: profile?.fullName || profile?.name || user.name || 'Student',
-          studentEmail: user.email,
-          studentPhone,
-          studentRollNumber: studentRollNo,
-          studentRollNo,
-          department: studentDepartment,
-          semester: studentSemester,
-          collegeName,
+          studentName: (profile?.fullName || profile?.name || user.name || 'Student').trim().slice(0, 100),
+          studentEmail: user.email.trim().toLowerCase(),
+          studentPhone: studentPhone.trim().slice(0, 20),
+          studentRollNumber: studentRollNo.trim().slice(0, 50),
+          studentRollNo: studentRollNo.trim().slice(0, 50),
+          department: studentDepartment.trim().slice(0, 100),
+          semester: studentSemester.trim().slice(0, 10),
+          collegeName: collegeName.trim().slice(0, 100),
         })
       } else {
         // Team Registration
-        if (!teamName.trim()) {
-          throw new Error('Please specify a Team Name.')
+        const sanitizedTeamName = teamName.trim().slice(0, 80)
+        if (!sanitizedTeamName) {
+          throw new Error('Please specify a valid Team Name.')
         }
 
-        const validMembers = memberEmails.map((m) => m.trim()).filter(Boolean)
+        const validMembers = Array.from(
+          new Set(
+            memberEmails
+              .map((m) => m.trim().replace(/^@/, ''))
+              .filter(Boolean),
+          ),
+        )
 
         if (validMembers.length < requiredAdditionalMembers) {
           throw new Error(
@@ -178,10 +188,10 @@ export default function EventRegistrationModal({
 
         await teamsService.createTeam({
           eventId: event.$id,
-          teamName: teamName.trim(),
+          teamName: sanitizedTeamName,
           leaderId: user.$id,
-          leaderName: profile?.fullName || profile?.name || user.name || 'Team Leader',
-          leaderEmail: user.email,
+          leaderName: (profile?.fullName || profile?.name || user.name || 'Team Leader').trim().slice(0, 100),
+          leaderEmail: user.email.trim().toLowerCase(),
           memberEmails: validMembers,
         })
       }
@@ -195,6 +205,7 @@ export default function EventRegistrationModal({
         setError('Failed to complete registration.')
       }
     } finally {
+      isSubmittingRef.current = false
       setLoading(false)
     }
   }

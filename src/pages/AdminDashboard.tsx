@@ -24,6 +24,10 @@ import {
   GraduationCap,
   ShieldCheck,
   Check,
+  QrCode,
+  ChevronLeft,
+  ChevronRight,
+  Volume2,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useAppDispatch } from '../store/hooks'
@@ -77,12 +81,25 @@ export default function AdminDashboard() {
 
   const [rosterSearch, setRosterSearch] = useState('')
   const [rosterCheckInFilter, setRosterCheckInFilter] = useState<'all' | 'checked' | 'unchecked'>('all')
+  const [rosterPage, setRosterPage] = useState(1)
+  const [rosterPageSize, setRosterPageSize] = useState(50)
+
+  // Gate Scanner state
+  const [scannerInput, setScannerInput] = useState('')
+  const [scannerResult, setScannerResult] = useState<{
+    success: boolean
+    entry?: EventRosterEntry
+    message: string
+    timestamp: string
+  } | null>(null)
 
   // Users Directory state
   const [usersList, setUsersList] = useState<UserProfile[]>([])
   const [loadingUsers, setLoadingUsers] = useState(false)
   const [userSearch, setUserSearch] = useState('')
   const [userDeptFilter, setUserDeptFilter] = useState('all')
+  const [usersPage, setUsersPage] = useState(1)
+  const [usersPageSize, setUsersPageSize] = useState(50)
   const [selectedUserProfile, setSelectedUserProfile] = useState<UserProfile | null>(null)
 
   // Teams Directory state
@@ -407,6 +424,86 @@ export default function AdminDashboard() {
     }
   }
 
+  // Audio synthesizer for Gate Scanner feedback
+  const playCyberTone = (type: 'success' | 'error') => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+      if (!AudioContextClass) return
+      const ctx = new AudioContextClass()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      if (type === 'success') {
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime)
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08)
+        gain.gain.setValueAtTime(0.12, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25)
+        osc.start(ctx.currentTime)
+        osc.stop(ctx.currentTime + 0.25)
+      } else {
+        osc.type = 'sawtooth'
+        osc.frequency.setValueAtTime(220, ctx.currentTime)
+        osc.frequency.setValueAtTime(160, ctx.currentTime + 0.1)
+        gain.gain.setValueAtTime(0.12, ctx.currentTime)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
+        osc.start(ctx.currentTime)
+        osc.stop(ctx.currentTime + 0.3)
+      }
+    } catch {
+      // AudioContext policy blocked
+    }
+  }
+
+  // High-Speed Gate Clearance Scanner
+  const handleScanPass = async (queryToScan?: string) => {
+    const raw = (queryToScan !== undefined ? queryToScan : scannerInput).trim()
+    if (!raw) return
+    setScannerInput('')
+
+    const clean = raw.toLowerCase().replace(/^ytr-/, '')
+    const matched = roster.find((r) => {
+      const regId = r.registrationId.toLowerCase()
+      const roll = (r.studentRollNumber || r.studentRollNo || '').toLowerCase()
+      const email = r.studentEmail.toLowerCase()
+      const username = (r.username || '').toLowerCase()
+      return (
+        regId === clean ||
+        regId.startsWith(clean) ||
+        `ytr-${regId.slice(0, 8)}` === raw.toLowerCase() ||
+        roll === clean ||
+        email === clean ||
+        (clean.includes('@') && email === clean) ||
+        (username && username === clean)
+      )
+    })
+
+    if (matched) {
+      if (!matched.checkedIn) {
+        await adminService.checkInStudent(matched.registrationId)
+        matched.checkedIn = true
+      }
+      playCyberTone('success')
+      setScannerResult({
+        success: true,
+        entry: matched,
+        message: 'GATE CLEARANCE GRANTED ✓',
+        timestamp: new Date().toLocaleTimeString(),
+      })
+      showNotification(`Verified: ${matched.studentName}`)
+      await loadRoster(selectedEventId)
+    } else {
+      playCyberTone('error')
+      setScannerResult({
+        success: false,
+        message: `NO RECORD FOUND FOR "${raw}"`,
+        timestamp: new Date().toLocaleTimeString(),
+      })
+      showNotification(`No registration match found for "${raw}"`, 'error')
+    }
+  }
+
   // Delete Individual Registration
   const handleDeleteRegistration = async (registrationId: string, studentName: string) => {
     if (!window.confirm(`Are you sure you want to cancel the registration for ${studentName}?`)) return
@@ -620,6 +717,30 @@ export default function AdminDashboard() {
       return matchSearch && matchDept
     })
   }, [usersList, userSearch, userDeptFilter])
+
+  // Paginated Roster
+  const paginatedRoster = useMemo(() => {
+    if (rosterPageSize === -1) return filteredRoster
+    const start = (rosterPage - 1) * rosterPageSize
+    return filteredRoster.slice(start, start + rosterPageSize)
+  }, [filteredRoster, rosterPage, rosterPageSize])
+
+  const totalRosterPages = useMemo(() => {
+    if (rosterPageSize === -1 || filteredRoster.length === 0) return 1
+    return Math.ceil(filteredRoster.length / rosterPageSize)
+  }, [filteredRoster, rosterPageSize])
+
+  // Paginated Users
+  const paginatedUsers = useMemo(() => {
+    if (usersPageSize === -1) return filteredUsers
+    const start = (usersPage - 1) * usersPageSize
+    return filteredUsers.slice(start, start + usersPageSize)
+  }, [filteredUsers, usersPage, usersPageSize])
+
+  const totalUsersPages = useMemo(() => {
+    if (usersPageSize === -1 || filteredUsers.length === 0) return 1
+    return Math.ceil(filteredUsers.length / usersPageSize)
+  }, [filteredUsers, usersPageSize])
 
   // Filtered Teams
   const filteredTeams = useMemo(() => {
@@ -1085,6 +1206,87 @@ export default function AdminDashboard() {
               </div>
             </div>
 
+            {/* Rapid Gate Clearance Scanner Bar */}
+            <div className="mt-4 border border-[#00E5FF]/30 bg-[#00E5FF]/5 p-4 relative overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 border border-[#00E5FF]/50 bg-[#00E5FF]/10 text-[#00E5FF]">
+                    <QrCode size={20} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+                        Rapid Gate Clearance Scanner
+                      </span>
+                      <span className="font-mono text-[9px] border border-emerald-500/40 bg-emerald-950/40 text-emerald-400 px-1.5 py-0.2 rounded flex items-center gap-1">
+                        <Volume2 size={10} /> AUDIO FEEDBACK ON
+                      </span>
+                    </div>
+                    <p className="font-mono text-[10px] text-slate-400">
+                      Scan Pass QR barcode or paste Registration ID / Roll No / Email / Username to verify & check in instantly.
+                    </p>
+                  </div>
+                </div>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    if (scannerInput.trim()) {
+                      handleScanPass(scannerInput)
+                    }
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <input
+                    type="text"
+                    value={scannerInput}
+                    onChange={(e) => setScannerInput(e.target.value)}
+                    placeholder="Scan QR or enter ID/Roll..."
+                    className="border border-white/20 bg-[#050816] px-3 py-2 font-mono text-xs text-white outline-none focus:border-[#00E5FF] w-56 sm:w-72"
+                    autoComplete="off"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!scannerInput.trim()}
+                    className="border border-[#00E5FF] bg-[#00E5FF] px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-black transition-all hover:bg-transparent hover:text-[#00E5FF] disabled:opacity-40"
+                  >
+                    Clear Pass
+                  </button>
+                </form>
+              </div>
+
+              {/* Scanner result dossier */}
+              {scannerResult && (
+                <div
+                  className={`mt-3 p-3 border font-mono text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
+                    scannerResult.success
+                      ? 'border-emerald-500/50 bg-emerald-950/40 text-emerald-300'
+                      : 'border-red-500/50 bg-red-950/40 text-red-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    {scannerResult.success ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
+                    <span className="font-bold">{scannerResult.message}</span>
+                    {scannerResult.entry && (
+                      <span className="text-white">
+                        — <strong>{scannerResult.entry.studentName}</strong> ({scannerResult.entry.studentRollNumber || scannerResult.entry.studentRollNo || 'No Roll'}) | Event: {scannerResult.entry.eventTitle || 'Event'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 text-[10px] text-slate-400">
+                    <span>Scanned at {scannerResult.timestamp}</span>
+                    <button
+                      type="button"
+                      onClick={() => setScannerResult(null)}
+                      className="text-slate-500 hover:text-white underline"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Attendance Progress & Summary */}
             {roster.length > 0 && (
               <div className="mt-4 border border-white/10 bg-[#050816] p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -1145,7 +1347,7 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {filteredRoster.map((row) => (
+                    {paginatedRoster.map((row) => (
                       <tr key={row.registrationId} className="hover:bg-white/[0.02] transition-colors">
                         <td className="py-3 pr-4">
                           <div className="font-bold text-white text-[13px]">{row.studentName}</div>
@@ -1207,6 +1409,54 @@ export default function AdminDashboard() {
                     ))}
                   </tbody>
                 </table>
+              )}
+
+              {/* Roster Pagination Controls */}
+              {filteredRoster.length > 0 && (
+                <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/10 pt-4 font-mono text-xs text-slate-400">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span>Showing {paginatedRoster.length} of {filteredRoster.length} entries</span>
+                    <span>•</span>
+                    <span>Rows per page:</span>
+                    <select
+                      value={rosterPageSize}
+                      onChange={(e) => {
+                        setRosterPageSize(Number(e.target.value))
+                        setRosterPage(1)
+                      }}
+                      className="border border-white/15 bg-[#050816] px-2 py-1 text-white text-xs outline-none focus:border-[#00E5FF]"
+                    >
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={-1}>All ({filteredRoster.length})</option>
+                    </select>
+                  </div>
+
+                  {rosterPageSize !== -1 && totalRosterPages > 1 && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setRosterPage((p) => Math.max(1, p - 1))}
+                        disabled={rosterPage <= 1}
+                        className="p-1 border border-white/15 bg-[#050816] text-white disabled:opacity-30 hover:border-[#00E5FF]"
+                        title="Previous Page"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <span>
+                        Page <strong className="text-white">{rosterPage}</strong> of {totalRosterPages}
+                      </span>
+                      <button
+                        onClick={() => setRosterPage((p) => Math.min(totalRosterPages, p + 1))}
+                        disabled={rosterPage >= totalRosterPages}
+                        className="p-1 border border-white/15 bg-[#050816] text-white disabled:opacity-30 hover:border-[#00E5FF]"
+                        title="Next Page"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -1292,7 +1542,7 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {filteredUsers.map((u) => (
+                    {paginatedUsers.map((u) => (
                       <tr key={u.$id} className="hover:bg-white/[0.02] transition-colors">
                         <td className="py-3 pr-4">
                           <div className="flex items-center gap-2">
@@ -1337,6 +1587,54 @@ export default function AdminDashboard() {
                     ))}
                   </tbody>
                 </table>
+              )}
+
+              {/* Users Pagination Controls */}
+              {filteredUsers.length > 0 && (
+                <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/10 pt-4 font-mono text-xs text-slate-400">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span>Showing {paginatedUsers.length} of {filteredUsers.length} students</span>
+                    <span>•</span>
+                    <span>Rows per page:</span>
+                    <select
+                      value={usersPageSize}
+                      onChange={(e) => {
+                        setUsersPageSize(Number(e.target.value))
+                        setUsersPage(1)
+                      }}
+                      className="border border-white/15 bg-[#050816] px-2 py-1 text-white text-xs outline-none focus:border-purple-400"
+                    >
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                      <option value={-1}>All ({filteredUsers.length})</option>
+                    </select>
+                  </div>
+
+                  {usersPageSize !== -1 && totalUsersPages > 1 && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setUsersPage((p) => Math.max(1, p - 1))}
+                        disabled={usersPage <= 1}
+                        className="p-1 border border-white/15 bg-[#050816] text-white disabled:opacity-30 hover:border-purple-400"
+                        title="Previous Page"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <span>
+                        Page <strong className="text-white">{usersPage}</strong> of {totalUsersPages}
+                      </span>
+                      <button
+                        onClick={() => setUsersPage((p) => Math.min(totalUsersPages, p + 1))}
+                        disabled={usersPage >= totalUsersPages}
+                        className="p-1 border border-white/15 bg-[#050816] text-white disabled:opacity-30 hover:border-purple-400"
+                        title="Next Page"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

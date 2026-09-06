@@ -53,6 +53,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         user: gmailUser,
         pass: gmailAppPassword,
       },
+      connectionTimeout: 8000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000,
     });
 
     await transporter.sendMail({

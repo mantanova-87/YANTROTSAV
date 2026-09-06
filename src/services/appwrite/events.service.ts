@@ -399,7 +399,7 @@ export class EventsService {
     return this.updateEvent(eventId, { status: isOpen ? 'published' : 'closed' })
   }
 
-  /** Soft capacity check — called before registration. Non-blocking on failure. */
+  /** Soft capacity check and count incrementer — called before and after registration. */
   async incrementRegistrations(eventId: string): Promise<void> {
     try {
       const event = await this.getEventById(eventId)
@@ -407,10 +407,19 @@ export class EventsService {
         throw new AppError('Registration is closed for this event.', 'EVENT_REGISTRATION_CLOSED', 400)
       }
       const maxAllowed = event.maxTeamsAllowed
-      const current    = (event as any).currentRegistrations ?? 0
+      const current = (event as any).currentRegistrations ?? 0
       if (maxAllowed && current >= maxAllowed) {
         throw new AppError('Event capacity has been reached.', 'EVENT_CAPACITY_REACHED', 400)
       }
+
+      await databases
+        .updateDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.events,
+          eventId,
+          { currentRegistrations: current + 1 },
+        )
+        .catch(() => {})
     } catch (error) {
       if (error instanceof AppError) throw error
       // Non-critical — don't block registration if check fails

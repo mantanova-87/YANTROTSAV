@@ -244,24 +244,35 @@ export class AdminService {
       const documents = rawDocuments.filter((doc) => !deletedRegIds.has(doc.$id))
       const allUsers = usersRes.documents as unknown as UserProfile[]
       const allTeams = teamsRes.documents as unknown as TeamDocument[]
+      const rawRoster = documents
+        .filter((doc) => {
+          const event = allEvents.find((e) => e.$id === doc.eventId)
+          if (!event) return false
+          if (doc.teamId) {
+            const team = allTeams.find((t) => t.$id === doc.teamId)
+            if (team && (team.status === 'cancelled' || (team.status as any) === 'disbanded')) {
+              return false
+            }
+          }
+          return true
+        })
+        .map((doc) => {
+          const user = allUsers.find(
+            (u) =>
+              u.$id === doc.userId ||
+              (u as any).userId === doc.userId ||
+              (u.email && doc.userEmail && u.email.toLowerCase() === doc.userEmail.toLowerCase()) ||
+              ((u as any).userId && doc.userEmail && (u as any).userId.toLowerCase() === doc.userEmail.toLowerCase()) ||
+              (doc.userName && (u as any).userId && (u as any).userId.toLowerCase() === doc.userName.toLowerCase())
+          )
+          const team = doc.teamId ? allTeams.find((t) => t.$id === doc.teamId) : undefined
+          const event = allEvents.find((e) => e.$id === doc.eventId)
 
-      const rawRoster = documents.map((doc) => {
-        const user = allUsers.find(
-          (u) =>
-            u.$id === doc.userId ||
-            (u as any).userId === doc.userId ||
-            (u.email && doc.userEmail && u.email.toLowerCase() === doc.userEmail.toLowerCase()) ||
-            ((u as any).userId && doc.userEmail && (u as any).userId.toLowerCase() === doc.userEmail.toLowerCase()) ||
-            (doc.userName && (u as any).userId && (u as any).userId.toLowerCase() === doc.userName.toLowerCase())
-        )
-        const team = doc.teamId ? allTeams.find((t) => t.$id === doc.teamId) : undefined
-        const event = allEvents.find((e) => e.$id === doc.eventId)
-
-        const studentName =
-          (user as any)?.fullName ||
-          (user as any)?.name ||
-          (doc.userName && doc.userName !== doc.userEmail ? doc.userName : undefined) ||
-          'Student'
+          const studentName =
+            (user as any)?.fullName ||
+            (user as any)?.name ||
+            (doc.userName && doc.userName !== doc.userEmail ? doc.userName : undefined) ||
+            'Student'
         const username =
           (user as any)?.userId ||
           (user as any)?.username ||
@@ -611,23 +622,28 @@ export class AdminService {
 
       const deletedTeamIds = getStoredDeletedTeams()
       const teams = (teamsRes.documents as unknown as TeamDocument[]).filter(
-        (t) => !deletedTeamIds.has(t.$id)
+        (t) =>
+          !deletedTeamIds.has(t.$id) &&
+          t.status !== 'cancelled' &&
+          (t.status as any) !== 'disbanded',
       )
       const invites = allInvitesRes.documents as unknown as TeamInvitationDocument[]
 
-      return teams.map((t) => {
-        const evt = allEvents.find((e) => e.$id === t.eventId)
-        const teamInvites = invites.filter((i) => i.teamId === t.$id)
-        const acceptedCount = teamInvites.filter((i) => i.status === 'accepted').length + 1 // +1 for leader
+      return teams
+        .filter((t) => allEvents.some((e) => e.$id === t.eventId))
+        .map((t) => {
+          const evt = allEvents.find((e) => e.$id === t.eventId)
+          const teamInvites = invites.filter((i) => i.teamId === t.$id)
+          const acceptedCount = teamInvites.filter((i) => i.status === 'accepted').length + 1 // +1 for leader
 
-        return {
-          ...t,
-          eventTitle: evt?.title || t.eventId,
-          targetTeamSize: evt?.minTeamSize || 2,
-          acceptedCount,
-          memberEmails: teamInvites.map((i) => i.inviteeEmail),
-        } as TeamDocument
-      })
+          return {
+            ...t,
+            eventTitle: evt?.title || t.eventId,
+            targetTeamSize: evt?.minTeamSize || 2,
+            acceptedCount,
+            memberEmails: teamInvites.map((i) => i.inviteeEmail),
+          } as TeamDocument
+        })
     } catch (error) {
       throw mapAppwriteError(error, 'AdminService.getAllTeams')
     }
@@ -1110,21 +1126,29 @@ export class AdminService {
         'Registration Date',
       ]
 
+      const safeCSVCell = (val: unknown): string => {
+        let str = String(val ?? '').trim()
+        if (/^[=+\-@\t\r]/.test(str)) {
+          str = `'${str}`
+        }
+        return `"${str.replace(/"/g, '""')}"`
+      }
+
       const rows = roster.map((item) => [
-        `"${item.registrationId}"`,
-        `"${(item.eventTitle || '').replace(/"/g, '""')}"`,
-        `"${item.registrationType}"`,
-        `"${(item.studentName || '').replace(/"/g, '""')}"`,
-        `"${(item.username || '').replace(/"/g, '""')}"`,
-        `"${item.studentRollNumber || item.studentRollNo || ''}"`,
-        `"${item.studentPhone || ''}"`,
-        `"${item.studentEmail || ''}"`,
-        `"${(item.department || '').replace(/"/g, '""')}"`,
-        `"${item.semester || ''}"`,
-        `"${(item.collegeName || '').replace(/"/g, '""')}"`,
-        `"${(item.teamName || 'Solo').replace(/"/g, '""')}"`,
-        `"${item.checkedIn ? 'Present' : 'Absent / Pending'}"`,
-        `"${new Date(item.registeredAt).toLocaleString()}"`,
+        safeCSVCell(item.registrationId),
+        safeCSVCell(item.eventTitle || ''),
+        safeCSVCell(item.registrationType),
+        safeCSVCell(item.studentName || ''),
+        safeCSVCell(item.username || ''),
+        safeCSVCell(item.studentRollNumber || item.studentRollNo || ''),
+        safeCSVCell(item.studentPhone || ''),
+        safeCSVCell(item.studentEmail || ''),
+        safeCSVCell(item.department || ''),
+        safeCSVCell(item.semester || ''),
+        safeCSVCell(item.collegeName || ''),
+        safeCSVCell(item.teamName || 'Solo'),
+        safeCSVCell(item.checkedIn ? 'Present' : 'Absent / Pending'),
+        safeCSVCell(new Date(item.registeredAt).toLocaleString()),
       ])
 
       const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n')
@@ -1150,6 +1174,14 @@ export class AdminService {
    */
   async exportUsersCSV(users: UserProfile[]): Promise<void> {
     try {
+      const safeCSVCell = (val: unknown): string => {
+        let str = String(val ?? '').trim()
+        if (/^[=+\-@\t\r]/.test(str)) {
+          str = `'${str}`
+        }
+        return `"${str.replace(/"/g, '""')}"`
+      }
+
       const headers = [
         'User ID',
         'Full Name',
@@ -1164,16 +1196,16 @@ export class AdminService {
       ]
 
       const rows = users.map((u) => [
-        `"${u.userId || u.$id}"`,
-        `"${(u.fullName || u.name || '').replace(/"/g, '""')}"`,
-        `"${u.rollNumber || u.rollNo || ''}"`,
-        `"${u.email || ''}"`,
-        `"${u.phone || ''}"`,
-        `"${(u.department || u.branch || '').replace(/"/g, '""')}"`,
-        `"${(u.customDepartment || '').replace(/"/g, '""')}"`,
-        `"${u.semester || ''}"`,
-        `"Central University of Jammu"`,
-        `"${new Date(u.$createdAt).toLocaleString()}"`,
+        safeCSVCell(u.userId || u.$id),
+        safeCSVCell(u.fullName || u.name || ''),
+        safeCSVCell(u.rollNumber || u.rollNo || ''),
+        safeCSVCell(u.email || ''),
+        safeCSVCell(u.phone || ''),
+        safeCSVCell(u.department || u.branch || ''),
+        safeCSVCell(u.customDepartment || ''),
+        safeCSVCell(u.semester || ''),
+        safeCSVCell('Central University of Jammu'),
+        safeCSVCell(new Date(u.$createdAt).toLocaleString()),
       ])
 
       const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n')
