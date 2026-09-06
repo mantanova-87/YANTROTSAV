@@ -204,7 +204,7 @@ function Footer() {
 
         <div className="relative flex flex-col gap-4 py-5 text-[9px] uppercase tracking-[0.15em] text-slate-700 sm:flex-row sm:items-center sm:justify-between">
           <p>© 2026 YANTROTSAV</p>
-          {/*<p>Designed and Developed by Mantavya and Priyanshu</p>*/}
+          <p>Designed and Developed by Mantavya and Priyanshu</p>
           <div className="flex items-center gap-3">
             <span>Built for builders</span>
 
