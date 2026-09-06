@@ -65,6 +65,7 @@ export default function AdminDashboard() {
     activeEventsCount: 0,
     pendingInvitesCount: 0,
   })
+  const [kpiEventId, setKpiEventId] = useState<string>('')
 
   // Events & Roster state
   const [eventsList, setEventsList] = useState<EventDocument[]>([])
@@ -153,12 +154,16 @@ export default function AdminDashboard() {
   }
 
 
-  const loadAdminOverview = useCallback(async () => {
+  const loadAdminOverview = useCallback(async (overrideEventId?: string) => {
     setLoadingStats(true)
     try {
+      const targetId = overrideEventId || kpiEventId || undefined
       const [analytics, allEvents] = await Promise.all([
-        adminService.getAnalytics().catch(() => ({
+        adminService.getAnalytics(targetId).catch((): AdminAnalyticsKPI => ({
           totalRegistrations: 0,
+          eventName: 'No Active Event',
+          eventId: undefined,
+          eventRegistrationsMap: {},
           totalTeamsFormed: 0,
           activeEventsCount: 0,
           pendingInvitesCount: 0,
@@ -168,10 +173,13 @@ export default function AdminDashboard() {
 
       setKpi(analytics)
       setEventsList(allEvents)
+      if (!kpiEventId && analytics.eventId) {
+        setKpiEventId(analytics.eventId)
+      }
     } finally {
       setLoadingStats(false)
     }
-  }, [])
+  }, [kpiEventId])
 
   const loadRoster = useCallback(async (eventId: string) => {
     setLoadingRoster(true)
@@ -381,7 +389,7 @@ export default function AdminDashboard() {
     try {
       await eventsService.deleteEvent(eventToDelete.$id)
       dispatch(invalidateEventsCache())
-      showNotification(`Event "${eventToDelete.title}" and all related teams, passes, and invites deleted successfully!`)
+      showNotification(`Event "${eventToDelete.title}" and all related teams, registrations, and invites deleted successfully!`)
       setDeleteModalOpen(false)
       setEventToDelete(null)
       await loadAdminOverview()
@@ -557,10 +565,10 @@ export default function AdminDashboard() {
 
   const handleDeleteTeam = async (team: TeamDocument) => {
     const displayName = team.name || team.teamName || 'Team'
-    if (!window.confirm(`Permanently delete team "${displayName}", its event passes, and all member invitations?`)) return
+    if (!window.confirm(`Permanently delete team "${displayName}", its event registrations, and all member invitations?`)) return
     try {
       await adminService.deleteTeam(team.$id)
-      showNotification(`Team "${displayName}" and associated passes removed`)
+      showNotification(`Team "${displayName}" and associated registrations removed`)
       await loadTeams()
       await loadRoster(selectedEventId)
       await loadAdminOverview()
@@ -618,7 +626,7 @@ export default function AdminDashboard() {
       `Department: ${squadDetails.leader.department || 'N/A'}`,
       `Semester: ${squadDetails.leader.semester || 'N/A'}`,
       `Check-In: ${squadDetails.leader.checkedIn ? 'Checked-In' : 'Pending Entry'}`,
-      `Clearance Pass: ${squadDetails.leader.qrCode || 'N/A'}`,
+      `Clearance ID: ${squadDetails.leader.qrCode || 'N/A'}`,
       ``,
       `--- SQUAD MEMBERS (${squadDetails.members.length}) ---`,
     ]
@@ -798,6 +806,18 @@ export default function AdminDashboard() {
     )
   }
 
+  // Dynamically resolved event for KPI card
+  const activeKpiEvent =
+    eventsList.find((e) => e.$id === kpiEventId) ||
+    eventsList.find((e) => e.status === 'published') ||
+    eventsList[0] ||
+    null
+
+  const currentEventTitle = activeKpiEvent?.title || kpi.eventName || 'No Active Event'
+  const currentEventRegCount = activeKpiEvent
+    ? (kpi.eventRegistrationsMap?.[activeKpiEvent.$id] ?? (activeKpiEvent.$id === kpi.eventId ? kpi.totalRegistrations : 0))
+    : kpi.totalRegistrations
+
   return (
     <div className="min-h-screen bg-[#050816] pb-24 pt-28 text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -848,15 +868,40 @@ export default function AdminDashboard() {
 
         {/* Analytics KPI Row */}
         <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {/* Total Registrations in a Given Event */}
           <div className="relative overflow-hidden border border-white/10 bg-[#080A0F] p-5 shadow-lg">
-            <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-400 block">
-              Total Registrations
-            </span>
-            <div className="mt-2 font-mono text-3xl font-black text-white">
-              {loadingStats ? '...' : kpi.totalRegistrations}
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-400 block">
+                Total Registrations
+              </span>
+              {eventsList.length > 1 && (
+                <select
+                  value={activeKpiEvent?.$id || ''}
+                  onChange={(e) => {
+                    const newId = e.target.value
+                    setKpiEventId(newId)
+                  }}
+                  className="max-w-[120px] truncate border border-[#00E5FF]/30 bg-[#050816] px-1 py-0.5 font-mono text-[9px] text-[#00E5FF] outline-none cursor-pointer hover:border-[#00E5FF]"
+                  title="Switch event"
+                >
+                  {eventsList.map((ev) => (
+                    <option key={ev.$id} value={ev.$id}>
+                      {ev.title}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
-            <span className="mt-1 block font-mono text-[9px] text-[#00E5FF]">
-              Event passes booked
+
+            <div className="mt-2 font-mono text-3xl font-black text-white">
+              {loadingStats ? '...' : currentEventRegCount}
+            </div>
+
+            <span className="mt-1 block font-mono text-[10px] font-bold uppercase tracking-wider text-[#00E5FF] truncate" title={currentEventTitle}>
+              {currentEventTitle}
+            </span>
+            <span className="block font-mono text-[8px] text-slate-400">
+              Registered in this event
             </span>
             <span className="absolute bottom-0 right-0 h-4 w-4 border-b-2 border-r-2 border-[#00E5FF]" />
           </div>
@@ -1223,7 +1268,7 @@ export default function AdminDashboard() {
                       </span>
                     </div>
                     <p className="font-mono text-[10px] text-slate-400">
-                      Scan Pass QR barcode or paste Registration ID / Roll No / Email / Username to verify & check in instantly.
+                      Scan QR code or paste Registration ID / Roll No / Email / Username to verify & check in instantly.
                     </p>
                   </div>
                 </div>
@@ -1250,7 +1295,7 @@ export default function AdminDashboard() {
                     disabled={!scannerInput.trim()}
                     className="border border-[#00E5FF] bg-[#00E5FF] px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-black transition-all hover:bg-transparent hover:text-[#00E5FF] disabled:opacity-40"
                   >
-                    Clear Pass
+                    Verify & Check-In
                   </button>
                 </form>
               </div>
@@ -2009,7 +2054,7 @@ export default function AdminDashboard() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-slate-500 text-[9px] block uppercase">Pass Clearance ID</span>
+                        <span className="text-slate-500 text-[9px] block uppercase">Registration ID</span>
                         <span className="text-emerald-400 font-bold tracking-wider">
                           {squadDetails.leader.qrCode || `YTR-${squadDetails.team.$id.slice(0, 8).toUpperCase()}`}
                         </span>
@@ -2100,7 +2145,7 @@ export default function AdminDashboard() {
                                   <span className="text-slate-500">Semester:</span> {member.semester || 'N/A'}
                                 </div>
                                 <div>
-                                  <span className="text-slate-500">Pass ID:</span>{' '}
+                                  <span className="text-slate-500">Registration ID:</span>{' '}
                                   <span className="text-emerald-400">{member.qrCode || 'Pending Entry'}</span>
                                 </div>
                               </div>
