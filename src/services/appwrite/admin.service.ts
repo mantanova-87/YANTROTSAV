@@ -80,8 +80,19 @@ export class AdminService {
         ).catch(() => ({ total: 0, documents: [] })),
       ])
 
+      // Count unique registrations per event so duplicates do not inflate KPI cards
+      const uniqueRegs = new Set<string>()
+      for (const doc of regResponse.documents) {
+        const d = doc as any
+        const idKey = ((d.userEmail || d.userId || d.$id) as string).trim().toLowerCase()
+        uniqueRegs.add(`${d.eventId}-${idKey}`)
+      }
+      const totalRegistrations = regResponse.documents.length > 0
+        ? uniqueRegs.size
+        : (regResponse.total || 0)
+
       return {
-        totalRegistrations: regResponse.total || regResponse.documents.length,
+        totalRegistrations,
         totalUsers: userResponse.total || userResponse.documents.length,
         totalTeamsFormed:   teamResponse.documents.filter((t: any) => t.status === 'confirmed').length,
         activeEventsCount:  eventResponse.documents.filter((e: any) => e.status === 'published').length,
