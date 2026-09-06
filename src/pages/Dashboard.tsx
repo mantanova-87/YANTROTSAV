@@ -914,7 +914,7 @@ export default function Dashboard() {
               <div className="mt-4 border border-white/10 bg-[#050816] p-4 text-center">
                 {/* Scannable QR Matrix Canvas / Image */}
                 <div className="relative inline-block my-2 group">
-                  <div className="p-2.5 bg-white rounded-lg shadow-md transition-transform group-hover:scale-[1.02]">
+                  <div className="p-2 bg-white rounded border-2 border-[#00E5FF] shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-transform group-hover:scale-[1.02]">
                     {badgeQrUrl ? (
                       <img
                         src={badgeQrUrl}
@@ -923,7 +923,7 @@ export default function Dashboard() {
                       />
                     ) : (
                       <div className="w-36 h-36 flex flex-col items-center justify-center text-slate-800 font-mono text-xs gap-2">
-                        <Loader2 size={24} className="animate-spin text-slate-400" />
+                        <Loader2 size={24} className="animate-spin text-[#00E5FF]" />
                         <span className="text-[10px] text-slate-500">Generating...</span>
                       </div>
                     )}
@@ -933,7 +933,7 @@ export default function Dashboard() {
                 <div className="mt-2 font-mono text-xs font-bold uppercase tracking-wider text-white">
                   {profile?.fullName || user.name}
                 </div>
-                <div className="font-mono text-xs font-bold text-[#FF6B00] tracking-wider mt-0.5">
+                <div className="font-mono text-xs font-bold text-[#00E5FF] tracking-wider mt-0.5">
                   {profile?.rollNumber || profile?.rollNo || `ID: ${user.$id.slice(0, 10)}`}
                 </div>
                 <p className="mt-1 font-mono text-[8px] uppercase tracking-widest text-slate-400">
@@ -956,7 +956,7 @@ export default function Dashboard() {
                         setIsPassModalOpen(true)
                       }
                     }}
-                    className="flex items-center gap-1.5 border border-white/20 bg-white/5 px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase text-slate-300 hover:border-white hover:text-white transition-colors"
+                    className="flex items-center gap-1.5 border border-[#00E5FF]/40 bg-[#00E5FF]/10 px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase text-[#00E5FF] hover:bg-[#00E5FF] hover:text-black transition-colors"
                   >
                     <Maximize2 size={11} />
                     <span>View Card</span>
@@ -1174,7 +1174,7 @@ export default function Dashboard() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-sm border border-white/10 bg-[#080A0F] p-6 shadow-2xl text-center"
+              className="relative w-full max-w-sm border border-[#00E5FF]/40 bg-[#080A0F] p-6 shadow-[0_0_50px_rgba(0,229,255,0.25)] text-center"
             >
               <button
                 type="button"
@@ -1188,8 +1188,8 @@ export default function Dashboard() {
               </button>
 
               <div className="flex items-center justify-center gap-2 mb-2">
-                <QrCode size={16} className="text-[#FF6B00]" />
-                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-300 font-bold">
+                <QrCode size={16} className="text-[#00E5FF]" />
+                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#00E5FF] font-bold">
                   Yantrotsav 2026
                 </span>
               </div>
@@ -1204,8 +1204,8 @@ export default function Dashboard() {
                 </p>
               )}
 
-              {/* Clean, High-Contrast QR Code Card */}
-              <div className="mx-auto my-5 p-4 bg-white rounded-xl shadow-xl inline-block">
+              {/* Large, High-Contrast QR Code Card */}
+              <div className="mx-auto my-5 p-3 bg-white rounded-lg border-4 border-[#00E5FF] shadow-[0_0_30px_rgba(0,229,255,0.5)] inline-block">
                 <img
                   src={activePassData.qrUrl}
                   alt={`QR code for ${activePassData.code}`}
@@ -1218,7 +1218,7 @@ export default function Dashboard() {
                 <div className="text-white font-bold text-sm tracking-wide">
                   {activePassData.name}
                 </div>
-                <div className="text-[#FF6B00] font-bold text-xs tracking-wider">
+                <div className="text-[#00E5FF] font-bold text-xs tracking-wider">
                   ROLL / ID: {activePassData.roll}
                 </div>
                 <div className="text-emerald-400 text-[11px] font-bold tracking-widest pt-1 border-t border-white/10">
@@ -1234,7 +1234,7 @@ export default function Dashboard() {
                 <a
                   href={activePassData.qrUrl}
                   download={`Participant_Card_${activePassData.code}.png`}
-                  className="flex items-center justify-center gap-2 w-full border border-white/20 bg-white/10 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-white hover:bg-white hover:text-black transition-colors"
+                  className="flex items-center justify-center gap-2 w-full border border-[#00E5FF] bg-[#00E5FF] px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-black hover:bg-transparent hover:text-[#00E5FF] transition-colors"
                 >
                   <Download size={14} />
                   <span>Download QR</span>
