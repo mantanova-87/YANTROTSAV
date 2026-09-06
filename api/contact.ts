@@ -1,78 +1,66 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import nodemailer from "nodemailer";
 
-import type { VercelRequest, VercelResponse } from '@vercel/node'
-import nodemailer from 'nodemailer'
+const gmailUser = process.env.GMAIL_USER;
+const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
 
-const gmailUser = process.env.GMAIL_USER
-const gmailAppPassword = process.env.GMAIL_APP_PASSWORD
-
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse,
-) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Only allow POST requests
-  if (req.method !== 'POST') {
+  if (req.method !== "POST") {
     return res.status(405).json({
       success: false,
-      message: 'Method not allowed',
-    })
+      message: "Method not allowed",
+    });
   }
 
   if (!gmailUser || !gmailAppPassword) {
-    console.error('Gmail environment variables are missing.')
+    console.error("Gmail environment variables are missing.");
 
     return res.status(500).json({
       success: false,
-      message: 'Email service is not configured.',
-    })
+      message: "Email service is not configured.",
+    });
   }
 
   try {
-    const {
-      name,
-      email,
-      phone,
-      queryType,
-      message,
-    } = req.body ?? {}
+    const { name, email, phone, queryType, message } = req.body ?? {};
 
     // Basic server-side validation.
     // Client-side Zod validation is still used in Contact.tsx,
     // but never trust browser data alone.
     if (
-      typeof name !== 'string' ||
-      typeof email !== 'string' ||
-      typeof queryType !== 'string' ||
-      typeof message !== 'string'
+      typeof name !== "string" ||
+      typeof email !== "string" ||
+      typeof queryType !== "string" ||
+      typeof message !== "string"
     ) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid form data.',
-      })
+        message: "Invalid form data.",
+      });
     }
 
-    if (
-      !name.trim() ||
-      !email.trim() ||
-      !queryType.trim() ||
-      !message.trim()
-    ) {
+    if (!name.trim() || !email.trim() || !queryType.trim() || !message.trim()) {
       return res.status(400).json({
         success: false,
-        message: 'Please fill in all required fields.',
-      })
+        message: "Please fill in all required fields.",
+      });
     }
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: "gmail",
       auth: {
         user: gmailUser,
         pass: gmailAppPassword,
       },
-    })
+      connectionTimeout: 8000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000,
+    });
 
     await transporter.sendMail({
       from: gmailUser,
-      to: 'mantavya4729@gmail.com',
+      to: "priyanshuguptawebdev@gmail.com",
       replyTo: email.trim(),
       subject: `[YANTROTSAV QUERY] ${queryType.trim()}`,
 
@@ -84,7 +72,7 @@ New Query Received
 
 Name: ${name.trim()}
 Email: ${email.trim()}
-Phone / WhatsApp: ${phone?.trim() || 'Not provided'}
+Phone / WhatsApp: ${phone?.trim() || "Not provided"}
 Query Type: ${queryType.trim()}
 
 Message:
@@ -114,7 +102,7 @@ This message was submitted through the Yantrotsav website.
 
           <p>
             <strong>Phone / WhatsApp:</strong>
-            ${escapeHtml(phone?.trim() || 'Not provided')}
+            ${escapeHtml(phone?.trim() || "Not provided")}
           </p>
 
           <p>
@@ -142,19 +130,19 @@ This message was submitted through the Yantrotsav website.
           </p>
         </div>
       `,
-    })
+    });
 
     return res.status(200).json({
       success: true,
-      message: 'Query sent successfully.',
-    })
+      message: "Query sent successfully.",
+    });
   } catch (error) {
-    console.error('Email sending error:', error)
+    console.error("Email sending error:", error);
 
     return res.status(500).json({
       success: false,
-      message: 'Unable to send query.',
-    })
+      message: "Unable to send query.",
+    });
   }
 }
 
@@ -164,9 +152,9 @@ This message was submitted through the Yantrotsav website.
  */
 function escapeHtml(value: string) {
   return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }

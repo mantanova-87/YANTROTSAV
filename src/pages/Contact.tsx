@@ -261,7 +261,7 @@ export default function Contact() {
                       Department of Computer Science and Engineering
                     </p>
                     <p className="mt-1 text-xs text-slate-300">
-                      Central University of Jammu
+                      Yantrotsav 2026
                     </p>
                   </div>
                 </div>
@@ -404,7 +404,7 @@ export default function Contact() {
                         event.target.value.replace(/\D/g, ''),
                       )
                     }
-                    placeholder="10-digit number"
+                    placeholder="Enter your phone number"
                     className={inputClass('phone')}
                   />
 
