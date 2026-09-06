@@ -2194,7 +2194,7 @@ export default function AdminDashboard() {
 
                 <div>
                   <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                    Max Teams Capacity
+                    Max Teams / Slots Capacity
                   </label>
                   <input
                     type="number"
@@ -2206,6 +2206,42 @@ export default function AdminDashboard() {
                   />
                 </div>
               </div>
+
+              {/* Team size bounds for team events */}
+              {editFormData.format === 'team' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
+                      Min Team Size (Leader + Members)
+                    </label>
+                    <input
+                      type="number"
+                      min={2}
+                      max={10}
+                      value={editFormData.minTeamSize || 2}
+                      onChange={(e) =>
+                        setEditFormData({ ...editFormData, minTeamSize: Number(e.target.value) })
+                      }
+                      className="mt-1 w-full border border-white/10 bg-[#050816] px-3 py-2 text-xs text-white outline-none focus:border-[#00E5FF]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
+                      Max Team Size
+                    </label>
+                    <input
+                      type="number"
+                      min={editFormData.minTeamSize || 2}
+                      max={20}
+                      value={editFormData.maxTeamSize || 4}
+                      onChange={(e) =>
+                        setEditFormData({ ...editFormData, maxTeamSize: Number(e.target.value) })
+                      }
+                      className="mt-1 w-full border border-white/10 bg-[#050816] px-3 py-2 text-xs text-white outline-none focus:border-[#00E5FF]"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>

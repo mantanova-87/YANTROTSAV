@@ -220,6 +220,24 @@ export class TeamsService {
           throw new AppError('You cannot invite yourself as a teammate.', 'UNKNOWN_ERROR', 400)
         }
 
+        if (resolvedMembers.some((m) => m.email === resolvedEmail)) {
+          throw new AppError(`Teammate "${rawMember}" is added more than once.`, 'UNKNOWN_ERROR', 400)
+        }
+
+        // Check if invited teammate is already enrolled for this event
+        const memberEnrolled = await this.checkUserEventEnrollment(
+          data.eventId,
+          inviteeUserId || resolvedEmail,
+          [resolvedEmail, cleanHandle, inviteeName],
+        )
+        if (memberEnrolled.enrolled) {
+          throw new AppError(
+            `Teammate "${inviteeName || cleanHandle}" is already enrolled in this event (${memberEnrolled.reason || 'Existing registration'}).`,
+            'ALREADY_REGISTERED',
+            409,
+          )
+        }
+
         resolvedMembers.push({
           rawHandle: cleanHandle,
           email: resolvedEmail,
@@ -649,6 +667,13 @@ export class TeamsService {
       }
 
       const allEvents = await eventsService.getEvents().catch(() => [])
+      const teamsRes = await databases.listDocuments(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.teams,
+        [Query.limit(500)],
+      ).catch(() => ({ documents: [] }))
+      const activeTeamsMap = new Map(teamsRes.documents.map((t: any) => [t.$id, t]))
+
       const results = Array.from(foundDocsMap.values()).filter((inv) => {
         const evt = allEvents.find((e) => e.$id === inv.eventId)
         if (!evt) {
@@ -659,6 +684,12 @@ export class TeamsService {
             inv.$id,
           ).catch(() => {})
           return false
+        }
+        if (inv.teamId) {
+          const parentTeam = activeTeamsMap.get(inv.teamId)
+          if (parentTeam && (parentTeam.status === 'cancelled' || parentTeam.status === 'disbanded')) {
+            return false
+          }
         }
         return true
       })
