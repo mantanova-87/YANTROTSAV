@@ -22,7 +22,6 @@ import {
   Users,
   Layers,
   GraduationCap,
-  RefreshCw,
   ShieldCheck,
   Check,
 } from 'lucide-react'
@@ -671,19 +670,6 @@ export default function AdminDashboard() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => {
-                  loadAdminOverview()
-                  if (activeTab === 'roster') loadRoster(selectedEventId)
-                  if (activeTab === 'users') loadUsers()
-                  if (activeTab === 'teams') loadTeams()
-                  showNotification('System telemetry refreshed.')
-                }}
-                className="flex items-center gap-1.5 border border-white/15 bg-white/5 px-3.5 py-2 font-mono text-xs text-slate-300 hover:border-[#00E5FF] hover:text-[#00E5FF] transition-colors"
-              >
-                <RefreshCw size={13} />
-                <span>Sync Data</span>
-              </button>
               <button
                 type="button"
                 onClick={() => setCreateModalOpen(true)}
