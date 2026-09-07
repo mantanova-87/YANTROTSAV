@@ -881,13 +881,6 @@ export default function Dashboard() {
                     Participant Profile
                   </h2>
                 </div>
-                <button
-                  onClick={handleOpenEditModal}
-                  className="flex items-center gap-1 font-mono text-[9px] text-[#00E5FF] hover:underline"
-                >
-                  <Edit3 size={11} />
-                  <span>Edit</span>
-                </button>
               </div>
 
               {/* Profile Avatar & Identity Header */}
