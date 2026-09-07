@@ -226,7 +226,7 @@ function Events() {
 
       {/* ========================================================= */}
       {/* SCHEDULE TABLE */}
-      {/* PAPER STRIP ANIMATION ONLY */}
+      {/* PAPER STRIP + BORDER ANIMATION */}
       {/* ========================================================= */}
 
       {dynamicSchedule.length > 0 && (
@@ -256,119 +256,226 @@ function Events() {
               />
             </div>
 
-            <div className="relative border border-white/10 bg-[#080A0F]">
-              {/* Corner brackets */}
-              <div className="pointer-events-none absolute -left-px -top-px h-7 w-7 border-l-2 border-t-2 border-[#00E5FF]" />
+            {/* ========================================================= */}
+            {/* ANIMATED TABLE FRAME */}
+            {/* ========================================================= */}
 
-              <div className="pointer-events-none absolute -right-px -top-px h-7 w-7 border-r-2 border-t-2 border-[#FF6B00]" />
+            <motion.div
+              initial={
+                shouldReduceMotion
+                  ? {
+                      opacity: 1,
+                    }
+                  : {
+                      opacity: 0,
+                    }
+              }
+              whileInView={{
+                opacity: 1,
+              }}
+              viewport={{
+                once: true,
+                amount: 0.35,
+              }}
+              transition={{
+                duration: 0.2,
+              }}
+              className="relative"
+            >
+              {/* Animated top border */}
+              <motion.span
+                initial={
+                  shouldReduceMotion
+                    ? { scaleX: 1 }
+                    : { scaleX: 0 }
+                }
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true, amount: 0.35 }}
+                transition={{
+                  duration: 0.8,
+                  delay: 0.05,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                style={{
+                  transformOrigin: 'left center',
+                }}
+                className="pointer-events-none absolute left-0 top-0 z-40 h-px w-full bg-gradient-to-r from-[#00E5FF] via-white/30 to-[#FF6B00]"
+              />
 
-              <div className="pointer-events-none absolute -bottom-px -left-px h-7 w-7 border-b-2 border-l-2 border-[#FF6B00]" />
+              {/* Animated bottom border */}
+              <motion.span
+                initial={
+                  shouldReduceMotion
+                    ? { scaleX: 1 }
+                    : { scaleX: 0 }
+                }
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true, amount: 0.35 }}
+                transition={{
+                  duration: 0.8,
+                  delay: 0.35,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                style={{
+                  transformOrigin: 'right center',
+                }}
+                className="pointer-events-none absolute bottom-0 left-0 z-40 h-px w-full bg-gradient-to-r from-[#FF6B00] via-white/30 to-[#00E5FF]"
+              />
 
-              <div className="pointer-events-none absolute -bottom-px -right-px h-7 w-7 border-b-2 border-r-2 border-[#00E5FF]" />
+              {/* Animated left border */}
+              <motion.span
+                initial={
+                  shouldReduceMotion
+                    ? { scaleY: 1 }
+                    : { scaleY: 0 }
+                }
+                whileInView={{ scaleY: 1 }}
+                viewport={{ once: true, amount: 0.35 }}
+                transition={{
+                  duration: 0.7,
+                  delay: 0.15,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                style={{
+                  transformOrigin: 'top center',
+                }}
+                className="pointer-events-none absolute bottom-0 left-0 z-40 h-full w-px bg-[#00E5FF]"
+              />
 
-              {/* Table header */}
-              <div className="relative z-10 grid grid-cols-[80px_1fr_1fr_1.2fr] border-b border-white/10 bg-[#050816] px-5 py-3 font-mono text-[8px] uppercase tracking-[0.22em] text-slate-500 sm:grid-cols-[100px_140px_1fr_1.2fr] sm:px-8">
-                <div>Date</div>
-                <div>Time</div>
-                <div>Event</div>
-                <div>Venue</div>
-              </div>
+              {/* Animated right border */}
+              <motion.span
+                initial={
+                  shouldReduceMotion
+                    ? { scaleY: 1 }
+                    : { scaleY: 0 }
+                }
+                whileInView={{ scaleY: 1 }}
+                viewport={{ once: true, amount: 0.35 }}
+                transition={{
+                  duration: 0.7,
+                  delay: 0.25,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                style={{
+                  transformOrigin: 'bottom center',
+                }}
+                className="pointer-events-none absolute bottom-0 right-0 z-40 h-full w-px bg-[#FF6B00]"
+              />
 
-              <div className="divide-y divide-white/[0.06]">
-                {dynamicSchedule.map((item, index) => {
-                  const fromLeft = index % 2 === 0
+              <div className="relative border border-white/10 bg-[#080A0F]">
+                {/* Corner brackets */}
+                <div className="pointer-events-none absolute -left-px -top-px h-7 w-7 border-l-2 border-t-2 border-[#00E5FF]" />
 
-                  return (
-                    <div
-                      key={index}
-                      className="relative overflow-hidden"
-                    >
-                      {/* REAL TABLE ROW */}
-                      <div className="relative z-10 grid grid-cols-[80px_1fr_1fr_1.2fr] items-center px-5 py-4 text-xs transition-colors duration-200 hover:bg-white/[0.03] sm:grid-cols-[100px_140px_1fr_1.2fr] sm:px-8 sm:text-sm">
-                        <div className="font-mono text-[10px] text-[#00E5FF] sm:text-xs">
-                          {item.day}
+                <div className="pointer-events-none absolute -right-px -top-px h-7 w-7 border-r-2 border-t-2 border-[#FF6B00]" />
+
+                <div className="pointer-events-none absolute -bottom-px -left-px h-7 w-7 border-b-2 border-l-2 border-[#FF6B00]" />
+
+                <div className="pointer-events-none absolute -bottom-px -right-px h-7 w-7 border-b-2 border-r-2 border-[#00E5FF]" />
+
+                {/* Table header */}
+                <div className="relative z-10 grid grid-cols-[80px_1fr_1fr_1.2fr] border-b border-white/10 bg-[#050816] px-5 py-3 font-mono text-[8px] uppercase tracking-[0.22em] text-slate-500 sm:grid-cols-[100px_140px_1fr_1.2fr] sm:px-8">
+                  <div>Date</div>
+                  <div>Time</div>
+                  <div>Event</div>
+                  <div>Venue</div>
+                </div>
+
+                <div className="divide-y divide-white/[0.06]">
+                  {dynamicSchedule.map((item, index) => {
+                    const fromLeft = index % 2 === 0
+
+                    return (
+                      <div
+                        key={index}
+                        className="relative overflow-hidden"
+                      >
+                        {/* REAL TABLE ROW */}
+                        <div className="relative z-10 grid grid-cols-[80px_1fr_1fr_1.2fr] items-center px-5 py-4 text-xs transition-colors duration-200 hover:bg-white/[0.03] sm:grid-cols-[100px_140px_1fr_1.2fr] sm:px-8 sm:text-sm">
+                          <div className="font-mono text-[10px] text-[#00E5FF] sm:text-xs">
+                            {item.day}
+                          </div>
+
+                          <div className="font-mono text-[10px] text-slate-400 sm:text-xs">
+                            {item.time}
+                          </div>
+
+                          <div className="font-bold uppercase tracking-tight text-white">
+                            {item.event}
+                          </div>
+
+                          <div className="font-mono text-[10px] uppercase text-slate-400 sm:text-xs">
+                            {item.venue}
+                          </div>
                         </div>
 
-                        <div className="font-mono text-[10px] text-slate-400 sm:text-xs">
-                          {item.time}
-                        </div>
+                        {/* ================================================= */}
+                        {/* PAPER STRIPS */}
+                        {/* ================================================= */}
 
-                        <div className="font-bold uppercase tracking-tight text-white">
-                          {item.event}
-                        </div>
+                        {!shouldReduceMotion && (
+                          <div className="pointer-events-none absolute inset-0 z-20">
+                            {Array.from({ length: 5 }).map(
+                              (_, stripIndex) => {
+                                const top = `${stripIndex * 20}%`
+                                const bottom = `${
+                                  (4 - stripIndex) * 20
+                                }%`
 
-                        <div className="font-mono text-[10px] uppercase text-slate-400 sm:text-xs">
-                          {item.venue}
-                        </div>
+                                return (
+                                  <motion.div
+                                    key={stripIndex}
+                                    initial={{
+                                      x: fromLeft ? '-110%' : '110%',
+                                    }}
+                                    whileInView={{
+                                      x: '0%',
+                                    }}
+                                    viewport={{
+                                      once: true,
+                                      amount: 0.35,
+                                    }}
+                                    transition={{
+                                      delay:
+                                        index * 0.1 +
+                                        stripIndex * 0.07,
+                                      duration: 0.55,
+                                      ease: [0.22, 1, 0.36, 1],
+                                    }}
+                                    style={{
+                                      top,
+                                      bottom,
+                                    }}
+                                    className="absolute left-0 right-0 bg-[#0B0F18]"
+                                  >
+                                    {/* Paper edge */}
+                                    <span
+                                      className={`absolute left-0 right-0 top-0 h-px ${
+                                        stripIndex === 0
+                                          ? 'bg-[#00E5FF]/40'
+                                          : 'bg-white/[0.05]'
+                                      }`}
+                                    />
+
+                                    {/* Technical paper mark */}
+                                    <span
+                                      className={`absolute top-1/2 h-px w-8 -translate-y-1/2 ${
+                                        fromLeft
+                                          ? 'right-5 bg-[#FF6B00]/50'
+                                          : 'left-5 bg-[#00E5FF]/50'
+                                      }`}
+                                    />
+                                  </motion.div>
+                                )
+                              }
+                            )}
+                          </div>
+                        )}
                       </div>
-
-                      {/* ================================================= */}
-                      {/* PAPER STRIPS */}
-                      {/* ================================================= */}
-
-                      {!shouldReduceMotion && (
-                        <div className="pointer-events-none absolute inset-0 z-20">
-                          {Array.from({ length: 5 }).map(
-                            (_, stripIndex) => {
-                              const top = `${stripIndex * 20}%`
-                              const bottom = `${
-                                (4 - stripIndex) * 20
-                              }%`
-
-                              return (
-                                <motion.div
-                                  key={stripIndex}
-                                  initial={{
-                                    x: fromLeft ? '-110%' : '110%',
-                                  }}
-                                  whileInView={{
-                                    x: '0%',
-                                  }}
-                                  viewport={{
-                                    once: true,
-                                    amount: 0.35,
-                                  }}
-                                  transition={{
-                                    delay:
-                                      index * 0.1 +
-                                      stripIndex * 0.07,
-                                    duration: 0.55,
-                                    ease: [0.22, 1, 0.36, 1],
-                                  }}
-                                  style={{
-                                    top,
-                                    bottom,
-                                  }}
-                                  className="absolute left-0 right-0 bg-[#0B0F18]"
-                                >
-                                  {/* Paper edge */}
-                                  <span
-                                    className={`absolute left-0 right-0 top-0 h-px ${
-                                      stripIndex === 0
-                                        ? 'bg-[#00E5FF]/40'
-                                        : 'bg-white/[0.05]'
-                                    }`}
-                                  />
-
-                                  {/* Technical paper mark */}
-                                  <span
-                                    className={`absolute top-1/2 h-px w-8 -translate-y-1/2 ${
-                                      fromLeft
-                                        ? 'right-5 bg-[#FF6B00]/50'
-                                        : 'left-5 bg-[#00E5FF]/50'
-                                    }`}
-                                  />
-                                </motion.div>
-                              )
-                            }
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         </section>
       )}
@@ -431,15 +538,6 @@ function Events() {
 
               const eventNumber = String(index + 1).padStart(2, '0')
 
-              /*
-               * ALTERNATING CARD ENTRANCE
-               *
-               * Even cards:
-               *      LEFT  →  CENTER
-               *
-               * Odd cards:
-               *      RIGHT →  CENTER
-               */
               const cardInitial = shouldReduceMotion
                 ? {
                     opacity: 1,
@@ -496,10 +594,7 @@ function Events() {
                     />
 
                     <div className="grid md:grid-cols-[280px_1fr]">
-                      {/* ================================================= */}
                       {/* VISUAL BLOCK */}
-                      {/* ================================================= */}
-
                       <div className="relative min-h-[240px] overflow-hidden border-b border-white/10 bg-[#050816] md:border-b-0 md:border-r">
                         <img
                           src={event.bannerUrl || poster}
@@ -534,10 +629,7 @@ function Events() {
                         <span className="absolute bottom-0 right-0 h-8 w-8 border-b border-r border-[#FF6B00]/60" />
                       </div>
 
-                      {/* ================================================= */}
                       {/* INFORMATION BLOCK */}
-                      {/* ================================================= */}
-
                       <div className="relative p-6 md:p-8 lg:p-10">
                         <div className="mb-7 flex flex-wrap items-center gap-3">
                           <span className="border border-[#00E5FF]/30 px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.18em] text-[#00E5FF]">
@@ -569,10 +661,7 @@ function Events() {
                           </p>
                         </div>
 
-                        {/* ================================================= */}
                         {/* DATE / TIME / VENUE */}
-                        {/* ================================================= */}
-
                         <div className="mt-9 grid border-y border-white/[0.08] py-5 sm:grid-cols-3">
                           <div className="border-b border-white/[0.07] pb-4 sm:border-b-0 sm:border-r sm:pb-0">
                             <span className="block font-mono text-[8px] uppercase tracking-[0.18em] text-slate-600">
@@ -656,10 +745,7 @@ function Events() {
                           </div>
                         </div>
 
-                        {/* ================================================= */}
                         {/* FOOTER ACTION */}
-                        {/* ================================================= */}
-
                         {(() => {
                           const isDeadlinePassed = Boolean(
                             event.registrationDeadline &&
