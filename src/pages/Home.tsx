@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
 import poster from '../assets/images/poster.png'
 import logo from "../assets/images/logo.png";
 const images = import.meta.glob(
@@ -10,51 +11,70 @@ const images = import.meta.glob(
   },
 ) as Record<string, string>
 // ============================================================
-// ANIMATION PRESETS
+// ANIMATION PRESETS (Optimized 3D Hardware Accelerated)
 // ============================================================
 
-const revealFromLeft = {
-  hidden: {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const revealFromLeft: any = {
+  hidden: (isMobile: boolean) => ({
     opacity: 0,
-    x: -30,
-    y: 20,
-    scale: 0.98,
-  },
+    x: isMobile ? -35 : -90,
+    y: isMobile ? 35 : 50,
+    rotateY: isMobile ? 8 : 16,
+    rotateZ: -2,
+    scale: isMobile ? 0.96 : 0.92,
+  }),
   visible: {
     opacity: 1,
     x: 0,
     y: 0,
+    rotateY: 0,
+    rotateZ: 0,
     scale: 1,
   },
 }
 
-const revealFromRight = {
-  hidden: {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const revealFromRight: any = {
+  hidden: (isMobile: boolean) => ({
     opacity: 0,
-    x: 30,
-    y: 20,
-    scale: 0.98,
-  },
+    x: isMobile ? 35 : 90,
+    y: isMobile ? 35 : 50,
+    rotateY: isMobile ? -8 : -16,
+    rotateZ: 2,
+    scale: isMobile ? 0.96 : 0.92,
+  }),
   visible: {
     opacity: 1,
     x: 0,
     y: 0,
+    rotateY: 0,
+    rotateZ: 0,
     scale: 1,
   },
 }
 
-const revealFromDepth = {
-  hidden: {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const revealFromDepth: any = {
+  hidden: (isMobile: boolean) => ({
     opacity: 0,
-    y: 25,
-    scale: 0.97,
-  },
+    y: isMobile ? 45 : 75,
+    rotateX: isMobile ? 10 : 18,
+    scale: isMobile ? 0.92 : 0.86,
+  }),
   visible: {
     opacity: 1,
     y: 0,
+    rotateX: 0,
     scale: 1,
   },
 }
+
+const cardTransition = {
+  duration: 0.85,
+  ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+}
+
 
 
 // ============================================================
@@ -112,6 +132,14 @@ const featureCards = [
 // ============================================================
 
 function Home() {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   return (
     <>
             <div className="min-h-screen mt-10 overflow-hidden bg-[#050816] text-white">
@@ -196,6 +224,7 @@ function Home() {
                 return (
                   <motion.article
                     key={card.title}
+                    custom={isMobile}
                     variants={animation}
                     initial="hidden"
                     whileInView="visible"
@@ -203,10 +232,7 @@ function Home() {
                       once: true,
                       amount: 0.2,
                     }}
-                    transition={{
-                      duration: 0.5,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
+                    transition={cardTransition}
                     className={`relative w-full max-w-5xl ${index === 0
                       ? 'md:ml-[2%]'
                       : 'md:ml-auto md:mr-[2%]'
@@ -543,6 +569,7 @@ function Home() {
                 return (
                   <motion.article
                     key={card.title}
+                    custom={isMobile}
                     variants={animation}
                     initial="hidden"
                     whileInView="visible"
@@ -550,11 +577,7 @@ function Home() {
                       once: true,
                       amount: 0.2,
                     }}
-                    transition={{
-                      duration: 0.5,
-                      delay: index * 0.08,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
+                    transition={{ ...cardTransition, delay: index * 0.1 }}
                     className="group relative"
                   >
 
