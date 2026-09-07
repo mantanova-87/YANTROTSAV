@@ -24,10 +24,8 @@ import {
   GraduationCap,
   ShieldCheck,
   Check,
-  QrCode,
   ChevronLeft,
   ChevronRight,
-  Volume2,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useAppDispatch } from '../store/hooks'
@@ -85,15 +83,6 @@ export default function AdminDashboard() {
   const [rosterCheckInFilter, setRosterCheckInFilter] = useState<'all' | 'checked' | 'unchecked'>('all')
   const [rosterPage, setRosterPage] = useState(1)
   const [rosterPageSize, setRosterPageSize] = useState(50)
-
-  // Gate Scanner state
-  const [scannerInput, setScannerInput] = useState('')
-  const [scannerResult, setScannerResult] = useState<{
-    success: boolean
-    entry?: EventRosterEntry
-    message: string
-    timestamp: string
-  } | null>(null)
 
   // Users Directory state
   const [usersList, setUsersList] = useState<UserProfile[]>([])
@@ -387,38 +376,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // 1-Click Clone / Duplicate Event
-  const handleCloneEvent = async (event: EventDocument) => {
-    try {
-      const clonedDTO: CreateEventDTO = {
-        title: `${event.title} (Copy)`,
-        category: event.category,
-        description: event.description,
-        format: event.format || event.eventType,
-        minTeamSize: event.minTeamSize,
-        maxTeamSize: event.maxTeamSize,
-        maxTeams: event.maxTeamsAllowed || event.maxTeams || 50,
-        venue: event.venue || '',
-        eventDate: event.eventTiming || event.eventDate || '',
-        eventTiming: event.eventTiming || event.eventDate || '',
-        registrationDeadline: event.registrationDeadline || '',
-        bannerUrl: event.bannerUrl || '',
-        status: 'draft',
-      }
-
-      try {
-        await eventsService.createEvent(clonedDTO)
-      } catch (cloneErr: any) {
-        throw new Error(`[Database Error] Failed to clone event: ${cloneErr?.message || 'Access denied'}. Check 'events' collection permissions.`)
-      }
-      dispatch(invalidateEventsCache())
-      showNotification(`Event "${clonedDTO.title}" cloned as draft!`)
-      await loadAdminOverview()
-    } catch (err: any) {
-      showNotification(err?.message || 'Failed to clone event', 'error')
-    }
-  }
-
   const confirmDeleteEvent = (event: EventDocument) => {
     setEventToDelete(event)
     setDeleteModalOpen(true)
@@ -470,86 +427,6 @@ export default function AdminDashboard() {
       await loadRoster(selectedEventId)
     } catch (err: any) {
       showNotification(err?.message || 'Failed to update check-in status', 'error')
-    }
-  }
-
-  // Audio synthesizer for Gate Scanner feedback
-  const playCyberTone = (type: 'success' | 'error') => {
-    try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
-      if (!AudioContextClass) return
-      const ctx = new AudioContextClass()
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      if (type === 'success') {
-        osc.type = 'sine'
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime)
-        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08)
-        gain.gain.setValueAtTime(0.12, ctx.currentTime)
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25)
-        osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 0.25)
-      } else {
-        osc.type = 'sawtooth'
-        osc.frequency.setValueAtTime(220, ctx.currentTime)
-        osc.frequency.setValueAtTime(160, ctx.currentTime + 0.1)
-        gain.gain.setValueAtTime(0.12, ctx.currentTime)
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
-        osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 0.3)
-      }
-    } catch {
-      // AudioContext policy blocked
-    }
-  }
-
-  // High-Speed Gate Clearance Scanner
-  const handleScanPass = async (queryToScan?: string) => {
-    const raw = (queryToScan !== undefined ? queryToScan : scannerInput).trim()
-    if (!raw) return
-    setScannerInput('')
-
-    const clean = raw.toLowerCase().replace(/^ytr-/, '')
-    const matched = roster.find((r) => {
-      const regId = r.registrationId.toLowerCase()
-      const roll = (r.studentRollNumber || r.studentRollNo || '').toLowerCase()
-      const email = r.studentEmail.toLowerCase()
-      const username = (r.username || '').toLowerCase()
-      return (
-        regId === clean ||
-        regId.startsWith(clean) ||
-        `ytr-${regId.slice(0, 8)}` === raw.toLowerCase() ||
-        roll === clean ||
-        email === clean ||
-        (clean.includes('@') && email === clean) ||
-        (username && username === clean)
-      )
-    })
-
-    if (matched) {
-      if (!matched.checkedIn) {
-        await adminService.checkInStudent(matched.registrationId)
-        matched.checkedIn = true
-      }
-      playCyberTone('success')
-      setScannerResult({
-        success: true,
-        entry: matched,
-        message: 'GATE CLEARANCE GRANTED ✓',
-        timestamp: new Date().toLocaleTimeString(),
-      })
-      showNotification(`Verified: ${matched.studentName}`)
-      await loadRoster(selectedEventId)
-    } else {
-      playCyberTone('error')
-      setScannerResult({
-        success: false,
-        message: `NO RECORD FOUND FOR "${raw}"`,
-        timestamp: new Date().toLocaleTimeString(),
-      })
-      showNotification(`No registration match found for "${raw}"`, 'error')
     }
   }
 
@@ -1065,7 +942,7 @@ export default function AdminDashboard() {
                   Events Catalog & Storage Controls
                 </h2>
                 <p className="mt-1 font-mono text-[9px] text-slate-500">
-                  Deploy, edit, clone, delete events and manage banner images in Appwrite Storage.
+                  Deploy, edit, delete events and manage banner images in Appwrite Storage.
                 </p>
               </div>
 
@@ -1207,16 +1084,6 @@ export default function AdminDashboard() {
                         <span>Edit</span>
                       </button>
 
-                      {/* 1-Click Clone Button */}
-                      <button
-                        onClick={() => handleCloneEvent(ev)}
-                        className="flex items-center gap-1 border border-white/15 bg-white/5 px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-purple-400 hover:border-purple-400 hover:bg-purple-950/20 transition-colors"
-                        title="Duplicate as new event"
-                      >
-                        <Copy size={12} />
-                        <span>Clone</span>
-                      </button>
-
                       {/* Delete Button */}
                       <button
                         onClick={() => confirmDeleteEvent(ev)}
@@ -1318,87 +1185,6 @@ export default function AdminDashboard() {
                   <span>Export Attendee List</span>
                 </button>
               </div>
-            </div>
-
-            {/* Rapid Gate Clearance Scanner Bar */}
-            <div className="mt-4 border border-[#00E5FF]/30 bg-[#00E5FF]/5 p-4 relative overflow-hidden">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 border border-[#00E5FF]/50 bg-[#00E5FF]/10 text-[#00E5FF]">
-                    <QrCode size={20} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold uppercase tracking-wider text-white">
-                        Rapid Gate Clearance Scanner
-                      </span>
-                      <span className="font-mono text-[9px] border border-emerald-500/40 bg-emerald-950/40 text-emerald-400 px-1.5 py-0.2 rounded flex items-center gap-1">
-                        <Volume2 size={10} /> AUDIO FEEDBACK ON
-                      </span>
-                    </div>
-                    <p className="font-mono text-[10px] text-slate-400">
-                      Scan QR code or paste Registration ID / Roll No / Email / Username to verify & check in instantly.
-                    </p>
-                  </div>
-                </div>
-
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    if (scannerInput.trim()) {
-                      handleScanPass(scannerInput)
-                    }
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <input
-                    type="text"
-                    value={scannerInput}
-                    onChange={(e) => setScannerInput(e.target.value)}
-                    placeholder="Scan QR or enter ID/Roll..."
-                    className="border border-white/20 bg-[#050816] px-3 py-2 font-mono text-xs text-white outline-none focus:border-[#00E5FF] w-56 sm:w-72"
-                    autoComplete="off"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!scannerInput.trim()}
-                    className="border border-[#00E5FF] bg-[#00E5FF] px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-black transition-all hover:bg-transparent hover:text-[#00E5FF] disabled:opacity-40"
-                  >
-                    Verify & Check-In
-                  </button>
-                </form>
-              </div>
-
-              {/* Scanner result dossier */}
-              {scannerResult && (
-                <div
-                  className={`mt-3 p-3 border font-mono text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
-                    scannerResult.success
-                      ? 'border-emerald-500/50 bg-emerald-950/40 text-emerald-300'
-                      : 'border-red-500/50 bg-red-950/40 text-red-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {scannerResult.success ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
-                    <span className="font-bold">{scannerResult.message}</span>
-                    {scannerResult.entry && (
-                      <span className="text-white">
-                        — <strong>{scannerResult.entry.studentName}</strong> ({scannerResult.entry.studentRollNumber || scannerResult.entry.studentRollNo || 'No Roll'}) | Event: {scannerResult.entry.eventTitle || 'Event'}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 text-[10px] text-slate-400">
-                    <span>Scanned at {scannerResult.timestamp}</span>
-                    <button
-                      type="button"
-                      onClick={() => setScannerResult(null)}
-                      className="text-slate-500 hover:text-white underline"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Attendance Progress & Summary */}

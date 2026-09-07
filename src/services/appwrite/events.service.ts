@@ -18,17 +18,21 @@ export class EventsService {
     status?: EventStatus
     limit?: number
   }): Promise<EventDocument[]> {
+    const queries = [
+      Query.limit(options?.limit ?? 100),
+      Query.orderDesc('$createdAt'),
+    ]
+    if (options?.category && options?.category !== 'all') {
+      // Server-side filtering using Appwrite index on 'category'
+      queries.unshift(Query.equal('category', options.category.toLowerCase()))
+    }
     const response = await databases.listDocuments(
       APPWRITE_CONFIG.databaseId,
       APPWRITE_CONFIG.collections.events,
-      [Query.limit(options?.limit ?? 100), Query.orderDesc('$createdAt')],
+      queries,
     )
-
+    
     let docs = response.documents as unknown as EventDocument[]
-
-    if (options?.category && options.category !== 'all') {
-      docs = docs.filter((e) => e.category?.toLowerCase() === options.category!.toLowerCase())
-    }
     if (options?.status) {
       docs = docs.filter((e) => e.status === options.status)
     }
