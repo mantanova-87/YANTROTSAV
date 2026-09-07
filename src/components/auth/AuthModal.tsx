@@ -190,7 +190,7 @@ export default function AuthModal() {
                 [AUTH // PROTOCOL]
               </span>
               <h2 className="mt-1 text-xl font-black uppercase tracking-tight text-white">
-                {authModalMode === 'login' ? 'Student Sign In' : 'Create Identity Pass'}
+                {authModalMode === 'login' ? 'Sign In' : 'Create Identity Pass'}
               </h2>
             </div>
 

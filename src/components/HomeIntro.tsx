@@ -1,8 +1,20 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import logo from '../assets/images/logo.png'
+import introAudio from '../assets/images/intro.mp3'
 
-const words = ['LADIES', 'AND', 'GENTLEMEN,', 'ARE', 'YOU', 'READY?']
+const words = [
+  'LADIES',
+  'AND',
+  'GENTLEMEN,',
+  'YOU',
+  'ARE',
+  'STILL',
+  'NOT',
+  'READY',
+  'FOR',
+  'THIS',
+]
 
 type HomeIntroProps = {
   onComplete: () => void
@@ -22,6 +34,140 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
   const [showLogo, setShowLogo] = useState(false)
   const [exiting, setExiting] = useState(false)
 
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const fallbackTimerRef = useRef<number | null>(null)
+  const exitTimerRef = useRef<number | null>(null)
+
+  /*
+   * --------------------------------------------------
+   * AUDIO
+   * --------------------------------------------------
+   *
+   * The audio controls the actual completion of the intro.
+   *
+   * This means:
+   *
+   * Text animation
+   *       ↓
+   * Logo animation
+   *       ↓
+   * Audio continues
+   *       ↓
+   * Audio finishes
+   *       ↓
+   * Intro exits
+   *       ↓
+   * Home page
+   *
+   * Browser autoplay restrictions may still prevent
+   * sound until the user has interacted with the page.
+   */
+
+  useEffect(() => {
+    if (!showIntro || shouldReduceMotion) {
+      return
+    }
+
+    const audio = new Audio(introAudio)
+
+    audio.preload = 'auto'
+    audio.volume = 0.75
+
+    audioRef.current = audio
+
+    let hasCompleted = false
+
+    const completeIntro = () => {
+      if (hasCompleted) {
+        return
+      }
+
+      hasCompleted = true
+
+      if (fallbackTimerRef.current !== null) {
+        window.clearTimeout(fallbackTimerRef.current)
+        fallbackTimerRef.current = null
+      }
+
+      /*
+       * Start visual exit after audio has completely finished.
+       */
+      setExiting(true)
+
+      exitTimerRef.current = window.setTimeout(() => {
+        sessionStorage.setItem('yantrotsav-intro-shown', 'true')
+        setShowIntro(false)
+        onComplete()
+      }, 800)
+    }
+
+    const handleAudioEnded = () => {
+      completeIntro()
+    }
+
+    audio.addEventListener('ended', handleAudioEnded)
+
+    /*
+     * Attempt automatic playback.
+     */
+    const playAudio = async () => {
+      try {
+        await audio.play()
+
+        /*
+         * Audio is playing successfully.
+         * No fallback timer is needed because the
+         * 'ended' event will control completion.
+         */
+      } catch (error) {
+        /*
+         * Browser autoplay policy may block audio.
+         *
+         * We don't want the visitor to get stuck on
+         * the intro forever, so use a visual fallback.
+         */
+        console.warn(
+          'YANTROTSAV intro audio autoplay was blocked:',
+          error,
+        )
+
+        fallbackTimerRef.current = window.setTimeout(() => {
+          completeIntro()
+        }, 5800)
+      }
+    }
+
+    playAudio()
+
+    return () => {
+      audio.removeEventListener('ended', handleAudioEnded)
+
+      audio.pause()
+      audio.currentTime = 0
+
+      if (fallbackTimerRef.current !== null) {
+        window.clearTimeout(fallbackTimerRef.current)
+        fallbackTimerRef.current = null
+      }
+
+      if (exitTimerRef.current !== null) {
+        window.clearTimeout(exitTimerRef.current)
+        exitTimerRef.current = null
+      }
+
+      audioRef.current = null
+    }
+  }, [showIntro, shouldReduceMotion, onComplete])
+
+  /*
+   * --------------------------------------------------
+   * VISUAL INTRO TIMELINE
+   * --------------------------------------------------
+   *
+   * These timers only control visual elements.
+   * They do NOT control when the page exits.
+   */
+
   useEffect(() => {
     if (!showIntro) {
       onComplete()
@@ -38,24 +184,15 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
       return () => window.clearTimeout(timer)
     }
 
+    /*
+     * Show logo after the slower word-by-word reveal.
+     */
     const logoTimer = window.setTimeout(() => {
       setShowLogo(true)
-    }, 1900)
-
-    const exitTimer = window.setTimeout(() => {
-      setExiting(true)
-    }, 3500)
-
-    const completeTimer = window.setTimeout(() => {
-      sessionStorage.setItem('yantrotsav-intro-shown', 'true')
-      setShowIntro(false)
-      onComplete()
-    }, 4300)
+    }, 3200)
 
     return () => {
       window.clearTimeout(logoTimer)
-      window.clearTimeout(exitTimer)
-      window.clearTimeout(completeTimer)
     }
   }, [showIntro, shouldReduceMotion, onComplete])
 
@@ -80,17 +217,26 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
           className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#050816]"
         >
           {/* Technical frame */}
+
           <span className="absolute left-5 top-5 h-8 w-8 border-l border-t border-[#FF6B00]/70" />
+
           <span className="absolute right-5 top-5 h-8 w-8 border-r border-t border-[#00E5FF]/70" />
+
           <span className="absolute bottom-5 left-5 h-8 w-8 border-b border-l border-[#00E5FF]/70" />
+
           <span className="absolute bottom-5 right-5 h-8 w-8 border-b border-r border-[#FF6B00]/70" />
 
           {/* Side lines */}
+
           <span className="absolute left-0 top-1/2 h-px w-[18%] bg-[#FF6B00]/70" />
+
           <span className="absolute right-0 top-1/2 h-px w-[18%] bg-[#00E5FF]/70" />
+
+          {/* Main content */}
 
           <div className="relative z-10 flex w-full max-w-5xl flex-col items-center px-6 text-center">
             {/* Word-by-word text */}
+
             <div className="flex max-w-4xl flex-wrap justify-center gap-x-3 gap-y-2 md:gap-x-5">
               {words.map((word, index) => (
                 <motion.span
@@ -106,8 +252,11 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
                     filter: 'blur(0px)',
                   }}
                   transition={{
-                    delay: index * 0.22,
-                    duration: 0.45,
+                    /*
+                     * Slower cinematic reveal.
+                     */
+                    delay: index * 0.70,
+                    duration: 0.98,
                     ease: [0.22, 1, 0.36, 1],
                   }}
                   className="text-[clamp(1.8rem,5vw,4.5rem)] font-black uppercase leading-none tracking-[-0.05em] text-red-600"
@@ -118,6 +267,7 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
             </div>
 
             {/* Logo */}
+
             <AnimatePresence>
               {showLogo && (
                 <motion.div
@@ -140,9 +290,14 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
                   className="mt-12"
                 >
                   <div className="relative">
+                    {/* Logo frame */}
+
                     <span className="absolute -left-4 -top-4 h-5 w-5 border-l-2 border-t-2 border-[#00E5FF]" />
+
                     <span className="absolute -right-4 -top-4 h-5 w-5 border-r-2 border-t-2 border-[#FF6B00]" />
+
                     <span className="absolute -bottom-4 -left-4 h-5 w-5 border-b-2 border-l-2 border-[#FF6B00]" />
+
                     <span className="absolute -bottom-4 -right-4 h-5 w-5 border-b-2 border-r-2 border-[#00E5FF]" />
 
                     <img
@@ -169,11 +324,16 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
           </div>
 
           {/* Progress line */}
+
           <motion.div
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{
-              duration: 4.3,
+              /*
+               * This is only a visual progress indicator.
+               * The audio still controls actual completion.
+               */
+              duration: 5.8,
               ease: 'linear',
             }}
             className="absolute bottom-0 left-0 h-px w-full origin-left bg-[#FF6B00]"
