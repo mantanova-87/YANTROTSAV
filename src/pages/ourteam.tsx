@@ -3,10 +3,10 @@ import { Mail, MessageCircle } from 'lucide-react'
 
 const teamMembers = [
   {
-    name: 'Member One',
-    designation: 'Event Coordinator',
-    course: 'B.Tech CSE',
-    semester: 'Semester 1',
+    name: 'ABHINAV KUMAR',
+    designation: '',
+    course: 'B.Tech CSE CYBER',
+    semester: '',
     email: 'member1@example.com',
     instagram: '#',
     linkedin: '#',
@@ -14,7 +14,7 @@ const teamMembers = [
     image: '',
   },
   {
-    name: 'Member Two',
+    name: 'HARSH SAXENA',
     designation: 'Technical Lead',
     course: 'B.Tech CSE',
     semester: 'Semester 2',
@@ -25,7 +25,7 @@ const teamMembers = [
     image: '',
   },
   {
-    name: 'Member Three',
+    name: 'MANTVAYA KUMAR',
     designation: 'Creative Lead',
     course: 'B.Tech CSE',
     semester: 'Semester 3',
@@ -36,7 +36,7 @@ const teamMembers = [
     image: '',
   },
   {
-    name: 'Member Four',
+    name: 'PRIYANSHU GUPTA',
     designation: 'Media & Outreach',
     course: 'B.Tech CSE',
     semester: 'Semester 4',
@@ -47,10 +47,10 @@ const teamMembers = [
     image: '',
   },
   {
-    name: 'Member Five',
-    designation: 'Operations Lead',
+    name: 'KUMAR SACHIN',
+    designation: '',
     course: 'B.Tech CSE',
-    semester: 'Semester 5',
+    semester: '',
     email: 'member5@example.com',
     instagram: '#',
     linkedin: '#',
@@ -58,7 +58,7 @@ const teamMembers = [
     image: '',
   },
   {
-    name: 'Member Six',
+    name: 'MEHAK SHARMA',
     designation: 'Design & Experience',
     course: 'B.Tech CSE',
     semester: 'Semester 6',

@@ -179,7 +179,7 @@ export default function Contact() {
             <span className="h-px w-8 bg-[#00E5FF]" />
 
             <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-slate-500">
-              04 / Contact
+              01 / Contact
             </span>
 
             <span className="h-px w-8 bg-[#FF6B00]" />

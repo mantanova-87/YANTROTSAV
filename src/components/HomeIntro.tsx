@@ -1,352 +1,400 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import logo from '../assets/images/logo.png'
-import introAudio from '../assets/images/intro.mp3'
 
-const isMobile =
-  typeof window !== 'undefined' ? window.innerWidth < 768 : false
+const words = ['LADIES', 'AND', 'GENTLEMEN,', 'ARE', 'YOU', 'READY']
 
-const words = [
-  'LADIES',
-  'AND',
-  'GENTLEMEN,',
-  'YOU',
-  'ARE',
-  'STILL',
-  'NOT',
-  'READY',
-  'FOR',
-  'THIS',
-]
-
-type HomeIntroProps = {
-  onComplete: () => void
-}
-
-function HomeIntro({ onComplete }: HomeIntroProps) {
+function HomeIntro() {
   const shouldReduceMotion = useReducedMotion()
 
-  const [showIntro, setShowIntro] = useState(() => {
-    if (typeof window === 'undefined') {
-      return true
-    }
-
-    return !sessionStorage.getItem('yantrotsav-intro-shown')
-  })
-
-  const [showLogo, setShowLogo] = useState(false)
+  const [showText, setShowText] = useState(false)
   const [exiting, setExiting] = useState(false)
-
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const fallbackTimerRef = useRef<number | null>(null)
-  const exitTimerRef = useRef<number | null>(null)
-
-  /*
-   * --------------------------------------------------
-   * AUDIO
-   * --------------------------------------------------
-   *
-   * The audio controls the actual completion of the intro.
-   *
-   * This means:
-   *
-   * Text animation
-   *       ↓
-   * Logo animation
-   *       ↓
-   * Audio continues
-   *       ↓
-   * Audio finishes
-   *       ↓
-   * Intro exits
-   *       ↓
-   * Home page
-   *
-   * Browser autoplay restrictions may still prevent
-   * sound until the user has interacted with the page.
-   */
+  const [skipIntro, setSkipIntro] = useState(false)
 
   useEffect(() => {
-    if (!showIntro || shouldReduceMotion) {
+    const alreadyShown = sessionStorage.getItem('yantrotsav-intro-shown')
+
+    // Intro already completed in this browser session.
+    if (alreadyShown) {
+      setSkipIntro(true)
       return
     }
-
-    const audio = new Audio(introAudio)
-
-    audio.preload = 'auto'
-    audio.volume = 0.75
-
-    audioRef.current = audio
-
-    let hasCompleted = false
-
-    const completeIntro = () => {
-      if (hasCompleted) {
-        return
-      }
-
-      hasCompleted = true
-
-      if (fallbackTimerRef.current !== null) {
-        window.clearTimeout(fallbackTimerRef.current)
-        fallbackTimerRef.current = null
-      }
-
-      /*
-       * Start visual exit after audio has completely finished.
-       */
-      setExiting(true)
-
-      exitTimerRef.current = window.setTimeout(() => {
-        sessionStorage.setItem('yantrotsav-intro-shown', 'true')
-        setShowIntro(false)
-        onComplete()
-      }, 800)
-    }
-
-    const handleAudioEnded = () => {
-      completeIntro()
-    }
-
-    audio.addEventListener('ended', handleAudioEnded)
 
     /*
-     * Attempt automatic playback.
-     */
-    const playAudio = async () => {
-      try {
-        await audio.play()
+      TIMELINE
 
-        /*
-         * Audio is playing successfully.
-         * No fallback timer is needed because the
-         * 'ended' event will control completion.
-         */
-      } catch (error) {
-        /*
-         * Browser autoplay policy may block audio.
-         *
-         * We don't want the visitor to get stuck on
-         * the intro forever, so use a visual fallback.
-         */
-        console.warn(
-          'YANTROTSAV intro audio autoplay was blocked:',
-          error,
-        )
+      0.0s  → logo starts spinning
+      3.2s  → logo stops
+      3.3s  → text starts
+      6.4s  → intro fades
+      7.2s  → homepage is force-loaded
+    */
 
-        fallbackTimerRef.current = window.setTimeout(() => {
-          completeIntro()
-        }, 6200)
-      }
-    }
+    const textTimer = window.setTimeout(() => {
+      setShowText(true)
+    }, shouldReduceMotion ? 200 : 3300)
 
-    playAudio()
+    const exitTimer = window.setTimeout(() => {
+      setExiting(true)
+    }, shouldReduceMotion ? 1200 : 6400)
 
-    return () => {
-      audio.removeEventListener('ended', handleAudioEnded)
-
-      audio.pause()
-      audio.currentTime = 0
-
-      if (fallbackTimerRef.current !== null) {
-        window.clearTimeout(fallbackTimerRef.current)
-        fallbackTimerRef.current = null
-      }
-
-      if (exitTimerRef.current !== null) {
-        window.clearTimeout(exitTimerRef.current)
-        exitTimerRef.current = null
-      }
-
-      audioRef.current = null
-    }
-  }, [showIntro, shouldReduceMotion, onComplete])
-
-  /*
-   * --------------------------------------------------
-   * VISUAL INTRO TIMELINE
-   * --------------------------------------------------
-   *
-   * These timers only control visual elements.
-   * They do NOT control when the page exits.
-   */
-
-  useEffect(() => {
-    if (!showIntro) {
-      onComplete()
-      return
-    }
-
-    if (shouldReduceMotion) {
+    const homeTimer = window.setTimeout(() => {
       sessionStorage.setItem('yantrotsav-intro-shown', 'true')
 
-      const timer = window.setTimeout(() => {
-        onComplete()
-      }, 500)
+      /*
+        Force a real homepage load.
 
-      return () => window.clearTimeout(timer)
-    }
-
-    /*
-     * Show logo only after all words are fully revealed.
-     * With 10 words × 0.45s stagger, last word starts at 4.05s.
-     * Adding 0.6s duration → all words visible at ~4.65s.
-     * Logo fires at 4800ms for a clean sequential reveal.
-     */
-    const logoTimer = window.setTimeout(() => {
-      setShowLogo(true)
-    }, 4800)
+        This is intentional instead of navigate('/').
+        If HomeIntro is already mounted on "/", React Router can
+        consider navigate("/") the same route and leave the intro
+        component mounted.
+      */
+      window.location.replace('/')
+    }, shouldReduceMotion ? 1800 : 7200)
 
     return () => {
-      window.clearTimeout(logoTimer)
+      window.clearTimeout(textTimer)
+      window.clearTimeout(exitTimer)
+      window.clearTimeout(homeTimer)
     }
-  }, [showIntro, shouldReduceMotion, onComplete])
+  }, [shouldReduceMotion])
 
-  if (!showIntro) {
+  // Don't render the intro after it has already been completed.
+  if (skipIntro) {
     return null
   }
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {!exiting && (
-        <motion.div
+        <motion.main
+          key="yantrotsav-intro"
           initial={{ opacity: 1 }}
           exit={{
             opacity: 0,
-            scale: 1.03,
-            filter: 'blur(8px)',
+            scale: 1.02,
+            filter: 'blur(10px)',
           }}
           transition={{
             duration: 0.8,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#050816]"
+          className="fixed inset-0 z-[100] overflow-hidden bg-[#050816] text-white"
         >
-          {/* Technical frame */}
+          {/* ====================================================== */}
+          {/* BACKGROUND GRID */}
+          {/* ====================================================== */}
 
-          <span className="absolute left-5 top-5 h-8 w-8 border-l border-t border-[#FF6B00]/70" />
+          <div className="pointer-events-none absolute inset-0 opacity-35">
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage:
+                  'linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)',
+                backgroundSize: '44px 44px',
+              }}
+            />
+          </div>
 
-          <span className="absolute right-5 top-5 h-8 w-8 border-r border-t border-[#00E5FF]/70" />
+          {/* ====================================================== */}
+          {/* TECHNICAL CORNERS */}
+          {/* ====================================================== */}
 
-          <span className="absolute bottom-5 left-5 h-8 w-8 border-b border-l border-[#00E5FF]/70" />
+          <div className="pointer-events-none absolute left-4 top-4 h-8 w-8 border-l border-t border-[#00E5FF]/50" />
 
-          <span className="absolute bottom-5 right-5 h-8 w-8 border-b border-r border-[#FF6B00]/70" />
+          <div className="pointer-events-none absolute right-4 top-4 h-8 w-8 border-r border-t border-[#FF6B00]/50" />
 
-          {/* Side lines */}
+          <div className="pointer-events-none absolute bottom-4 left-4 h-8 w-8 border-b border-l border-[#FF6B00]/50" />
 
-          <span className="absolute left-0 top-1/2 h-px w-[18%] bg-[#FF6B00]/70" />
+          <div className="pointer-events-none absolute bottom-4 right-4 h-8 w-8 border-b border-r border-[#00E5FF]/50" />
 
-          <span className="absolute right-0 top-1/2 h-px w-[18%] bg-[#00E5FF]/70" />
+          {/* Side accent lines */}
+          <div className="pointer-events-none absolute left-0 top-[30%] h-32 w-px bg-[#00E5FF]/40" />
 
-          {/* Main content */}
+          <div className="pointer-events-none absolute right-0 top-[65%] h-40 w-px bg-[#FF6B00]/40" />
 
-          <div className="relative z-10 flex w-full max-w-5xl flex-col items-center px-6 text-center">
-            {/* Word-by-word text */}
+          {/* ====================================================== */}
+          {/* MAIN CONTENT */}
+          {/* ====================================================== */}
 
-            <div className="flex max-w-4xl flex-wrap justify-center gap-x-3 gap-y-2 md:gap-x-5">
-              {words.map((word, index) => (
-                <motion.span
-                  key={word}
-                  initial={{
-                    opacity: 0,
-                    y: isMobile ? 15 : 25,
-                    filter: isMobile ? 'none' : 'blur(8px)',
-                  }}
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                    filter: 'blur(0px)',
-                  }}
-                  transition={{
-                    /*
-                     * Stagger timed to match the voice track (5.63s).
-                     * 10 words × 0.45s = last word starts at 4.05s.
-                     * All words visible by ~4.5s, just before audio ends.
-                     */
-                    delay: index * 0.45,
-                    duration: isMobile ? 0.4 : 0.6,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                  className="text-[clamp(1.8rem,5vw,4.5rem)] font-black uppercase leading-none tracking-[-0.05em] text-red-600"
-                >
-                  {word}
-                </motion.span>
-              ))}
-            </div>
+          <div className="relative flex min-h-screen w-full flex-col items-center justify-center px-5 py-16">
+            {/* ================================================== */}
+            {/* LOGO */}
+            {/* ================================================== */}
 
-            {/* Logo */}
-
-            <AnimatePresence>
-              {showLogo && (
+            <div className="relative flex h-[230px] w-full items-center justify-center sm:h-[280px] md:h-[320px]">
+              {/* Rotating outer ring */}
+              {!shouldReduceMotion && (
                 <motion.div
                   initial={{
                     opacity: 0,
-                    y: isMobile ? 20 : 35,
-                    scale: isMobile ? 0.9 : 0.75,
-                    filter: isMobile ? 'none' : 'blur(14px)',
+                    scale: 0.5,
+                    rotate: -900,
+                  }}
+                  animate={{
+                    opacity: [0, 0.7, 0.45, 0],
+                    scale: [0.5, 1.05, 1.2, 1.3],
+                    rotate: [-900, 0, 720, 1080],
+                  }}
+                  transition={{
+                    duration: 3.2,
+                    times: [0, 0.42, 0.78, 1],
+                    ease: 'easeOut',
+                  }}
+                  className="pointer-events-none absolute h-[210px] w-[210px] border border-[#00E5FF]/25 sm:h-[260px] sm:w-[260px] md:h-[300px] md:w-[300px]"
+                >
+                  <span className="absolute -left-1 -top-1 h-4 w-4 border-l-2 border-t-2 border-[#00E5FF]" />
+
+                  <span className="absolute -right-1 -top-1 h-4 w-4 border-r-2 border-t-2 border-[#FF6B00]" />
+
+                  <span className="absolute -bottom-1 -left-1 h-4 w-4 border-b-2 border-l-2 border-[#FF6B00]" />
+
+                  <span className="absolute -bottom-1 -right-1 h-4 w-4 border-b-2 border-r-2 border-[#00E5FF]" />
+                </motion.div>
+              )}
+
+              {/* Secondary rotating ring */}
+              {!shouldReduceMotion && (
+                <motion.div
+                  initial={{
+                    opacity: 0,
+                    scale: 0.6,
+                    rotate: 700,
+                  }}
+                  animate={{
+                    opacity: [0, 0.35, 0.15, 0],
+                    scale: [0.6, 1.08, 1.2, 1.3],
+                    rotate: [700, 0, -500, -800],
+                  }}
+                  transition={{
+                    duration: 3.2,
+                    ease: 'easeOut',
+                  }}
+                  className="pointer-events-none absolute h-[175px] w-[175px] border border-[#FF6B00]/20 sm:h-[220px] sm:w-[220px] md:h-[255px] md:w-[255px]"
+                />
+              )}
+
+              {/* Logo frame */}
+              <div className="relative">
+                <span className="pointer-events-none absolute -left-5 -top-5 h-9 w-9 border-l-2 border-t-2 border-[#00E5FF] sm:-left-6 sm:-top-6 sm:h-11 sm:w-11" />
+
+                <span className="pointer-events-none absolute -right-5 -top-5 h-9 w-9 border-r-2 border-t-2 border-[#FF6B00] sm:-right-6 sm:-top-6 sm:h-11 sm:w-11" />
+
+                <span className="pointer-events-none absolute -bottom-5 -left-5 h-9 w-9 border-b-2 border-l-2 border-[#FF6B00] sm:-bottom-6 sm:-left-6 sm:h-11 sm:w-11" />
+
+                <span className="pointer-events-none absolute -bottom-5 -right-5 h-9 w-9 border-b-2 border-r-2 border-[#00E5FF] sm:-bottom-6 sm:-right-6 sm:h-11 sm:w-11" />
+
+                {/* ================================================= */}
+                {/* LOGO */}
+                {/* ================================================= */}
+
+                <motion.img
+                  src={logo}
+                  alt="YANTROTSAV"
+                  initial={
+                    shouldReduceMotion
+                      ? {
+                          opacity: 1,
+                          scale: 1,
+                          rotate: 0,
+                          filter: 'blur(0px)',
+                        }
+                      : {
+                          opacity: 0,
+                          scale: 0.2,
+                          rotate: -1800,
+                          filter: 'blur(20px)',
+                        }
+                  }
+                  animate={
+                    shouldReduceMotion
+                      ? {
+                          opacity: 1,
+                          scale: 1,
+                          rotate: 0,
+                          filter: 'blur(0px)',
+                        }
+                      : {
+                          opacity: 1,
+                          scale: [0.2, 1.12, 0.97, 1.05, 1],
+                          rotate: [-1800, 1260, -540, 90, 0],
+                          filter: [
+                            'blur(20px)',
+                            'blur(7px)',
+                            'blur(3px)',
+                            'blur(1px)',
+                            'blur(0px)',
+                          ],
+                        }
+                  }
+                  transition={
+                    shouldReduceMotion
+                      ? { duration: 0 }
+                      : {
+                          duration: 3.2,
+                          times: [0, 0.4, 0.72, 0.9, 1],
+                          ease: [0.16, 1, 0.3, 1],
+                        }
+                  }
+                  className="
+                    relative
+                    z-10
+                    block
+                    h-auto
+                    w-[190px]
+                    object-contain
+                    sm:w-[240px]
+                    md:w-[280px]
+                    lg:w-[320px]
+                  "
+                />
+              </div>
+            </div>
+
+            {/* ================================================== */}
+            {/* LOGO STATUS */}
+            {/* ================================================== */}
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                delay: shouldReduceMotion ? 0 : 2.8,
+                duration: 0.6,
+              }}
+              className="mt-2 flex items-center gap-3"
+            >
+              <span className="h-px w-8 bg-[#00E5FF]" />
+
+              <span className="font-mono text-[8px] uppercase tracking-[0.28em] text-slate-600 sm:text-[9px]">
+                YT / SYSTEM ONLINE
+              </span>
+
+              <span className="h-px w-8 bg-[#FF6B00]" />
+            </motion.div>
+
+            {/* ================================================== */}
+            {/* TEXT */}
+            {/* ================================================== */}
+
+            <AnimatePresence>
+              {showText && (
+                <motion.section
+                  initial={{
+                    opacity: 0,
+                    y: 30,
                   }}
                   animate={{
                     opacity: 1,
                     y: 0,
-                    scale: 1,
-                    filter: 'blur(0px)',
                   }}
                   transition={{
-                    duration: 0.5,
+                    duration: 0.7,
                     ease: [0.22, 1, 0.36, 1],
                   }}
-                  className="mt-12"
+                  className="relative z-10 mt-12 w-full max-w-[900px] text-center sm:mt-14"
                 >
-                  <div className="relative">
-                    {/* Logo frame */}
+                  {/* Label */}
+                  <div className="mb-5 flex items-center justify-center gap-3">
+                    <span className="h-px w-8 bg-[#00E5FF] sm:w-12" />
 
-                    <span className="absolute -left-4 -top-4 h-5 w-5 border-l-2 border-t-2 border-[#00E5FF]" />
+                    <span className="font-mono text-[8px] uppercase tracking-[0.3em] text-slate-600 sm:text-[9px]">
+                      SYSTEM / READY
+                    </span>
 
-                    <span className="absolute -right-4 -top-4 h-5 w-5 border-r-2 border-t-2 border-[#FF6B00]" />
-
-                    <span className="absolute -bottom-4 -left-4 h-5 w-5 border-b-2 border-l-2 border-[#FF6B00]" />
-
-                    <span className="absolute -bottom-4 -right-4 h-5 w-5 border-b-2 border-r-2 border-[#00E5FF]" />
-
-                    <img
-                      src={logo}
-                      alt="Yantrotsav 2026"
-                      className="h-32 w-32 object-contain md:h-44 md:w-44"
-                    />
+                    <span className="h-px w-8 bg-[#FF6B00] sm:w-12" />
                   </div>
 
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{
-                      delay: 0.35,
-                      duration: 0.5,
-                    }}
-                    className="mt-6 font-mono text-[9px] uppercase tracking-[0.35em] text-slate-500"
-                  >
-                    YANTROTSAV / 2026
-                  </motion.p>
-                </motion.div>
+                  {/* Main message */}
+                  <div className="flex flex-wrap justify-center gap-x-2 gap-y-1 px-3 sm:gap-x-4 md:gap-x-5">
+                    {words.map((word, index) => (
+                      <motion.span
+                        key={word}
+                        initial={
+                          shouldReduceMotion
+                            ? {
+                                opacity: 1,
+                                y: 0,
+                                filter: 'blur(0px)',
+                              }
+                            : {
+                                opacity: 0,
+                                y: 22,
+                                filter: 'blur(7px)',
+                              }
+                        }
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                          filter: 'blur(0px)',
+                        }}
+                        transition={{
+                          delay: shouldReduceMotion ? 0 : index * 0.12,
+                          duration: 0.5,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        className={`
+                          text-xl
+                          font-black
+                          uppercase
+                          tracking-[0.06em]
+                          sm:text-2xl
+                          md:text-3xl
+                          lg:text-4xl
+                          ${
+                            word === 'READY'
+                              ? 'text-[#FF6B00]'
+                              : 'text-white'
+                          }
+                        `}
+                      >
+                        {word}
+                      </motion.span>
+                    ))}
+                  </div>
+                </motion.section>
               )}
             </AnimatePresence>
+
+            {/* ================================================== */}
+            {/* BOTTOM STATUS */}
+            {/* ================================================== */}
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                delay: shouldReduceMotion ? 0 : 3.5,
+                duration: 0.7,
+              }}
+              className="absolute bottom-7 left-1/2 flex w-[calc(100%-40px)] max-w-[1200px] -translate-x-1/2 items-center justify-between font-mono text-[7px] uppercase tracking-[0.18em] text-slate-700 sm:text-[8px]"
+            >
+              <span>YANTROTSAV // 2026</span>
+
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 animate-pulse bg-[#FF6B00]" />
+
+                <span>INITIALIZATION</span>
+              </div>
+            </motion.div>
+
+            {/* ================================================== */}
+            {/* PROGRESS */}
+            {/* ================================================== */}
+
+            {!shouldReduceMotion && (
+              <motion.div
+                initial={{ width: '0%' }}
+                animate={{ width: '100%' }}
+                transition={{
+                  duration: 6.4,
+                  ease: 'linear',
+                }}
+                className="fixed bottom-0 left-0 z-[110] h-[2px] bg-[#FF6B00]"
+              />
+            )}
           </div>
-
-          {/* Progress line */}
-
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{
-              /*
-               * This is only a visual progress indicator.
-               * The audio still controls actual completion.
-               */
-              duration: 5.8,
-              ease: 'linear',
-            }}
-            className="absolute bottom-0 left-0 h-px w-full origin-left bg-[#FF6B00]"
-          />
-        </motion.div>
+        </motion.main>
       )}
     </AnimatePresence>
   )
