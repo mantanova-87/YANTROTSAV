@@ -387,38 +387,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // 1-Click Clone / Duplicate Event
-  const handleCloneEvent = async (event: EventDocument) => {
-    try {
-      const clonedDTO: CreateEventDTO = {
-        title: `${event.title} (Copy)`,
-        category: event.category,
-        description: event.description,
-        format: event.format || event.eventType,
-        minTeamSize: event.minTeamSize,
-        maxTeamSize: event.maxTeamSize,
-        maxTeams: event.maxTeamsAllowed || event.maxTeams || 50,
-        venue: event.venue || '',
-        eventDate: event.eventTiming || event.eventDate || '',
-        eventTiming: event.eventTiming || event.eventDate || '',
-        registrationDeadline: event.registrationDeadline || '',
-        bannerUrl: event.bannerUrl || '',
-        status: 'draft',
-      }
-
-      try {
-        await eventsService.createEvent(clonedDTO)
-      } catch (cloneErr: any) {
-        throw new Error(`[Database Error] Failed to clone event: ${cloneErr?.message || 'Access denied'}. Check 'events' collection permissions.`)
-      }
-      dispatch(invalidateEventsCache())
-      showNotification(`Event "${clonedDTO.title}" cloned as draft!`)
-      await loadAdminOverview()
-    } catch (err: any) {
-      showNotification(err?.message || 'Failed to clone event', 'error')
-    }
-  }
-
   const confirmDeleteEvent = (event: EventDocument) => {
     setEventToDelete(event)
     setDeleteModalOpen(true)
@@ -1065,7 +1033,7 @@ export default function AdminDashboard() {
                   Events Catalog & Storage Controls
                 </h2>
                 <p className="mt-1 font-mono text-[9px] text-slate-500">
-                  Deploy, edit, clone, delete events and manage banner images in Appwrite Storage.
+                  Deploy, edit, delete events and manage banner images in Appwrite Storage.
                 </p>
               </div>
 
@@ -1205,16 +1173,6 @@ export default function AdminDashboard() {
                       >
                         <Edit2 size={12} />
                         <span>Edit</span>
-                      </button>
-
-                      {/* 1-Click Clone Button */}
-                      <button
-                        onClick={() => handleCloneEvent(ev)}
-                        className="flex items-center gap-1 border border-white/15 bg-white/5 px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-purple-400 hover:border-purple-400 hover:bg-purple-950/20 transition-colors"
-                        title="Duplicate as new event"
-                      >
-                        <Copy size={12} />
-                        <span>Clone</span>
                       </button>
 
                       {/* Delete Button */}
