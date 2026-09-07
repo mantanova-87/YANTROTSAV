@@ -417,7 +417,12 @@ export default function Dashboard() {
     }
     setIsSubmittingDisband(true)
     try {
-      await teamsService.requestTeamDisband(disbandModalTeam.$id, user.$id, reason)
+      await teamsService.requestTeamDisband(
+        disbandModalTeam.$id,
+        user.$id,
+        reason,
+        profile?.phone,
+      )
       showToast.success(
         `Disband request for "${disbandModalTeam.name || disbandModalTeam.teamName}" submitted to administrators for review.`,
       )

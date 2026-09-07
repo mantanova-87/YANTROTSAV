@@ -1863,7 +1863,12 @@ export class TeamsService {
   /**
    * Request disbandment of a confirmed team (Pending Admin Approval)
    */
-  async requestTeamDisband(teamId: string, leaderId: string, reason: string): Promise<void> {
+  async requestTeamDisband(
+    teamId: string,
+    leaderId: string,
+    reason: string,
+    leaderPhone?: string,
+  ): Promise<void> {
     try {
       const teamDoc = (await databases.getDocument(
         APPWRITE_CONFIG.databaseId,
@@ -1872,10 +1877,9 @@ export class TeamsService {
       )) as any
 
       if (teamDoc.leaderId !== leaderId) {
-        throw new AppError('Only the team leader can request team disbandment.', 'AUTH_UNAUTHORIZED', 403)
+        throw new AppError('Only the team leader can submit a disband request.', 'AUTH_UNAUTHORIZED', 403)
       }
 
-      // Prefix team name with [DISBAND REQUESTED] if not already present
       const currentName = teamDoc.name || teamDoc.teamName || 'Team'
       if (!currentName.includes('[DISBAND REQUESTED]')) {
         const newName = `[DISBAND REQUESTED] ${currentName}`.slice(0, 100)
@@ -1887,6 +1891,32 @@ export class TeamsService {
         )
       }
 
+      // Resolve leader phone / WhatsApp number from argument or profile collection
+      let resolvedPhone = (leaderPhone || '').trim()
+      if (!resolvedPhone) {
+        try {
+          const userDoc = (await databases.getDocument(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.users,
+            leaderId,
+          ).catch(() => null)) as any
+          if (userDoc?.phone) {
+            resolvedPhone = String(userDoc.phone).trim()
+          } else if (teamDoc.leaderEmail) {
+            const listRes = await databases.listDocuments(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.users,
+              [Query.equal('email', teamDoc.leaderEmail), Query.limit(1)],
+            ).catch(() => ({ documents: [] }))
+            if (listRes.documents.length > 0 && (listRes.documents[0] as any).phone) {
+              resolvedPhone = String((listRes.documents[0] as any).phone).trim()
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+
       // Dispatch disband notification email to admin/organizers
       try {
         await fetch('/api/contact', {
@@ -1895,9 +1925,9 @@ export class TeamsService {
           body: JSON.stringify({
             name: teamDoc.leaderName || 'Team Leader',
             email: teamDoc.leaderEmail,
-            phone: 'N/A',
+            phone: resolvedPhone || 'Not provided',
             queryType: 'TEAM DISBAND REQUEST',
-            message: `TEAM DISBAND REQUEST FOR YANTROTSAV\n\nTeam: ${currentName} (ID: ${teamId})\nLeader: ${teamDoc.leaderName} (${teamDoc.leaderEmail})\nReason: ${reason || 'Leader requested team disbandment.'}\n\nPlease review and approve this disband request in the Admin Dashboard.`,
+            message: `TEAM DISBAND REQUEST FOR YANTROTSAV\n\nTeam: ${currentName} (ID: ${teamId})\nLeader: ${teamDoc.leaderName} (${teamDoc.leaderEmail})\nWhatsApp / Phone: ${resolvedPhone || 'Not provided'}\nReason: ${reason || 'Leader requested team disbandment.'}\n\nPlease review and approve this disband request in the Admin Dashboard.`,
           }),
         })
       } catch {
