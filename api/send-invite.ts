@@ -42,6 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const safeToEmail = toEmail.trim()
     const safeInvitee = (inviteeName ? String(inviteeName).trim() : '') || 'Student'
     const safeTeam = String(teamName).trim()
+    const safeEvent = String(eventTitle).trim()
     let safeActionUrl = (actionUrl ? String(actionUrl).trim() : '')
     if (!safeActionUrl || safeActionUrl.includes('localhost') || safeActionUrl.includes('yantrotsav.com')) {
       const queryString = safeActionUrl.includes('?') ? safeActionUrl.substring(safeActionUrl.indexOf('?')) : ''
