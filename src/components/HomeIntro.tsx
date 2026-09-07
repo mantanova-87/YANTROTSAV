@@ -23,22 +23,15 @@ type HomeIntroProps = {
 function HomeIntro({ onComplete }: HomeIntroProps) {
   const shouldReduceMotion = useReducedMotion()
 
-  const [showIntro, setShowIntro] = useState(() => {
-    if (typeof window === 'undefined') {
-      return true
-    }
-
-    return !sessionStorage.getItem('yantrotsav-intro-shown')
-  })
-
   const [showLogo, setShowLogo] = useState(false)
-  const [exiting, setExiting] = useState(false)
-
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const fallbackTimerRef = useRef<number | null>(null)
-  const exitTimerRef = useRef<number | null>(null)
+  const hasCompletedRef = useRef(false)
 
-  const handleSkip = useCallback(() => {
+  const handleFinish = useCallback(() => {
+    if (hasCompletedRef.current) return
+    hasCompletedRef.current = true
+
     if (audioRef.current) {
       try {
         audioRef.current.pause()
@@ -53,18 +46,18 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
       fallbackTimerRef.current = null
     }
 
-    if (exitTimerRef.current !== null) {
-      window.clearTimeout(exitTimerRef.current)
-      exitTimerRef.current = null
+    try {
+      sessionStorage.setItem('yantrotsav-intro-shown', 'true')
+    } catch {
+      // ignore
     }
 
-    sessionStorage.setItem('yantrotsav-intro-shown', 'true')
-    setShowIntro(false)
     onComplete()
   }, [onComplete])
 
   useEffect(() => {
-    if (!showIntro || shouldReduceMotion) {
+    if (shouldReduceMotion) {
+      handleFinish()
       return
     }
 
@@ -73,31 +66,8 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
     audio.volume = 0.75
     audioRef.current = audio
 
-    let hasCompleted = false
-
-    const completeIntro = () => {
-      if (hasCompleted) {
-        return
-      }
-
-      hasCompleted = true
-
-      if (fallbackTimerRef.current !== null) {
-        window.clearTimeout(fallbackTimerRef.current)
-        fallbackTimerRef.current = null
-      }
-
-      setExiting(true)
-
-      exitTimerRef.current = window.setTimeout(() => {
-        sessionStorage.setItem('yantrotsav-intro-shown', 'true')
-        setShowIntro(false)
-        onComplete()
-      }, 400)
-    }
-
     const handleAudioEnded = () => {
-      completeIntro()
+      handleFinish()
     }
 
     audio.addEventListener('ended', handleAudioEnded)
@@ -109,12 +79,16 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
         console.warn('YANTROTSAV intro audio autoplay was blocked:', error)
         // Autoplay blocked on mobile: swiftly transition after 2.6 seconds
         fallbackTimerRef.current = window.setTimeout(() => {
-          completeIntro()
+          handleFinish()
         }, 2600)
       }
     }
 
     playAudio()
+
+    const logoTimer = window.setTimeout(() => {
+      setShowLogo(true)
+    }, 1800)
 
     return () => {
       audio.removeEventListener('ended', handleAudioEnded)
@@ -126,67 +100,34 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
         fallbackTimerRef.current = null
       }
 
-      if (exitTimerRef.current !== null) {
-        window.clearTimeout(exitTimerRef.current)
-        exitTimerRef.current = null
-      }
-
+      window.clearTimeout(logoTimer)
       audioRef.current = null
     }
-  }, [showIntro, shouldReduceMotion, onComplete])
-
-  useEffect(() => {
-    if (!showIntro) {
-      onComplete()
-      return
-    }
-
-    if (shouldReduceMotion) {
-      sessionStorage.setItem('yantrotsav-intro-shown', 'true')
-      const timer = window.setTimeout(() => {
-        onComplete()
-      }, 300)
-      return () => window.clearTimeout(timer)
-    }
-
-    const logoTimer = window.setTimeout(() => {
-      setShowLogo(true)
-    }, 1800)
-
-    return () => {
-      window.clearTimeout(logoTimer)
-    }
-  }, [showIntro, shouldReduceMotion, onComplete])
-
-  if (!showIntro) {
-    return null
-  }
-
+  }, [shouldReduceMotion, handleFinish])
 
   return (
-    <AnimatePresence>
-      {!exiting && (
-        <motion.div
-          initial={{ opacity: 1 }}
-          exit={{
-            opacity: 0,
-            scale: 1.02,
-          }}
-          transition={{
-            duration: 0.4,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#050816]"
-        >
-          {/* Skip Intro Button */}
-          <button
-            type="button"
-            onClick={handleSkip}
-            className="absolute right-4 top-4 z-50 flex items-center gap-2 border border-[#00E5FF]/40 bg-[#050816]/80 px-3.5 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#00E5FF] backdrop-blur-sm transition-all hover:border-[#00E5FF] hover:bg-[#00E5FF] hover:text-black sm:right-8 sm:top-8 sm:px-4 sm:py-2 sm:text-xs"
-          >
-            <span>SKIP INTRO</span>
-            <span className="text-[#FF6B00]">››</span>
-          </button>
+    <motion.div
+      key="yantrotsav-intro-screen"
+      initial={{ opacity: 1 }}
+      exit={{
+        opacity: 0,
+        scale: 1.02,
+      }}
+      transition={{
+        duration: 0.35,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#050816]"
+    >
+      {/* Skip Intro Button */}
+      <button
+        type="button"
+        onClick={handleFinish}
+        className="absolute right-4 top-4 z-50 flex items-center gap-2 border border-[#00E5FF]/40 bg-[#050816]/80 px-3.5 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#00E5FF] backdrop-blur-sm transition-all hover:border-[#00E5FF] hover:bg-[#00E5FF] hover:text-black sm:right-8 sm:top-8 sm:px-4 sm:py-2 sm:text-xs"
+      >
+        <span>SKIP INTRO</span>
+        <span className="text-[#FF6B00]">››</span>
+      </button>
 
           {/* Technical frame */}
           <span className="absolute left-5 top-5 h-8 w-8 border-l border-t border-[#FF6B00]/70" />
@@ -286,9 +227,6 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
             className="absolute bottom-0 left-0 h-px w-full origin-left bg-[#FF6B00]"
           />
         </motion.div>
-      )}
-    </AnimatePresence>
-
   )
 }
 

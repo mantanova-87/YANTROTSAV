@@ -1,5 +1,6 @@
 import { useLocation, Outlet } from 'react-router-dom'
 import { useState, Suspense } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import Navbar from '../layout/Navbar'
 import Footer from '../layout/Footer'
 import HomeIntro from '../HomeIntro'
@@ -18,16 +19,17 @@ function MainLayout() {
     return Boolean(sessionStorage.getItem('yantrotsav-intro-shown'))
   })
 
-  if (isHome && !introComplete) {
-    return (
-      <HomeIntro
-        onComplete={() => setIntroComplete(true)}
-      />
-    )
-  }
-
   return (
     <div className="flex min-h-screen flex-col bg-[#050816]">
+      <AnimatePresence>
+        {isHome && !introComplete && (
+          <HomeIntro
+            key="yantrotsav-home-intro"
+            onComplete={() => setIntroComplete(true)}
+          />
+        )}
+      </AnimatePresence>
+
       <Navbar />
 
       <main className="flex-1">
