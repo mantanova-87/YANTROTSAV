@@ -70,6 +70,8 @@ const teamMembers = [
   },
 ]
 
+const stripCount = 5
+
 function TeamMemberCard({
   member,
   index,
@@ -84,13 +86,13 @@ function TeamMemberCard({
       initial={
         reducedMotion
           ? { opacity: 1 }
-          : { opacity: 0, y: 20 }
+          : { opacity: 0, y: 35, scale: 0.97 }
       }
-      whileInView={{ opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, amount: 0.15 }}
       transition={{
-        duration: reducedMotion ? 0 : 0.4,
-        delay: reducedMotion ? 0 : (index % 3) * 0.08,
+        duration: reducedMotion ? 0 : 0.7,
+        delay: reducedMotion ? 0 : index * 0.08,
         ease: [0.22, 1, 0.36, 1],
       }}
       className={`group relative mx-auto w-full max-w-[360px] ${
@@ -222,6 +224,52 @@ function TeamMemberCard({
             </div>
           </div>
         </div>
+
+        {/* PAPER STRIPS — overlay only */}
+        {!reducedMotion &&
+          Array.from({ length: stripCount }).map((_, strip) => {
+            const fromLeft = strip % 2 === 0
+
+            return (
+              <motion.div
+                key={strip}
+                initial={{
+                  x: fromLeft ? '-110%' : '110%',
+                  rotateZ: fromLeft ? -3 : 3,
+                  opacity: 1,
+                }}
+                whileInView={{
+                  x: 0,
+                  rotateZ: 0,
+                  opacity: 0,
+                }}
+                viewport={{
+                  once: true,
+                  amount: 0.2,
+                }}
+                transition={{
+                  duration: 0.7,
+                  delay: strip * 0.13,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="pointer-events-none absolute left-0 right-0 z-30 bg-[#0B0E15]"
+                style={{
+                  top: `${strip * 20}%`,
+                  height: '20.5%',
+                  borderTop: '1px solid rgba(255,255,255,0.08)',
+                  borderBottom: '1px solid rgba(255,255,255,0.08)',
+                }}
+              >
+                <span
+                  className={`absolute top-1/2 h-px w-10 ${
+                    fromLeft
+                      ? 'left-4 bg-[#00E5FF]'
+                      : 'right-4 bg-[#FF6B00]'
+                  }`}
+                />
+              </motion.div>
+            )
+          })}
 
         {/* Hover edge */}
         <div className="pointer-events-none absolute inset-0 z-40 border border-white/10 transition-colors duration-500 group-hover:border-white/20" />

@@ -2,29 +2,6 @@
 @import "react-toastify/dist/ReactToastify.css";
 
 /* ==========================================================================
-   VIEWPORT & PERFORMANCE OPTIMIZATIONS
-   ========================================================================== */
-html,
-body {
-  overflow-x: hidden;
-  max-width: 100vw;
-  background-color: #050816;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-}
-
-#root {
-  overflow-x: hidden;
-  min-height: 100vh;
-}
-
-.gpu-accelerated {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  will-change: transform, opacity;
-}
-
-/* ==========================================================================
    YANTROTSAV CYBERPUNK TOAST THEME (react-toastify)
    ========================================================================== */
 .Toastify__toast-container {
