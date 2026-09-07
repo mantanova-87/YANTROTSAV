@@ -9,7 +9,7 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import poster from '../assets/images/poster.png'
+import fallbackBanner from '../assets/images/event-fallback.jpg'
 import EventRegistrationModal from '../components/events/EventRegistrationModal'
 import CyberLoader from '../components/common/CyberLoader'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
@@ -365,8 +365,13 @@ function Events() {
                       {/* Visual Block with Banner Image */}
                       <div className="relative min-h-[240px] overflow-hidden border-b border-white/10 bg-[#050816] md:border-b-0 md:border-r">
                         <img
-                          src={event.bannerUrl || poster}
+                          src={event.bannerUrl || fallbackBanner}
                           alt={event.title}
+                          onError={(e) => {
+                            if (e.currentTarget.src !== fallbackBanner) {
+                              e.currentTarget.src = fallbackBanner
+                            }
+                          }}
                           className="absolute inset-0 h-full w-full object-cover object-center opacity-[0.22] grayscale transition-all duration-700 group-hover:scale-105 group-hover:opacity-[0.4] group-hover:grayscale-0"
                         />
                         <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/15 via-transparent to-[#FF6B00]/15" />

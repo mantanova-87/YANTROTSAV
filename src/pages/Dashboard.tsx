@@ -14,15 +14,21 @@ import {
   Edit3,
   X,
   QrCode,
-  Radio,
   AtSign,
   Maximize2,
   Download,
+  UserPlus,
+  Trash2,
+  GraduationCap,
 } from 'lucide-react'
 import QRCode from 'qrcode'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { teamsService, type UserTeamInfo } from '../services/appwrite/teams.service'
+import {
+  teamsService,
+  type UserTeamInfo,
+  type TeamMemberItem,
+} from '../services/appwrite/teams.service'
 import { client } from '../services/appwrite/client'
 import { APPWRITE_CONFIG } from '../config/appwrite.config'
 import { DEPARTMENT_OPTIONS, SEMESTER_OPTIONS } from '../types/database.types'
@@ -30,6 +36,7 @@ import type {
   TeamInvitationDocument,
   EventRegistrationDocument,
 } from '../types/database.types'
+import { showToast } from '../utils/toast'
 
 export default function Dashboard() {
   const { user, profile, openAuthModal, loading: authLoading, updateProfile } = useAuth()
@@ -39,17 +46,16 @@ export default function Dashboard() {
   const [userTeams, setUserTeams] = useState<UserTeamInfo[]>([])
   const [loadingData, setLoadingData] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(
-    null,
-  )
 
-  // Realtime Live WebSocket notification banner
-  const [liveNotification, setLiveNotification] = useState<{
-    id: string
-    title: string
-    message: string
-    invitation?: TeamInvitationDocument
-  } | null>(null)
+  // Team Management Modals State
+  const [addMemberModalTeam, setAddMemberModalTeam] = useState<UserTeamInfo | null>(null)
+  const [addMemberInput, setAddMemberInput] = useState('')
+  const [isSubmittingAddMember, setIsSubmittingAddMember] = useState(false)
+  const [addMemberSuggestion, setAddMemberSuggestion] = useState<string | null>(null)
+
+  const [disbandModalTeam, setDisbandModalTeam] = useState<UserTeamInfo | null>(null)
+  const [disbandReason, setDisbandReason] = useState('')
+  const [isSubmittingDisband, setIsSubmittingDisband] = useState(false)
 
   // Edit Profile Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -148,6 +154,22 @@ export default function Dashboard() {
       setInvitations(invites)
       setRegistrations(validRegs)
       setUserTeams(validTeams)
+
+      // Check if student arrived from an email invitation link (?inviteId=...)
+      const searchParams = new URLSearchParams(window.location.search)
+      const queryInviteId = searchParams.get('inviteId')
+      if (queryInviteId) {
+        const found = invites.find((i) => i.$id === queryInviteId)
+        if (found) {
+          showToast.success(`Squad invitation found for "${found.eventTitle || 'Event'}"! Review and accept below.`)
+        } else {
+          showToast.error(
+            'This squad invitation was revoked or cancelled by the team leader, or the squad is no longer active.',
+          )
+        }
+        // Clean URL to prevent repeated feedback on manual reload
+        window.history.replaceState({}, document.title, window.location.pathname)
+      }
     } catch (err) {
       console.error('Error fetching dashboard records:', err)
     } finally {
@@ -197,12 +219,10 @@ export default function Dashboard() {
         if (isTargetMatch) {
           const isCreate = response.events.some((ev) => ev.endsWith('.create'))
           if (isCreate && payload.status === 'pending') {
-            setLiveNotification({
-              id: payload.$id,
-              title: '⚡ REALTIME INVITATION DETECTED',
-              message: `${payload.inviterName || 'A teammate'} invited you to join for "${payload.eventTitle || 'Event'}".`,
-              invitation: payload,
-            })
+            showToast.info(
+              `⚡ Squad invitation received from ${payload.inviterName || 'a teammate'} for "${payload.eventTitle || 'Event'}"! Review below.`,
+              { autoClose: 6000 }
+            )
           }
         }
       }
@@ -236,7 +256,6 @@ export default function Dashboard() {
   const handleSaveProfileSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsSavingProfile(true)
-    setFeedback(null)
     try {
       if (editFormData.semester.trim()) {
         const semNum = parseInt(editFormData.semester, 10)
@@ -253,16 +272,9 @@ export default function Dashboard() {
         customDepartment: editFormData.department === 'OTHER' ? editFormData.customDepartment.trim() : undefined,
         semester: editFormData.semester.trim(),
       })
-      setFeedback({
-        message: 'Your profile and username have been updated successfully!',
-        type: 'success',
-      })
       setIsEditModalOpen(false)
     } catch (err: unknown) {
-      setFeedback({
-        message: err instanceof Error ? err.message : 'Failed to update profile.',
-        type: 'error',
-      })
+      showToast.error(err instanceof Error ? err.message : 'Failed to update profile.')
     } finally {
       setIsSavingProfile(false)
     }
@@ -274,7 +286,6 @@ export default function Dashboard() {
   ) => {
     if (!user) return
     setActionLoading(invitationId)
-    setFeedback(null)
 
     try {
       await teamsService.respondToInvitation({
@@ -290,19 +301,133 @@ export default function Dashboard() {
         },
       })
 
-      setFeedback({
-        message: `Invitation ${response === 'accepted' ? 'accepted! Your team roster has been updated.' : 'declined.'}`,
-        type: 'success',
-      })
+      showToast.success(
+        `Invitation ${response === 'accepted' ? 'accepted! Your squad roster has been updated.' : 'declined.'}`,
+      )
 
       await loadStudentData()
     } catch (err: unknown) {
-      setFeedback({
-        message: err instanceof Error ? err.message : 'Failed to update invitation status.',
-        type: 'error',
-      })
+      showToast.error(err instanceof Error ? err.message : 'Failed to update invitation status.')
     } finally {
       setActionLoading(null)
+    }
+  }
+
+  const handleRemoveMemberOrInvite = async (team: UserTeamInfo, member: TeamMemberItem) => {
+    if (member.status === 'pending') {
+      if (!window.confirm(`Cancel pending invitation for ${member.name}?`)) return
+      if (!member.invitationId) return
+      const actionKey = `${team.$id}-${member.invitationId}`
+      setActionLoading(actionKey)
+      try {
+        await teamsService.cancelInvitation(member.invitationId)
+        showToast.success(`Invitation for ${member.name} cancelled.`)
+        await loadStudentData()
+      } catch (err: unknown) {
+        showToast.error(err instanceof Error ? err.message : 'Failed to cancel invitation')
+      } finally {
+        setActionLoading(null)
+      }
+    } else {
+      const displayName = team.name || team.teamName || 'the squad'
+      if (
+        !window.confirm(
+          `Are you sure you want to remove ${member.name} from "${displayName}"? Their registration for this event will be cancelled.`,
+        )
+      )
+        return
+      const actionKey = `${team.$id}-${member.invitationId || member.email}`
+      setActionLoading(actionKey)
+      try {
+        await teamsService.removeTeamMember(team.$id, member.email, member.invitationId)
+        showToast.success(`${member.name} removed from the squad.`)
+        await loadStudentData()
+      } catch (err: unknown) {
+        showToast.error(err instanceof Error ? err.message : 'Failed to remove member')
+      } finally {
+        setActionLoading(null)
+      }
+    }
+  }
+
+  const handleCancelPendingTeam = async (team: UserTeamInfo) => {
+    if (!user) return
+    const displayName = team.name || team.teamName || 'squad'
+    if (!window.confirm(`Cancel squad "${displayName}"? All pending invitations will be revoked.`))
+      return
+    setActionLoading(team.$id)
+    try {
+      await teamsService.cancelPendingTeam(team.$id, user.$id)
+      showToast.success(`Squad "${displayName}" cancelled successfully.`)
+      await loadStudentData()
+    } catch (err: unknown) {
+      showToast.error(err instanceof Error ? err.message : 'Failed to cancel squad')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleSendAddMemberInvite = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!user || !addMemberModalTeam) return
+    const input = addMemberInput.trim()
+    if (!input) {
+      showToast.warning('Please enter a username, email, or roll number.')
+      setAddMemberSuggestion(null)
+      return
+    }
+    setIsSubmittingAddMember(true)
+    setAddMemberSuggestion(null)
+    try {
+      await teamsService.addMemberToTeam({
+        teamId: addMemberModalTeam.$id,
+        eventId: addMemberModalTeam.eventId,
+        memberHandle: input,
+        leaderId: user.$id,
+        leaderName: profile?.fullName || user.name || 'Team Leader',
+        leaderEmail: user.email,
+      })
+      showToast.success(`Invitation successfully sent to "${input}"!`)
+      setAddMemberModalTeam(null)
+      setAddMemberInput('')
+      setAddMemberSuggestion(null)
+      await loadStudentData()
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : 'Failed to send invitation.'
+      showToast.error(errMsg)
+      const explicitSuggestion = (err as any)?.suggestion
+      const match = errMsg.match(/Did you mean ["']([^"']+)["']/i)
+      if (explicitSuggestion) {
+        setAddMemberSuggestion(explicitSuggestion)
+      } else if (match && match[1]) {
+        setAddMemberSuggestion(match[1])
+      }
+    } finally {
+      setIsSubmittingAddMember(false)
+    }
+  }
+
+  const handleSubmitDisbandRequest = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!user || !disbandModalTeam) return
+    const reason = disbandReason.trim()
+    if (!reason) {
+      showToast.warning('Please describe the reason for your disbandment request.')
+      return
+    }
+    setIsSubmittingDisband(true)
+    try {
+      await teamsService.requestTeamDisband(disbandModalTeam.$id, user.$id, reason)
+      showToast.success(
+        `Disband request for "${disbandModalTeam.name || disbandModalTeam.teamName}" submitted to administrators for review.`,
+      )
+      setDisbandModalTeam(null)
+      setDisbandReason('')
+      await loadStudentData()
+    } catch (err: unknown) {
+      showToast.error(err instanceof Error ? err.message : 'Failed to submit disband request.')
+    } finally {
+      setIsSubmittingDisband(false)
     }
   }
 
@@ -351,47 +476,6 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#050816] pb-24 pt-28 text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Realtime Live WebSocket Toast Notification Banner */}
-        <AnimatePresence>
-          {liveNotification && (
-            <motion.div
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              className="mb-8 relative overflow-hidden border-2 border-[#00E5FF] bg-[#080A0F] p-4 shadow-[0_0_30px_rgba(0,229,255,0.3)]"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded border border-[#00E5FF] bg-[#00E5FF]/20 text-[#00E5FF] animate-pulse">
-                    <Radio size={20} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] uppercase font-black tracking-[0.2em] text-[#00E5FF]">
-                        {liveNotification.title}
-                      </span>
-                      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-                      <span className="font-mono text-[9px] text-emerald-400 font-bold">[WEBSOCKET LIVE]</span>
-                    </div>
-                    <p className="mt-1 text-xs text-white font-medium">
-                      {liveNotification.message}
-                    </p>
-                    <p className="mt-0.5 font-mono text-[10px] text-slate-400">
-                      Live event received without page refresh! Check the pending invitations widget below to accept.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setLiveNotification(null)}
-                  className="text-slate-400 hover:text-white p-1 rounded hover:bg-white/5"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Welcome Header */}
         <div className="relative mb-10 border-b border-white/10 pb-6">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -438,21 +522,6 @@ export default function Dashboard() {
               </Link>
             </div>
           </div>
-
-          {feedback && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`mt-6 flex items-center gap-3 border p-4 text-xs ${
-                feedback.type === 'success'
-                  ? 'border-emerald-500/40 bg-emerald-950/20 text-emerald-300'
-                  : 'border-red-500/40 bg-red-950/20 text-red-300'
-              }`}
-            >
-              {feedback.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-              <span>{feedback.message}</span>
-            </motion.div>
-          )}
         </div>
 
         {/* Dashboard Grid */}
@@ -659,6 +728,14 @@ export default function Dashboard() {
                 ) : (
                   userTeams.map((t) => {
                     const isLeader = t.userRole === 'Leader'
+                    const acceptedCount = (t.members || []).filter(
+                      (m) => m.status === 'confirmed' || m.status === 'accepted',
+                    ).length
+                    const totalRosterCount = (t.members || []).length
+                    const maxCap = t.maxTeamSize || 4
+                    const canAddMore = totalRosterCount < maxCap
+                    const canDirectCancel = acceptedCount <= 1 // Only leader has accepted; no confirmed teammates!
+
                     return (
                       <div
                         key={t.$id}
@@ -692,6 +769,14 @@ export default function Dashboard() {
                               >
                                 {t.status === 'confirmed' ? 'CONFIRMED' : 'WAITING FOR MEMBERS'}
                               </span>
+
+                              {/* Disband Requested Badge */}
+                              {t.isDisbandRequested && (
+                                <span className="border border-amber-500/60 bg-amber-950/40 px-2 py-0.5 font-mono text-[8px] uppercase tracking-[0.18em] text-amber-300 animate-pulse flex items-center gap-1">
+                                  <AlertCircle size={10} />
+                                  <span>DISBAND PENDING APPROVAL</span>
+                                </span>
+                              )}
                             </div>
 
                             <p className="mt-1.5 text-xs text-slate-400">
@@ -710,37 +795,135 @@ export default function Dashboard() {
                           </div>
                         </div>
 
+                        {/* Disband Notice Callout */}
+                        {t.isDisbandRequested && (
+                          <div className="mt-3 flex items-center gap-2 border border-amber-500/30 bg-amber-950/20 p-2.5 text-xs font-mono text-amber-300">
+                            <AlertCircle size={14} className="text-amber-400 shrink-0" />
+                            <span>
+                              Disband request submitted to Administrators. Member registrations will be safely cancelled once approved.
+                            </span>
+                          </div>
+                        )}
+
                         {/* Team Roster breakdown if available */}
                         {t.members && t.members.length > 0 && (
                           <div className="mt-3 border-t border-white/5 pt-3">
-                            <span className="font-mono text-[9px] uppercase tracking-wider text-slate-500 block mb-1.5">
-                              Squad Roster:
-                            </span>
-                            <div className="flex flex-wrap gap-2">
-                              {t.members.map((m, idx) => (
-                                <span
-                                  key={idx}
-                                  className="inline-flex items-center gap-1.5 border border-white/10 bg-white/5 px-2 py-0.5 font-mono text-[9px] text-slate-300"
-                                >
-                                  <span
-                                    className={`h-1.5 w-1.5 rounded-full ${
-                                      m.status === 'confirmed' || m.status === 'accepted'
-                                        ? 'bg-emerald-400'
-                                        : 'bg-yellow-400'
-                                    }`}
-                                  />
-                                  <span>{m.name}</span>
-                                  <span className="text-[8px] text-slate-500 uppercase">({m.role})</span>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-mono text-[9px] uppercase tracking-wider text-slate-500">
+                                Squad Roster ({totalRosterCount} / {maxCap}):
+                              </span>
+                              {isLeader && !t.isDisbandRequested && (
+                                <span className="font-mono text-[9px] text-slate-500">
+                                  Leader Controls Enabled
                                 </span>
-                              ))}
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {t.members.map((m, idx) => {
+                                const isSelf =
+                                  m.role === 'Leader' ||
+                                  m.userId === user.$id ||
+                                  (m.email && m.email === user.email)
+                                return (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center gap-1.5 border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[10px] text-slate-300"
+                                  >
+                                    <span
+                                      className={`h-1.5 w-1.5 rounded-full ${
+                                        m.status === 'confirmed' || m.status === 'accepted'
+                                          ? 'bg-emerald-400'
+                                          : 'bg-yellow-400'
+                                      }`}
+                                    />
+                                    <span className="text-white font-medium">{m.name}</span>
+                                    <span className="text-[8px] text-slate-500 uppercase">
+                                      ({m.role === 'Leader' ? 'Leader' : m.status === 'pending' ? 'Invited' : 'Joined'})
+                                    </span>
+
+                                    {/* Action button: Cancel pending invite or remove member */}
+                                    {isLeader && !isSelf && !t.isDisbandRequested && (
+                                      <button
+                                        type="button"
+                                        title={
+                                          m.status === 'pending'
+                                            ? 'Cancel invitation'
+                                            : 'Remove member from squad'
+                                        }
+                                        onClick={() => handleRemoveMemberOrInvite(t, m)}
+                                        disabled={actionLoading === `${t.$id}-${m.invitationId || m.email}`}
+                                        className="ml-1 text-slate-400 hover:text-red-400 transition-colors p-0.5"
+                                      >
+                                        {actionLoading === `${t.$id}-${m.invitationId || m.email}` ? (
+                                          <Loader2 size={10} className="animate-spin text-red-400" />
+                                        ) : (
+                                          <X size={11} />
+                                        )}
+                                      </button>
+                                    )}
+                                  </span>
+                                )
+                              })}
                             </div>
                           </div>
                         )}
 
-                        {t.status === 'pending' && (
+                        {t.status === 'pending' && !t.isDisbandRequested && (
                           <p className="mt-2.5 font-mono text-[9px] text-slate-500">
                             Waiting for invited teammates to accept invitations. Team status confirms automatically when minimum team size is achieved.
                           </p>
+                        )}
+
+                        {/* Leader Team Actions Bar */}
+                        {isLeader && !t.isDisbandRequested && (
+                          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
+                            <div className="flex items-center gap-2">
+                              {canAddMore && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setAddMemberModalTeam(t)
+                                    setAddMemberInput('')
+                                    setAddMemberSuggestion(null)
+                                  }}
+                                  className="flex items-center gap-1.5 border border-[#00E5FF]/40 bg-[#00E5FF]/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#00E5FF] hover:bg-[#00E5FF] hover:text-black transition-colors"
+                                >
+                                  <UserPlus size={12} />
+                                  <span>Add Teammate</span>
+                                </button>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {canDirectCancel ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleCancelPendingTeam(t)}
+                                  disabled={actionLoading === t.$id}
+                                  className="flex items-center gap-1 border border-red-500/40 bg-red-950/20 px-2.5 py-1 font-mono text-[10px] uppercase text-red-400 hover:bg-red-500 hover:text-white transition-colors"
+                                >
+                                  {actionLoading === t.$id ? (
+                                    <Loader2 size={11} className="animate-spin" />
+                                  ) : (
+                                    <Trash2 size={11} />
+                                  )}
+                                  <span>Cancel Squad</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setDisbandModalTeam(t)
+                                    setDisbandReason('')
+                                  }}
+                                  className="flex items-center gap-1 border border-amber-500/40 bg-amber-950/20 px-2.5 py-1 font-mono text-[10px] uppercase text-amber-400 hover:bg-amber-500 hover:text-black transition-colors"
+                                >
+                                  <AlertCircle size={11} />
+                                  <span>Request Disband</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
                         )}
                       </div>
                     )
@@ -1222,7 +1405,7 @@ export default function Dashboard() {
                   ROLL / ID: {activePassData.roll}
                 </div>
                 <div className="text-emerald-400 text-[11px] font-bold tracking-widest pt-1 border-t border-white/10">
-                  CODE: {activePassData.code}
+                  INDIVIDUAL PASS ID: {activePassData.code}
                 </div>
               </div>
 
@@ -1250,6 +1433,266 @@ export default function Dashboard() {
                   Close
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* =========================================================================
+          ADD TEAMMATE MODAL
+      ========================================================================= */}
+      <AnimatePresence>
+        {addMemberModalTeam && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-md border border-white/10 bg-[#080A0F] p-6 shadow-2xl"
+            >
+              {/* Corner Sci-Fi Decors */}
+              <div className="pointer-events-none absolute inset-0">
+                <span className="absolute left-0 top-0 h-3 w-3 border-l-2 border-t-2 border-[#00E5FF]" />
+                <span className="absolute right-0 top-0 h-3 w-3 border-r-2 border-t-2 border-[#FF6B00]" />
+                <span className="absolute bottom-0 left-0 h-3 w-3 border-b-2 border-l-2 border-[#FF6B00]" />
+                <span className="absolute bottom-0 right-0 h-3 w-3 border-b-2 border-r-2 border-[#00E5FF]" />
+              </div>
+
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-2">
+                  <UserPlus size={18} className="text-[#00E5FF]" />
+                  <h3 className="text-sm font-bold uppercase tracking-wide text-white font-mono">
+                    Invite Teammate
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddMemberModalTeam(null)
+                    setAddMemberSuggestion(null)
+                  }}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="mt-3">
+                <p className="font-mono text-xs text-slate-300">
+                  Team:{' '}
+                  <span className="font-bold text-white">
+                    {addMemberModalTeam.name || addMemberModalTeam.teamName}
+                  </span>
+                </p>
+                <p className="font-mono text-xs text-slate-400 mt-0.5">
+                  Event: <span className="text-[#00E5FF]">{addMemberModalTeam.eventTitle || 'Event'}</span>
+                </p>
+              </div>
+
+              {addMemberSuggestion && (
+                <div className="mt-3 flex items-center justify-between border border-[#00E5FF]/40 bg-[#00E5FF]/10 p-2.5 font-mono text-xs text-[#00E5FF]">
+                  <span className="text-[11px] text-slate-300">
+                    Did you mean: <strong className="text-[#00E5FF]">{addMemberSuggestion}</strong>?
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAddMemberInput(addMemberSuggestion)
+                      setAddMemberSuggestion(null)
+                    }}
+                    className="inline-flex items-center gap-1 rounded bg-[#00E5FF] px-2.5 py-1 text-[10px] font-bold uppercase text-black hover:bg-white transition-colors cursor-pointer"
+                  >
+                    <span>Use "{addMemberSuggestion}"</span>
+                    <ArrowRight size={10} />
+                  </button>
+                </div>
+              )}
+
+              <form onSubmit={handleSendAddMemberInvite} className="mt-4 space-y-4">
+                {(() => {
+                  const cleanInput = addMemberInput.trim()
+                  const isEmail = cleanInput.includes('@') && cleanInput.includes('.')
+                  const isRollNo = !cleanInput.startsWith('@') && /\d/.test(cleanInput)
+                  const isHandle = cleanInput.startsWith('@')
+                  return (
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
+                          Teammate Handle, Email, or Roll No *
+                        </label>
+                        {cleanInput && (
+                          <span className="font-mono text-[8px] uppercase tracking-wider text-[#00E5FF] bg-[#00E5FF]/10 px-1.5 py-0.5 rounded border border-[#00E5FF]/20">
+                            {isEmail ? 'Email Address' : isRollNo ? 'Roll Number' : isHandle ? 'Username Handle' : 'Identifier'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative mt-1">
+                        {isEmail ? (
+                          <Mail size={14} className="absolute left-2.5 top-2.5 text-[#00E5FF] transition-colors" />
+                        ) : isRollNo ? (
+                          <GraduationCap size={14} className="absolute left-2.5 top-2.5 text-[#00E5FF] transition-colors" />
+                        ) : isHandle ? (
+                          <AtSign size={14} className="absolute left-2.5 top-2.5 text-[#00E5FF] transition-colors" />
+                        ) : (
+                          <User size={14} className="absolute left-2.5 top-2.5 text-slate-500 transition-colors" />
+                        )}
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. 25BECSE52, student@cujammu.ac.in, or @priyanshu"
+                          value={addMemberInput}
+                          onChange={(e) => {
+                            setAddMemberInput(e.target.value)
+                            if (addMemberSuggestion) {
+                              setAddMemberSuggestion(null)
+                            }
+                          }}
+                          className="w-full border border-white/10 bg-[#050816] pl-8 pr-3 py-2 font-mono text-xs text-white outline-none focus:border-[#00E5FF]"
+                        />
+                      </div>
+                      <p className="mt-1 font-mono text-[9px] text-slate-500">
+                        An invitation will be generated and dispatched immediately to their dashboard and email.
+                      </p>
+                    </div>
+                  )
+                })()}
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAddMemberModalTeam(null)
+                      setAddMemberSuggestion(null)
+                    }}
+                    className="px-3 py-1.5 font-mono text-xs uppercase text-slate-400 hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingAddMember}
+                    className="flex items-center gap-1.5 border border-[#00E5FF] bg-[#00E5FF] px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-black hover:bg-transparent hover:text-[#00E5FF] disabled:opacity-50 transition-colors"
+                  >
+                    {isSubmittingAddMember ? (
+                      <>
+                        <Loader2 size={13} className="animate-spin" />
+                        <span>Sending Invite...</span>
+                      </>
+                    ) : (
+                      <span>Send Invitation</span>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* =========================================================================
+          REQUEST DISBAND MODAL (Admin Approval Required)
+      ========================================================================= */}
+      <AnimatePresence>
+        {disbandModalTeam && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-md border border-amber-500/40 bg-[#080A0F] p-6 shadow-2xl"
+            >
+              {/* Corner Sci-Fi Decors */}
+              <div className="pointer-events-none absolute inset-0">
+                <span className="absolute left-0 top-0 h-3 w-3 border-l-2 border-t-2 border-amber-400" />
+                <span className="absolute right-0 top-0 h-3 w-3 border-r-2 border-t-2 border-amber-400" />
+                <span className="absolute bottom-0 left-0 h-3 w-3 border-b-2 border-l-2 border-amber-400" />
+                <span className="absolute bottom-0 right-0 h-3 w-3 border-b-2 border-r-2 border-amber-400" />
+              </div>
+
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={18} className="text-amber-400" />
+                  <h3 className="text-sm font-bold uppercase tracking-wide text-white font-mono">
+                    Request Squad Disbandment
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDisbandModalTeam(null)
+                  }}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="mt-3 border border-amber-500/30 bg-amber-950/20 p-3 font-mono text-[11px] text-amber-300">
+                <p className="font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                  <ShieldCheck size={14} />
+                  <span>Admin Approval Required</span>
+                </p>
+                <p className="text-slate-300 text-[10px] leading-relaxed">
+                  This squad contains confirmed teammates. To prevent accidental disqualification or lost event slots, disband requests must be reviewed and confirmed by festival administrators before cancellation.
+                </p>
+              </div>
+
+              <div className="mt-3">
+                <p className="font-mono text-xs text-slate-300">
+                  Team:{' '}
+                  <span className="font-bold text-white">
+                    {disbandModalTeam.name || disbandModalTeam.teamName}
+                  </span>
+                </p>
+                <p className="font-mono text-xs text-slate-400 mt-0.5">
+                  Event: <span className="text-[#00E5FF]">{disbandModalTeam.eventTitle || 'Event'}</span>
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmitDisbandRequest} className="mt-4 space-y-4">
+                <div>
+                  <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
+                    Reason for Disbandment Request *
+                  </label>
+                  <textarea
+                    required
+                    rows={3}
+                    placeholder="Describe why the team cannot participate (e.g. teammate medical emergency, scheduling conflict)..."
+                    value={disbandReason}
+                    onChange={(e) => setDisbandReason(e.target.value)}
+                    className="mt-1 w-full border border-white/10 bg-[#050816] p-2.5 font-mono text-xs text-white outline-none focus:border-amber-400"
+                  />
+                  <p className="mt-1 font-mono text-[9px] text-slate-500">
+                    This reason will be submitted directly to the event coordinators.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDisbandModalTeam(null)
+                    }}
+                    className="px-3 py-1.5 font-mono text-xs uppercase text-slate-400 hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingDisband}
+                    className="flex items-center gap-1.5 border border-amber-500 bg-amber-500 px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-black hover:bg-transparent hover:text-amber-400 disabled:opacity-50 transition-colors"
+                  >
+                    {isSubmittingDisband ? (
+                      <>
+                        <Loader2 size={13} className="animate-spin" />
+                        <span>Submitting Request...</span>
+                      </>
+                    ) : (
+                      <span>Submit Disband Request</span>
+                    )}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}

@@ -7,8 +7,6 @@ import {
   Mail,
   User,
   Phone,
-  AlertCircle,
-  CheckCircle2,
   Loader2,
   Eye,
   EyeOff,
@@ -16,6 +14,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { DEPARTMENT_OPTIONS, SEMESTER_OPTIONS } from '../../types/database.types'
+import { showToast } from '../../utils/toast'
 
 export default function AuthModal() {
   const { authModalOpen, authModalMode, closeAuthModal, openAuthModal, login, registerStudent } =
@@ -35,10 +34,7 @@ export default function AuthModal() {
   const [customDepartment, setCustomDepartment] = useState('')
   const [semester, setSemester] = useState('')
 
-  const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [regSuccess, setRegSuccess] = useState(false)
-  const [countdown, setCountdown] = useState(2)
 
   const resetForm = () => {
     setEmail('')
@@ -53,7 +49,6 @@ export default function AuthModal() {
     setBranch('')
     setCustomDepartment('')
     setSemester('')
-    setError(null)
   }
 
   useEffect(() => {
@@ -62,55 +57,58 @@ export default function AuthModal() {
     }
   }, [authModalOpen])
 
-  useEffect(() => {
-    if (regSuccess) {
-      if (countdown > 0) {
-        const timer = setTimeout(() => setCountdown((prev) => prev - 1), 1000)
-        return () => clearTimeout(timer)
-      } else {
-        setRegSuccess(false)
-        resetForm()
-        closeAuthModal()
-      }
-    }
-  }, [regSuccess, countdown, closeAuthModal])
-
   if (!authModalOpen) return null
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setError(null)
-    setIsSubmitting(true)
 
     try {
       if (authModalMode === 'login') {
         if (!email.trim() || !password) {
-          throw new Error('Please enter both email/username and password.')
+          showToast.warning('Please enter both email/username and password.')
+          return
         }
+        setIsSubmitting(true)
         await login(email.trim(), password)
         resetForm()
+        closeAuthModal()
       } else {
-        if (!name.trim() || !email.trim() || !password) {
-          throw new Error('Name, email, and password are required.')
+        if (!name.trim()) {
+          showToast.warning('Full Name is required.')
+          return
+        }
+        if (!email.trim()) {
+          showToast.warning('Email address is required.')
+          return
+        }
+        if (!password) {
+          showToast.warning('Password is required.')
+          return
         }
         if (password.length < 8) {
-          throw new Error('Password must be at least 8 characters long.')
+          showToast.warning('Password must be at least 8 characters long.')
+          return
         }
         if (password !== confirmPassword) {
-          throw new Error('Passwords do not match. Please verify your confirm password.')
+          showToast.error('Passwords do not match. Please verify your confirm password.')
+          return
         }
         if (!rollNo.trim()) {
-          throw new Error('Student Roll Number is required.')
+          showToast.warning('Student Roll Number is required.')
+          return
         }
         if (branch === 'OTHER' && !customDepartment.trim()) {
-          throw new Error('Please specify your custom department name.')
+          showToast.warning('Please specify your custom department name.')
+          return
         }
         if (semester.trim()) {
           const semNum = parseInt(semester, 10)
           if (isNaN(semNum) || semNum < 1 || semNum > 8) {
-            throw new Error('Semester must be between 1 and 8.')
+            showToast.warning('Semester must be between 1 and 8.')
+            return
           }
         }
+        setIsSubmitting(true)
         await registerStudent({
           fullName: name.trim(),
           username: username.trim() || undefined,
@@ -122,37 +120,34 @@ export default function AuthModal() {
           customDepartment: branch === 'OTHER' ? customDepartment.trim() : undefined,
           semester: semester.trim(),
         })
-        setPassword('')
-        setConfirmPassword('')
-        setCountdown(2)
-        setRegSuccess(true)
+        resetForm()
+        closeAuthModal()
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
         const msg = err.message
         if (authModalMode === 'register') {
           if (msg.toLowerCase().includes('roll') || msg.toLowerCase().includes('idx_rollnumber')) {
-            setError('A student with this Roll Number is already registered.')
+            showToast.error('A student with this Roll Number is already registered.')
           } else if (msg.toLowerCase().includes('email') || msg.toLowerCase().includes('user_already_exists')) {
-            setError('An account with this email address already exists. Try signing in.')
+            showToast.error('An account with this email address already exists. Try signing in.')
           } else {
-            setError(msg)
+            showToast.error(msg)
           }
         } else {
-          // Login mode error mapping
           if (
             msg.toLowerCase().includes('invalid credentials') ||
             msg.toLowerCase().includes('invalid email') ||
             msg.toLowerCase().includes('invalid password') ||
             msg.toLowerCase().includes('user_invalid_credentials')
           ) {
-            setError('Invalid credentials. Please verify your email / username and password.')
+            showToast.error('Invalid credentials. Please verify your email / username and password.')
           } else {
-            setError(msg)
+            showToast.error(msg)
           }
         }
       } else {
-        setError('Authentication failed. Please check credentials.')
+        showToast.error('Authentication failed. Please check credentials.')
       }
     } finally {
       setIsSubmitting(false)
@@ -241,44 +236,8 @@ export default function AuthModal() {
 
           {/* Form */}
           <div className="max-h-[75vh] overflow-y-auto p-6">
-            {regSuccess ? (
-              <div className="py-6 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-emerald-500/40 bg-emerald-950/20 text-emerald-400">
-                  <CheckCircle2 size={32} />
-                </div>
-                <h3 className="mt-4 text-xl font-black uppercase tracking-tight text-white">
-                  Registration Successful!
-                </h3>
-                <p className="mt-2 text-xs text-slate-400 leading-relaxed">
-                  Welcome, <strong className="text-white">{name || email}</strong>. Your account has been registered.
-                </p>
-                <div className="mt-5 inline-flex items-center gap-2 border border-emerald-500/30 bg-emerald-950/30 px-4 py-2 font-mono text-xs text-emerald-300">
-                  <Loader2 size={13} className="animate-spin text-emerald-400" />
-                  <span>Entering portal in <strong className="text-white">{countdown}</strong>s...</span>
-                </div>
-                <div className="mt-6">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRegSuccess(false)
-                      closeAuthModal()
-                    }}
-                    className="flex w-full items-center justify-center gap-2 border border-[#00E5FF] bg-[#00E5FF] py-2.5 font-mono text-xs font-bold uppercase tracking-[0.15em] text-black transition-all hover:bg-transparent hover:text-[#00E5FF]"
-                  >
-                    <span>Continue to Portal</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit}>
-                {error && (
-                  <div className="mb-4 flex items-center gap-3 border border-red-500/40 bg-red-950/30 p-3 text-xs text-red-400">
-                    <AlertCircle size={16} className="shrink-0" />
-                    <span>{error}</span>
-                  </div>
-                )}
-
-                <div className="space-y-4">
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-4">
               {authModalMode === 'register' && (
                 <>
                   <div className="grid grid-cols-2 gap-3">
@@ -379,7 +338,6 @@ export default function AuthModal() {
                         value={confirmPassword}
                         onChange={(e) => {
                           setConfirmPassword(e.target.value)
-                          if (error) setError(null)
                         }}
                         className="w-full border border-white/10 bg-[#050816] py-2.5 pl-10 pr-10 text-xs text-white placeholder-slate-600 outline-none transition-colors focus:border-[#00E5FF]"
                       />
@@ -515,8 +473,7 @@ export default function AuthModal() {
                 )}
               </button>
             </form>
-          )}
-        </div>
+          </div>
       </motion.div>
     </div>
   </AnimatePresence>

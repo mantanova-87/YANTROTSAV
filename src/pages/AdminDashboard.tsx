@@ -11,10 +11,10 @@ import {
   Edit2,
   Trash2,
   Upload,
-  Image as ImageIcon,
   X,
   CheckCircle2,
   AlertTriangle,
+  AlertCircle,
   Copy,
   Search,
   UserCheck,
@@ -36,7 +36,9 @@ import { adminService, type SquadInspectionDetails } from '../services/appwrite/
 import { eventsService } from '../services/appwrite/events.service'
 import { storageService } from '../services/appwrite/storage.service'
 import CyberLoader from '../components/common/CyberLoader'
+import fallbackBanner from '../assets/images/event-fallback.jpg'
 import { DEPARTMENT_OPTIONS } from '../types/database.types'
+import { showToast } from '../utils/toast'
 import type {
   AdminAnalyticsKPI,
   EventDocument,
@@ -74,7 +76,6 @@ export default function AdminDashboard() {
   const [loadingStats, setLoadingStats] = useState(true)
   const [loadingRoster, setLoadingRoster] = useState(false)
   const [exporting, setExporting] = useState(false)
-  const [statusNotice, setStatusNotice] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   // Search & Filter states for each tab
   const [eventsSearch, setEventsSearch] = useState('')
@@ -107,7 +108,7 @@ export default function AdminDashboard() {
   const [teamsList, setTeamsList] = useState<TeamDocument[]>([])
   const [loadingTeams, setLoadingTeams] = useState(false)
   const [teamsSearch, setTeamsSearch] = useState('')
-  const [teamsStatusFilter, setTeamsStatusFilter] = useState<'all' | 'confirmed' | 'pending' | 'cancelled' | 'disbanded'>('all')
+  const [teamsStatusFilter, setTeamsStatusFilter] = useState<'all' | 'confirmed' | 'pending' | 'cancelled' | 'disbanded' | 'disband_requested'>('all')
 
   // Squad Inspector State
   const [inspectingTeamId, setInspectingTeamId] = useState<string | null>(null)
@@ -149,8 +150,11 @@ export default function AdminDashboard() {
   const [deletingEvent, setDeletingEvent] = useState(false)
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
-    setStatusNotice({ message, type })
-    setTimeout(() => setStatusNotice(null), 5000)
+    if (type === 'error') {
+      showToast.error(message)
+    } else {
+      showToast.success(message)
+    }
   }
 
 
@@ -253,23 +257,33 @@ export default function AdminDashboard() {
 
   const handleCreateEventSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    if (!createBannerFile) {
+      showNotification('Event banner image is mandatory! Please select an image.', 'error')
+      return
+    }
     setCreatingEvent(true)
     try {
+      console.log('[Admin] Uploading banner:', createBannerFile.name)
       let bannerUrl = ''
-
-      // Step 1: Upload banner if selected
-      if (createBannerFile) {
-        console.log('[Admin] Uploading banner:', createBannerFile.name)
+      try {
         const uploadRes = await storageService.uploadEventBanner(createBannerFile)
         bannerUrl = uploadRes.fileUrl
         console.log('[Admin] Banner uploaded successfully:', bannerUrl)
+      } catch (uploadErr: any) {
+        console.error('[Admin] Banner upload failed:', uploadErr)
+        throw new Error(`[Storage Error] Failed to upload banner: ${uploadErr?.message || 'Access denied'}. Check 'event_banners' bucket permissions in Appwrite Console.`)
       }
 
       // Step 2: Create the event document
-      await eventsService.createEvent({
-        ...newEvent,
-        bannerUrl,
-      })
+      try {
+        await eventsService.createEvent({
+          ...newEvent,
+          bannerUrl,
+        })
+      } catch (dbErr: any) {
+        console.error('[Admin] Event document creation failed:', dbErr)
+        throw new Error(`[Database Error] Failed to create event: ${dbErr?.message || 'Access denied'}. Check 'events' collection permissions in Appwrite Console.`)
+      }
 
       dispatch(invalidateEventsCache())
       showNotification(`✅ Event "${newEvent.title}" created successfully!${bannerUrl ? ' (with banner)' : ''}`)
@@ -323,18 +337,41 @@ export default function AdminDashboard() {
   const handleUpdateEventSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (!editingEvent) return
+    if (!editBannerFile && !editFormData.bannerUrl?.trim()) {
+      showNotification('Event banner image is mandatory! Please select an image.', 'error')
+      return
+    }
     setUpdatingEvent(true)
     try {
+      const oldBannerUrl = editingEvent.bannerUrl || ''
       let bannerUrl = editFormData.bannerUrl || ''
+      let uploadedNewBanner = false
+
       if (editBannerFile) {
-        const uploadRes = await storageService.uploadEventBanner(editBannerFile)
-        bannerUrl = uploadRes.fileUrl
+        try {
+          const uploadRes = await storageService.uploadEventBanner(editBannerFile)
+          bannerUrl = uploadRes.fileUrl
+          uploadedNewBanner = true
+        } catch (uploadErr: any) {
+          throw new Error(`[Storage Error] Failed to upload updated banner: ${uploadErr?.message || 'Access denied'}. Check 'event_banners' bucket permissions.`)
+        }
       }
 
-      await eventsService.updateEvent(editingEvent.$id, {
-        ...editFormData,
-        bannerUrl,
-      })
+      try {
+        await eventsService.updateEvent(editingEvent.$id, {
+          ...editFormData,
+          bannerUrl,
+        })
+      } catch (updateErr: any) {
+        throw new Error(`[Database Error] Failed to update event: ${updateErr?.message || 'Access denied'}. Check 'events' collection permissions.`)
+      }
+
+      // Clean up previous banner from storage if replaced with a new one
+      if (uploadedNewBanner && oldBannerUrl && oldBannerUrl !== bannerUrl) {
+        storageService.deleteEventBannerFromUrl(oldBannerUrl).catch((cleanErr) => {
+          console.warn('[Admin] Failed to clean up old banner on replace:', cleanErr)
+        })
+      }
 
       dispatch(invalidateEventsCache())
       showNotification(`Event "${editFormData.title}" updated successfully!`)
@@ -369,7 +406,11 @@ export default function AdminDashboard() {
         status: 'draft',
       }
 
-      await eventsService.createEvent(clonedDTO)
+      try {
+        await eventsService.createEvent(clonedDTO)
+      } catch (cloneErr: any) {
+        throw new Error(`[Database Error] Failed to clone event: ${cloneErr?.message || 'Access denied'}. Check 'events' collection permissions.`)
+      }
       dispatch(invalidateEventsCache())
       showNotification(`Event "${clonedDTO.title}" cloned as draft!`)
       await loadAdminOverview()
@@ -387,9 +428,9 @@ export default function AdminDashboard() {
     if (!eventToDelete) return
     setDeletingEvent(true)
     try {
-      await eventsService.deleteEvent(eventToDelete.$id)
+      await eventsService.deleteEvent(eventToDelete.$id, eventToDelete.bannerUrl)
       dispatch(invalidateEventsCache())
-      showNotification(`Event "${eventToDelete.title}" and all related teams, registrations, and invites deleted successfully!`)
+      showNotification(`Event "${eventToDelete.title}" and all related banner, teams, registrations, and invites deleted successfully!`)
       setDeleteModalOpen(false)
       setEventToDelete(null)
       await loadAdminOverview()
@@ -577,6 +618,29 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleApproveDisband = async (team: TeamDocument) => {
+    const rawName = team.name || team.teamName || 'Team'
+    const displayName = rawName.replace('[DISBAND REQUESTED]', '').trim()
+    if (
+      !window.confirm(
+        `Approve disband request for squad "${displayName}"?\n\nThis will cancel the squad and safely release all registered teammates so they can participate elsewhere.`,
+      )
+    )
+      return
+
+    try {
+      await adminService.updateTeamStatus(team.$id, 'cancelled')
+      showNotification(
+        `Disband request approved. Squad "${displayName}" has been disbanded and registered members released.`,
+      )
+      await loadTeams()
+      await loadRoster(selectedEventId)
+      await loadAdminOverview()
+    } catch (err: any) {
+      showNotification(err?.message || 'Failed to approve disband', 'error')
+    }
+  }
+
   // Squad Inspection Handlers
   const handleInspectSquad = async (teamId: string) => {
     setInspectingTeamId(teamId)
@@ -760,7 +824,13 @@ export default function AdminDashboard() {
         t.leaderEmail.toLowerCase().includes(q) ||
         (t.eventTitle || '').toLowerCase().includes(q)
 
-      const matchStatus = teamsStatusFilter === 'all' || t.status === teamsStatusFilter
+      const isDisbandReq = (t.name || t.teamName || '').includes('[DISBAND REQUESTED]')
+      const matchStatus =
+        teamsStatusFilter === 'all'
+          ? true
+          : teamsStatusFilter === 'disband_requested'
+          ? isDisbandReq
+          : t.status === teamsStatusFilter
       return matchSearch && matchStatus
     })
   }, [teamsList, teamsSearch, teamsStatusFilter])
@@ -850,20 +920,6 @@ export default function AdminDashboard() {
               </button>
             </div>
           </div>
-
-          {/* Status feedback toast */}
-          {statusNotice && (
-            <div
-              className={`mt-4 flex items-center gap-2 border p-3 font-mono text-xs transition-all ${
-                statusNotice.type === 'success'
-                  ? 'border-emerald-500/40 bg-emerald-950/30 text-emerald-400'
-                  : 'border-red-500/40 bg-red-950/30 text-red-400'
-              }`}
-            >
-              {statusNotice.type === 'success' ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
-              <span>{statusNotice.message}</span>
-            </div>
-          )}
         </div>
 
         {/* Analytics KPI Row */}
@@ -1068,17 +1124,30 @@ export default function AdminDashboard() {
                   >
                     <div className="flex items-center gap-4">
                       {/* Event Banner thumbnail */}
-                      {ev.bannerUrl ? (
+                      <div
+                        className="relative h-16 w-24 shrink-0 overflow-hidden border border-white/10 bg-[#050816]"
+                        title={ev.bannerUrl ? ev.title : 'No banner image (Using fallback)'}
+                      >
                         <img
-                          src={ev.bannerUrl}
+                          src={ev.bannerUrl || fallbackBanner}
                           alt={ev.title}
-                          className="h-16 w-24 object-cover border border-white/10 shrink-0 bg-[#050816]"
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            if (e.currentTarget.src !== fallbackBanner) {
+                              e.currentTarget.src = fallbackBanner
+                              const badge = e.currentTarget.parentElement?.querySelector('.offline-badge') as HTMLElement
+                              if (badge) badge.classList.remove('hidden')
+                            }
+                          }}
                         />
-                      ) : (
-                        <div className="flex h-16 w-24 items-center justify-center border border-white/10 bg-[#050816] text-slate-600 shrink-0">
-                          <ImageIcon size={20} />
+                        <div
+                          className={`offline-badge absolute bottom-0 inset-x-0 bg-black/85 text-amber-400 font-mono text-[7px] text-center py-0.5 tracking-wider uppercase font-bold border-t border-amber-500/30 ${
+                            !ev.bannerUrl ? '' : 'hidden'
+                          }`}
+                        >
+                          Unable to load
                         </div>
-                      )}
+                      </div>
 
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -1721,6 +1790,7 @@ export default function AdminDashboard() {
                   className="border border-white/15 bg-[#050816] px-3 py-1.5 font-mono text-xs text-white outline-none focus:border-emerald-400"
                 >
                   <option value="all">All Statuses</option>
+                  <option value="disband_requested">⚠️ Disband Requests</option>
                   <option value="confirmed">Confirmed</option>
                   <option value="pending">Pending Invites</option>
                   <option value="cancelled">Cancelled / Disbanded</option>
@@ -1738,95 +1808,133 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {filteredTeams.map((team) => (
-                    <div
-                      key={team.$id}
-                      className="border border-white/10 bg-[#050816] p-5 flex flex-col justify-between hover:border-[#00E5FF]/40 transition-colors shadow-lg"
-                    >
-                      <div>
-                        {/* Top: Event Title, Team Name, Status */}
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#00E5FF] block mb-1">
-                              {team.eventTitle || 'Tournament Squad'}
-                            </span>
-                            <h4 className="text-base font-bold text-white flex items-center gap-2">
-                              <span>{team.name || team.teamName}</span>
-                            </h4>
-                          </div>
+                  {filteredTeams.map((team) => {
+                    const isDisbandReq = (team.name || team.teamName || '').includes('[DISBAND REQUESTED]')
+                    const cleanTeamName = (team.name || team.teamName || 'Squad').replace('[DISBAND REQUESTED]', '').trim()
 
-                          <span
-                            className={`px-2 py-0.5 border font-mono text-[8px] uppercase tracking-wider ${
-                              team.status === 'confirmed'
-                                ? 'border-emerald-500/40 bg-emerald-950/30 text-emerald-400'
-                                : team.status === 'pending'
-                                ? 'border-amber-500/40 bg-amber-950/30 text-amber-400'
-                                : 'border-red-500/40 bg-red-950/30 text-red-400'
-                            }`}
-                          >
-                            {team.status === 'confirmed' ? 'CONFIRMED' : team.status === 'pending' ? 'WAITING' : 'CANCELLED'}
-                          </span>
-                        </div>
-
-                        {/* Leader & Roster stats */}
-                        <div className="mt-3 space-y-1 text-xs font-mono text-slate-300">
-                          <div className="flex items-center gap-2 text-slate-400">
-                            <span className="text-slate-500">Leader:</span>
-                            <span className="text-white font-medium">{team.leaderName}</span>
-                          </div>
-
-                          <div className="flex items-center gap-2 pt-1">
-                            <span className="text-slate-500">Confirmed Members:</span>
-                            <span className="text-[#00E5FF] font-bold">
-                              {team.acceptedCount || 1} / {team.targetTeamSize || 2}
-                            </span>
-                            {(team.memberEmails?.length || 0) > 0 && (
-                              <span className="text-slate-500 text-[10px]">
-                                ({team.memberEmails?.length} invited)
+                    return (
+                      <div
+                        key={team.$id}
+                        className={`border p-5 flex flex-col justify-between transition-colors shadow-lg ${
+                          isDisbandReq
+                            ? 'border-amber-500/50 bg-amber-950/10 hover:border-amber-400'
+                            : 'border-white/10 bg-[#050816] hover:border-[#00E5FF]/40'
+                        }`}
+                      >
+                        <div>
+                          {/* Top: Event Title, Team Name, Status */}
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#00E5FF] block mb-1">
+                                {team.eventTitle || 'Tournament Squad'}
                               </span>
+                              <h4 className="text-base font-bold text-white flex items-center gap-2">
+                                <span>{cleanTeamName}</span>
+                              </h4>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                              {isDisbandReq && (
+                                <span className="px-2 py-0.5 border border-amber-500/50 bg-amber-950/40 text-amber-300 font-mono text-[8px] uppercase tracking-wider animate-pulse flex items-center gap-1">
+                                  <AlertCircle size={10} />
+                                  <span>DISBAND REQ</span>
+                                </span>
+                              )}
+
+                              <span
+                                className={`px-2 py-0.5 border font-mono text-[8px] uppercase tracking-wider ${
+                                  team.status === 'confirmed'
+                                    ? 'border-emerald-500/40 bg-emerald-950/30 text-emerald-400'
+                                    : team.status === 'pending'
+                                    ? 'border-amber-500/40 bg-amber-950/30 text-amber-400'
+                                    : 'border-red-500/40 bg-red-950/30 text-red-400'
+                                }`}
+                              >
+                                {team.status === 'confirmed' ? 'CONFIRMED' : team.status === 'pending' ? 'WAITING' : 'CANCELLED'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Disband Request Callout banner */}
+                          {isDisbandReq && (
+                            <div className="mt-3 border border-amber-500/30 bg-amber-950/30 p-2 text-xs font-mono text-amber-300 flex items-center gap-2">
+                              <AlertCircle size={13} className="shrink-0 text-amber-400" />
+                              <span className="text-[11px]">
+                                Leader requested squad disbandment. Click <strong>Approve Disband</strong> to cancel and release members.
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Leader & Roster stats */}
+                          <div className="mt-3 space-y-1 text-xs font-mono text-slate-300">
+                            <div className="flex items-center gap-2 text-slate-400">
+                              <span className="text-slate-500">Leader:</span>
+                              <span className="text-white font-medium">{team.leaderName}</span>
+                            </div>
+
+                            <div className="flex items-center gap-2 pt-1">
+                              <span className="text-slate-500">Confirmed Members:</span>
+                              <span className="text-[#00E5FF] font-bold">
+                                {team.acceptedCount || 1} / {team.targetTeamSize || 2}
+                              </span>
+                              {(team.memberEmails?.length || 0) > 0 && (
+                                <span className="text-slate-500 text-[10px]">
+                                  ({team.memberEmails?.length} invited)
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Admin Team Controls */}
+                        <div className="mt-5 border-t border-white/10 pt-3 flex flex-wrap items-center justify-between gap-2">
+                          {/* Primary Inspect Action */}
+                          <button
+                            onClick={() => handleInspectSquad(team.$id)}
+                            className="flex items-center gap-1.5 border border-[#00E5FF] bg-[#00E5FF]/10 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#00E5FF] hover:bg-[#00E5FF] hover:text-black transition-all shadow-[0_0_12px_rgba(0,229,255,0.15)]"
+                          >
+                            <Search size={12} />
+                            <span>Inspect Squad</span>
+                          </button>
+
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {/* Approve Disband Button (High Priority) */}
+                            {isDisbandReq && team.status !== 'cancelled' && (
+                              <button
+                                onClick={() => handleApproveDisband(team)}
+                                className="border border-amber-400 bg-amber-500/20 px-2.5 py-1 font-mono text-[9px] font-bold uppercase text-amber-300 hover:bg-amber-400 hover:text-black transition-colors shadow-[0_0_10px_rgba(245,158,11,0.25)]"
+                              >
+                                Approve Disband
+                              </button>
                             )}
+
+                            {team.status !== 'confirmed' && (
+                              <button
+                                onClick={() => handleUpdateTeamStatus(team.$id, 'confirmed')}
+                                className="border border-emerald-500/40 bg-emerald-950/20 px-2 py-1 font-mono text-[9px] uppercase text-emerald-400 hover:bg-emerald-500 hover:text-black transition-colors"
+                              >
+                                Force Confirm
+                              </button>
+                            )}
+                            {team.status !== 'cancelled' && (team.status as any) !== 'disbanded' && !isDisbandReq && (
+                              <button
+                                onClick={() => handleUpdateTeamStatus(team.$id, 'cancelled')}
+                                className="border border-amber-500/40 bg-amber-950/20 px-2 py-1 font-mono text-[9px] uppercase text-amber-400 hover:bg-amber-500 hover:text-black transition-colors"
+                              >
+                                Disband
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDeleteTeam(team)}
+                              className="border border-red-500/30 bg-red-950/20 px-2 py-1 font-mono text-[9px] uppercase text-red-400 hover:bg-red-500 hover:text-white transition-colors"
+                            >
+                              Delete
+                            </button>
                           </div>
                         </div>
                       </div>
-
-                      {/* Admin Team Controls */}
-                      <div className="mt-5 border-t border-white/10 pt-3 flex flex-wrap items-center justify-between gap-2">
-                        {/* Primary Inspect Action */}
-                        <button
-                          onClick={() => handleInspectSquad(team.$id)}
-                          className="flex items-center gap-1.5 border border-[#00E5FF] bg-[#00E5FF]/10 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#00E5FF] hover:bg-[#00E5FF] hover:text-black transition-all shadow-[0_0_12px_rgba(0,229,255,0.15)]"
-                        >
-                          <Search size={12} />
-                          <span>Inspect Squad</span>
-                        </button>
-
-                        <div className="flex items-center gap-1.5">
-                          {team.status !== 'confirmed' && (
-                            <button
-                              onClick={() => handleUpdateTeamStatus(team.$id, 'confirmed')}
-                              className="border border-emerald-500/40 bg-emerald-950/20 px-2 py-1 font-mono text-[9px] uppercase text-emerald-400 hover:bg-emerald-500 hover:text-black transition-colors"
-                            >
-                              Force Confirm
-                            </button>
-                          )}
-                          {team.status !== 'cancelled' && (team.status as any) !== 'disbanded' && (
-                            <button
-                              onClick={() => handleUpdateTeamStatus(team.$id, 'cancelled')}
-                              className="border border-amber-500/40 bg-amber-950/20 px-2 py-1 font-mono text-[9px] uppercase text-amber-400 hover:bg-amber-500 hover:text-black transition-colors"
-                            >
-                              Disband
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeleteTeam(team)}
-                            className="border border-red-500/30 bg-red-950/20 px-2 py-1 font-mono text-[9px] uppercase text-red-400 hover:bg-red-500 hover:text-white transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -1936,7 +2044,17 @@ export default function AdminDashboard() {
                   [SQUAD INSPECTOR // FULL TELEMETRY]
                 </span>
                 <h3 className="mt-1 text-xl font-black uppercase tracking-tight text-white flex items-center gap-3">
-                  <span>{squadDetails?.team.name || squadDetails?.team.teamName || 'Squad Telemetry'}</span>
+                  <span>
+                    {(squadDetails?.team.name || squadDetails?.team.teamName || 'Squad Telemetry')
+                      .replace('[DISBAND REQUESTED]', '')
+                      .trim()}
+                  </span>
+                  {squadDetails?.team.name?.includes('[DISBAND REQUESTED]') && (
+                    <span className="px-2 py-0.5 border border-amber-500/60 bg-amber-950/40 text-amber-300 font-mono text-[9px] uppercase tracking-widest animate-pulse flex items-center gap-1">
+                      <AlertCircle size={10} />
+                      <span>DISBAND REQUESTED</span>
+                    </span>
+                  )}
                   {squadDetails && (
                     <span
                       className={`px-2 py-0.5 border font-mono text-[9px] uppercase tracking-widest ${
@@ -2183,7 +2301,20 @@ export default function AdminDashboard() {
                     <span>{copiedSquadDossier ? 'Dossier Copied!' : 'Copy Squad Dossier'}</span>
                   </button>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {squadDetails.team.name?.includes('[DISBAND REQUESTED]') &&
+                      squadDetails.team.status !== 'cancelled' && (
+                        <button
+                          onClick={async () => {
+                            await handleApproveDisband(squadDetails.team)
+                            setSquadDetails(null)
+                            setInspectingTeamId(null)
+                          }}
+                          className="border border-amber-400 bg-amber-500/20 px-3 py-2 font-mono text-xs font-bold uppercase text-amber-300 hover:bg-amber-400 hover:text-black transition-colors shadow-[0_0_12px_rgba(245,158,11,0.3)]"
+                        >
+                          Approve Disband Request
+                        </button>
+                      )}
                     {squadDetails.team.status !== 'confirmed' && (
                       <button
                         onClick={async () => {
@@ -2196,18 +2327,20 @@ export default function AdminDashboard() {
                         Force Confirm Squad
                       </button>
                     )}
-                    {squadDetails.team.status !== 'cancelled' && (squadDetails.team.status as any) !== 'disbanded' && (
-                      <button
-                        onClick={async () => {
-                          await handleUpdateTeamStatus(squadDetails.team.$id, 'cancelled')
-                          const updated = await adminService.getSquadDetails(squadDetails.team.$id)
-                          setSquadDetails(updated)
-                        }}
-                        className="border border-amber-500/60 bg-amber-950/20 px-3 py-2 font-mono text-xs font-bold uppercase text-amber-400 hover:bg-amber-500 hover:text-black transition-colors"
-                      >
-                        Disband
-                      </button>
-                    )}
+                    {squadDetails.team.status !== 'cancelled' &&
+                      (squadDetails.team.status as any) !== 'disbanded' &&
+                      !squadDetails.team.name?.includes('[DISBAND REQUESTED]') && (
+                        <button
+                          onClick={async () => {
+                            await handleUpdateTeamStatus(squadDetails.team.$id, 'cancelled')
+                            const updated = await adminService.getSquadDetails(squadDetails.team.$id)
+                            setSquadDetails(updated)
+                          }}
+                          className="border border-amber-500/60 bg-amber-950/20 px-3 py-2 font-mono text-xs font-bold uppercase text-amber-400 hover:bg-amber-500 hover:text-black transition-colors"
+                        >
+                          Disband
+                        </button>
+                      )}
                     <button
                       onClick={() => {
                         setInspectingTeamId(null)
@@ -2393,25 +2526,32 @@ export default function AdminDashboard() {
               {/* Banner Image Upload */}
               <div>
                 <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                  Event Banner Image (Stored in Appwrite Bucket)
+                  Event Banner Image * <span className="text-red-400 font-semibold">(Mandatory)</span>
                 </label>
                 <div className="mt-1 flex items-center gap-4">
-                  <label className="flex cursor-pointer items-center gap-2 border border-dashed border-[#00E5FF]/50 bg-[#050816] px-4 py-2.5 font-mono text-xs text-[#00E5FF] hover:bg-[#00E5FF]/10">
+                  <label className={`flex cursor-pointer items-center gap-2 border border-dashed px-4 py-2.5 font-mono text-xs transition-colors ${
+                    createBannerFile
+                      ? 'border-emerald-500/60 bg-emerald-950/20 text-emerald-400'
+                      : 'border-red-500/50 bg-red-950/10 text-red-300 hover:bg-red-950/20'
+                  }`}>
                     <Upload size={14} />
-                    <span>{createBannerFile ? createBannerFile.name : 'Choose Image File'}</span>
+                    <span>{createBannerFile ? createBannerFile.name : 'Choose Image File *'}</span>
                     <input
                       type="file"
                       accept="image/*"
+                      required
                       onChange={handleCreateImageSelect}
                       className="hidden"
                     />
                   </label>
-                  {createBannerPreview && (
+                  {createBannerPreview ? (
                     <img
                       src={createBannerPreview}
                       alt="Banner Preview"
-                      className="h-12 w-20 object-cover border border-white/20"
+                      className="h-12 w-20 object-cover border border-emerald-500/30"
                     />
+                  ) : (
+                    <span className="font-mono text-[10px] text-red-400/80">Banner is required *</span>
                   )}
                 </div>
               </div>
@@ -2658,7 +2798,14 @@ export default function AdminDashboard() {
 
               <div>
                 <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                  Update Banner Image
+                  Event Banner Image *{' '}
+                  <span className="font-semibold text-emerald-400">
+                    {editBannerFile
+                      ? '(New banner selected)'
+                      : editFormData.bannerUrl
+                      ? '(Current banner attached)'
+                      : '(Mandatory)'}
+                  </span>
                 </label>
                 <div className="mt-1 flex items-center gap-4">
                   <label className="flex cursor-pointer items-center gap-2 border border-dashed border-[#00E5FF]/50 bg-[#050816] px-4 py-2.5 font-mono text-xs text-[#00E5FF] hover:bg-[#00E5FF]/10">

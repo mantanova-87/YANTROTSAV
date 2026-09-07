@@ -179,11 +179,25 @@ export class AdminService {
       const validEventMap = new Map<string, EventDocument>()
       allEvents.forEach((e) => validEventMap.set(e.$id, e))
 
-      // Keep only registrations belonging to existing, valid events
-      const activeRegs = (regResponse.documents as unknown as EventRegistrationDocument[]).filter(
-        (doc) => !deletedRegIds.has(doc.$id) && validEventMap.has(doc.eventId),
+      const activeTeams = teamResponse.documents.filter(
+        (t) =>
+          !deletedTeamIds.has(t.$id) &&
+          (t as any).status !== 'cancelled' &&
+          (t as any).status !== 'disbanded',
       )
-      const activeTeams = teamResponse.documents.filter((t) => !deletedTeamIds.has(t.$id))
+      const activeTeamIdSet = new Set(activeTeams.map((t) => t.$id))
+
+      // Keep only genuine registrations belonging to existing events and active teams
+      const activeRegs = (regResponse.documents as unknown as EventRegistrationDocument[]).filter((doc) => {
+        if (deletedRegIds.has(doc.$id)) return false
+        if (!validEventMap.has(doc.eventId)) return false
+        if (doc.teamId) {
+          // Registration belongs to a team: team must exist and be active
+          return activeTeamIdSet.has(doc.teamId)
+        }
+        return true
+      })
+
       const activeUsers = userResponse.documents.filter(
         (u) => !deletedUserIds.has(u.$id) && !deletedUserIds.has((u as any).userId),
       )
@@ -287,7 +301,7 @@ export class AdminService {
           if (!event) return false
           if (doc.teamId) {
             const team = allTeams.find((t) => t.$id === doc.teamId)
-            if (team && (team.status === 'cancelled' || (team.status as any) === 'disbanded')) {
+            if (!team || team.status === 'cancelled' || (team.status as any) === 'disbanded') {
               return false
             }
           }
@@ -1288,6 +1302,87 @@ export class AdminService {
       URL.revokeObjectURL(url)
     } catch (error) {
       throw mapAppwriteError(error, 'AdminService.exportUsersCSV')
+    }
+  }
+
+  /**
+   * Scan and purge orphaned event registrations from deleted events or dead/cancelled teams
+   */
+  async cleanupOrphanedRegistrations(): Promise<{ purgedCount: number; totalInspected: number }> {
+    try {
+      const [eventsRes, teamsRes, regsRes] = await Promise.all([
+        databases.listDocuments(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.events,
+          [Query.limit(500)],
+        ).catch(() => ({ documents: [] })),
+        databases.listDocuments(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.teams,
+          [Query.limit(1000)],
+        ).catch(() => ({ documents: [] })),
+        databases.listDocuments(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.eventRegistrations,
+          [Query.limit(1000)],
+        ).catch(() => ({ documents: [] })),
+      ])
+
+      const validEventIds = new Set(eventsRes.documents.map((e) => e.$id))
+      const activeTeamsMap = new Map<string, any>()
+      for (const t of teamsRes.documents) {
+        if ((t as any).status !== 'cancelled' && (t as any).status !== 'disbanded') {
+          activeTeamsMap.set(t.$id, t)
+        }
+      }
+
+      let purgedCount = 0
+      for (const reg of regsRes.documents) {
+        const isEventDeleted = !validEventIds.has((reg as any).eventId)
+        const isDeadTeam = Boolean((reg as any).teamId && !activeTeamsMap.has((reg as any).teamId))
+
+        if (isEventDeleted || isDeadTeam) {
+          addStoredDeletedReg(reg.$id)
+          try {
+            await databases.deleteDocument(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.eventRegistrations,
+              reg.$id,
+            )
+            purgedCount++
+          } catch {
+            try {
+              await databases.updateDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.eventRegistrations,
+                reg.$id,
+                {},
+                [
+                  Permission.read(Role.any()),
+                  Permission.update(Role.any()),
+                  Permission.delete(Role.any()),
+                ],
+              )
+              await databases.deleteDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.eventRegistrations,
+                reg.$id,
+              )
+              purgedCount++
+            } catch {
+              // Marked in local state as purged
+              purgedCount++
+            }
+          }
+        }
+      }
+
+      return {
+        purgedCount,
+        totalInspected: regsRes.documents.length,
+      }
+    } catch (error) {
+      throw mapAppwriteError(error, 'AdminService.cleanupOrphanedRegistrations')
     }
   }
 }

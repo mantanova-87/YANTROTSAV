@@ -1,4 +1,4 @@
-import { ID } from 'appwrite'
+import { ID, Permission, Role } from 'appwrite'
 import { storage } from './client'
 import { APPWRITE_CONFIG } from '../../config/appwrite.config'
 import { mapAppwriteError } from './errorMapper'
@@ -18,7 +18,8 @@ export class StorageService {
   }
 
   /**
-   * Upload an event banner image to Appwrite Storage
+   * Upload an event banner image to Appwrite Storage with full access permissions
+   * so all admins can view, update, and delete the asset.
    */
   async uploadEventBanner(file: File): Promise<UploadResult> {
     try {
@@ -40,12 +41,30 @@ export class StorageService {
       console.log('[StorageService] Generated fileId:', fileId)
 
       console.log('[StorageService] Calling storage.createFile...')
-      // Passing undefined for permissions lets Appwrite use Bucket-level permissions
-      const uploadedFile = await storage.createFile(
-        this.bucketId,
-        fileId,
-        file
-      )
+      let uploadedFile: any
+      try {
+        uploadedFile = await storage.createFile(
+          this.bucketId,
+          fileId,
+          file,
+          [
+            Permission.read(Role.any()),
+            Permission.update(Role.users()),
+            Permission.delete(Role.users()),
+          ],
+        )
+      } catch (permErr: any) {
+        console.warn(
+          '[StorageService] Upload with custom permissions failed, retrying with default bucket permissions:',
+          permErr?.message,
+        )
+        // Fallback: inherit bucket-level permissions (required if File Security is disabled)
+        uploadedFile = await storage.createFile(
+          this.bucketId,
+          fileId,
+          file,
+        )
+      }
       console.log('[StorageService] Upload success! File $id:', uploadedFile.$id)
 
       // Build the public view URL
@@ -66,6 +85,28 @@ export class StorageService {
       console.error('[StorageService] Error message:', error?.message)
       throw mapAppwriteError(error, 'StorageService.uploadEventBanner')
     }
+  }
+
+  /**
+   * Robustly extract Appwrite Storage fileId from any banner URL or raw ID string.
+   */
+  extractFileId(bannerUrl?: string | null): string | null {
+    if (!bannerUrl || typeof bannerUrl !== 'string') return null
+    const trimmed = bannerUrl.trim()
+    if (!trimmed) return null
+
+    // Pattern 1: Appwrite storage URL - .../files/:fileId(/view|preview|download)?...
+    const match = trimmed.match(/\/files\/([a-zA-Z0-9_-]+)/)
+    if (match && match[1]) {
+      return match[1]
+    }
+
+    // Pattern 2: Raw fileId string (Appwrite unique IDs are alphanumeric)
+    if (/^[a-zA-Z0-9_-]{10,40}$/.test(trimmed)) {
+      return trimmed
+    }
+
+    return null
   }
 
   /**
@@ -98,15 +139,57 @@ export class StorageService {
   }
 
   /**
-   * Delete a banner image from storage bucket
+   * Delete a banner image from storage bucket.
+   * Tries client SDK first, then falls back to server API if permissions or session restricts client delete.
    */
-  async deleteEventBanner(fileId: string): Promise<void> {
+  async deleteEventBanner(fileId: string): Promise<boolean> {
+    if (!fileId?.trim()) return false
+    const safeFileId = fileId.trim()
+    console.log(`[StorageService] Attempting to delete banner file ${safeFileId}...`)
+
+    // Step 1: Direct client SDK deletion
     try {
-      await storage.deleteFile(this.bucketId, fileId)
-    } catch (error) {
-      console.warn(`[StorageService] Failed to delete file ${fileId}:`, error)
+      await storage.deleteFile(this.bucketId, safeFileId)
+      console.log(`[StorageService] ✅ Successfully deleted file ${safeFileId} via client SDK`)
+      return true
+    } catch (clientErr: any) {
+      console.warn(`[StorageService] Client SDK deleteFile failed for ${safeFileId}:`, clientErr?.message || clientErr)
     }
+
+    // Step 2: Fallback to server endpoint (uses APPWRITE_API_KEY when available)
+    try {
+      const res = await fetch('/api/admin/delete-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bucketId: this.bucketId,
+          fileId: safeFileId,
+        }),
+      })
+
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}))
+        if (data.success) {
+          console.log(`[StorageService] ✅ Successfully deleted file ${safeFileId} via server fallback API`)
+          return true
+        }
+      }
+    } catch (fallbackErr) {
+      console.warn(`[StorageService] Server fallback delete-file failed for ${safeFileId}:`, fallbackErr)
+    }
+
+    return false
+  }
+
+  /**
+   * Helper to delete banner directly from a URL string
+   */
+  async deleteEventBannerFromUrl(bannerUrl?: string | null): Promise<boolean> {
+    const fileId = this.extractFileId(bannerUrl)
+    if (!fileId) return false
+    return this.deleteEventBanner(fileId)
   }
 }
 
 export const storageService = new StorageService()
+
