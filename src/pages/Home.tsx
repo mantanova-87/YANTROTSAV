@@ -150,20 +150,19 @@ function Home() {
 
           <section className="relative w-full pt-[72px]">
 
+            {/* Perspective wrapper — disabled on mobile to avoid jank */}
+            <div style={{ perspective: isMobile ? 'none' : '900px' }}>
+
             <motion.div
-              initial={{
-                opacity: 0,
-                y: 15,
-                scale: 0.99,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-                scale: 1,
-              }}
+              initial={isMobile
+                ? { opacity: 0, y: 30, scale: 0.97 }
+                : { opacity: 0, y: 60, scale: 0.94, rotateX: 8 }
+              }
+              animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
               transition={{
-                duration: 0.45,
+                duration: isMobile ? 0.5 : 0.9,
                 ease: [0.22, 1, 0.36, 1],
+                delay: 0.1,
               }}
               className="relative mx-auto w-full max-w-5xl px-3 sm:px-6"
             >
@@ -175,34 +174,86 @@ function Home() {
               <div className="pointer-events-none absolute inset-0 z-20">
 
                 <div className="absolute inset-0 border border-white/15" />
-
                 <div className="absolute inset-2 border border-white/10" />
 
-                {/* Top-left */}
-                <span className="absolute left-0 top-0 h-10 w-10 sm:h-14 sm:w-14 border-l-2 border-t-2 border-[#00E5FF]" />
+                {/* Top-left corner — draws in */}
+                <motion.span
+                  initial={{ width: 0, height: 0 }}
+                  animate={{ width: isMobile ? 40 : 56, height: isMobile ? 40 : 56 }}
+                  transition={{ duration: 0.5, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute left-0 top-0 border-l-2 border-t-2 border-[#00E5FF]"
+                />
 
-                {/* Top-right */}
-                <span className="absolute right-0 top-0 h-10 w-10 sm:h-14 sm:w-14 border-r-2 border-t-2 border-[#FF6B00]" />
+                {/* Top-right corner — draws in */}
+                <motion.span
+                  initial={{ width: 0, height: 0 }}
+                  animate={{ width: isMobile ? 40 : 56, height: isMobile ? 40 : 56 }}
+                  transition={{ duration: 0.5, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute right-0 top-0 border-r-2 border-t-2 border-[#FF6B00]"
+                />
 
-                {/* Bottom-left */}
-                <span className="absolute bottom-0 left-0 h-10 w-10 sm:h-14 sm:w-14 border-b-2 border-l-2 border-[#FF6B00]" />
+                {/* Bottom-left corner */}
+                <motion.span
+                  initial={{ width: 0, height: 0 }}
+                  animate={{ width: isMobile ? 40 : 56, height: isMobile ? 40 : 56 }}
+                  transition={{ duration: 0.5, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute bottom-0 left-0 border-b-2 border-l-2 border-[#FF6B00]"
+                />
 
-                {/* Bottom-right */}
-                <span className="absolute bottom-0 right-0 h-10 w-10 sm:h-14 sm:w-14 border-b-2 border-r-2 border-[#00E5FF]" />
+                {/* Bottom-right corner */}
+                <motion.span
+                  initial={{ width: 0, height: 0 }}
+                  animate={{ width: isMobile ? 40 : 56, height: isMobile ? 40 : 56 }}
+                  transition={{ duration: 0.5, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute bottom-0 right-0 border-b-2 border-r-2 border-[#00E5FF]"
+                />
 
                 {/* Technical markers */}
-                <span className="absolute left-3 top-3 h-1.5 w-1.5 bg-[#00E5FF]" />
-                <span className="absolute right-3 top-3 h-1.5 w-1.5 bg-[#FF6B00]" />
-                <span className="absolute bottom-3 left-3 h-1.5 w-1.5 bg-[#FF6B00]" />
-                <span className="absolute bottom-3 right-3 h-1.5 w-1.5 bg-[#00E5FF]" />
+                <motion.span
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.75 }}
+                  className="absolute left-3 top-3 h-1.5 w-1.5 bg-[#00E5FF]"
+                />
+                <motion.span
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.8 }}
+                  className="absolute right-3 top-3 h-1.5 w-1.5 bg-[#FF6B00]"
+                />
+                <motion.span
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.85 }}
+                  className="absolute bottom-3 left-3 h-1.5 w-1.5 bg-[#FF6B00]"
+                />
+                <motion.span
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.9 }}
+                  className="absolute bottom-3 right-3 h-1.5 w-1.5 bg-[#00E5FF]"
+                />
               </div>
 
+              {/* Poster image */}
               <img
                 src={poster}
                 alt="YANTROTSAV event poster"
                 className="relative z-10 block w-full max-h-[75vh] object-contain shadow-2xl"
               />
+
+              {/* Scan-line sweep — desktop only */}
+              {!isMobile && (
+                <motion.div
+                  initial={{ top: '-2px', opacity: 0.9 }}
+                  animate={{ top: '102%', opacity: 0 }}
+                  transition={{ duration: 1.1, delay: 0.5, ease: 'linear' }}
+                  className="pointer-events-none absolute left-0 z-30 h-[2px] w-full bg-gradient-to-r from-transparent via-[#00E5FF]/60 to-transparent"
+                />
+              )}
             </motion.div>
+
+            </div>
           </section>
 
           {/* ======================================================
@@ -419,22 +470,12 @@ function Home() {
           </section>
 
           <motion.div
-            initial={{
-              opacity: 0,
-              y: 24,
-            }}
-            whileInView={{
-              opacity: 1,
-              y: 0,
-            }}
-            viewport={{
-              once: true,
-              amount: 0.2,
-            }}
-            transition={{
-              duration: 0.5,
-              ease: [0.22, 1, 0.36, 1],
-            }}
+            custom={isMobile}
+            variants={revealFromDepth}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.15 }}
+            transition={cardTransition}
             className="group relative mx-4 w-auto max-w-6xl overflow-hidden bg-[#080A0F] md:mx-auto"
           >
             {/* Outer technical border */}
@@ -443,56 +484,101 @@ function Home() {
             {/* Inner border */}
             <div className="pointer-events-none absolute inset-[4px] z-20 border border-white/5" />
 
-            {/* Top accent */}
-            <span className="absolute left-0 top-0 z-30 h-px w-32 bg-[#00E5FF]" />
+            {/* Top accent — extends on view */}
+            <motion.span
+              initial={{ width: 0 }}
+              whileInView={{ width: 128 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute left-0 top-0 z-30 h-px bg-[#00E5FF]"
+            />
 
-            {/* Bottom accent */}
-            <span className="absolute bottom-0 right-0 z-30 h-px w-32 bg-[#FF6B00]" />
+            {/* Bottom accent — extends on view */}
+            <motion.span
+              initial={{ width: 0 }}
+              whileInView={{ width: 128 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, delay: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute bottom-0 right-0 z-30 h-px bg-[#FF6B00]"
+            />
 
             {/* Corner brackets */}
             <span className="absolute left-0 top-0 z-30 h-9 w-9 border-l-2 border-t-2 border-[#00E5FF]" />
-
             <span className="absolute bottom-0 right-0 z-30 h-9 w-9 border-b-2 border-r-2 border-[#FF6B00]" />
 
             {/* CARD CONTENT */}
             <div className="grid min-h-[320px] md:grid-cols-[1.35fr_0.65fr]">
 
-              {/* TEXT */}
+              {/* TEXT — staggered children */}
               <div className="flex flex-col justify-center p-4 md:mx-auto md:p-12 lg:p-14">
-                <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
+
+                <motion.span
+                  initial={{ opacity: 0, x: isMobile ? 0 : -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]"
+                >
                   03 / About The Event
-                </span>
+                </motion.span>
 
-                <h2 className="mt-4 text-3xl font-black uppercase tracking-tight text-white md:text-4xl lg:text-5xl">
+                <motion.h2
+                  initial={{ opacity: 0, x: isMobile ? 0 : -24 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.45, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                  className="mt-4 text-3xl font-black uppercase tracking-tight text-white md:text-4xl lg:text-5xl"
+                >
                   Yantrotsav
-                </h2>
+                </motion.h2>
 
-                <h4 className="text-sm text-slate-300 md:text-base">
+                <motion.h4
+                  initial={{ opacity: 0, x: isMobile ? 0 : -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  className="text-sm text-slate-300 md:text-base"
+                >
                   <i>Where Tech Meets Innovation</i>
-                </h4>
+                </motion.h4>
 
-                <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-400 md:text-base">
+                <motion.p
+                  initial={{ opacity: 0, y: isMobile ? 10 : 0, x: isMobile ? 0 : -16 }}
+                  whileInView={{ opacity: 1, y: 0, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  className="mt-5 max-w-2xl text-sm leading-7 text-slate-400 md:text-base"
+                >
                   YANTROTSAV 2026 is a university-level technology fest organised by the
-                  Department of Computer Science & Engineering, Central University of
+                  Department of Computer Science &amp; Engineering, Central University of
                   Jammu, as part of the celebration of Engineers' Day. The fest brings
                   together students for technical, creative, analytical and competitive
                   activities.
-                </p>
+                </motion.p>
 
-                <div className="mt-8 flex items-center gap-3">
+                <motion.div
+                  initial={{ opacity: 0, x: isMobile ? 0 : -12 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                  className="mt-8 flex items-center gap-3"
+                >
                   <span className="h-px w-12 bg-[#00E5FF] transition-all duration-500 group-hover:w-24" />
-
                   <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-700">
                     Yantrotsav / 2026
                   </span>
-                </div>
+                </motion.div>
               </div>
 
               {/* IMAGE */}
               <div className="relative flex min-h-[240px] items-center justify-center overflow-hidden bg-[#050816] p-4">
-                <img
+                <motion.img
                   src={logo}
                   alt="Logo"
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
                   className="h-80 w-80 object-contain"
                 />
 
@@ -538,7 +624,13 @@ function Home() {
                 Our Convenors
               </h2>
 
-              <span className="absolute bottom-[-1px] left-0 h-px w-20 bg-[#00E5FF]" />
+              <motion.span
+                initial={{ width: 0 }}
+                whileInView={{ width: 80 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="absolute bottom-[-1px] left-0 h-px bg-[#00E5FF]"
+              />
             </motion.div>
           </section>
 
