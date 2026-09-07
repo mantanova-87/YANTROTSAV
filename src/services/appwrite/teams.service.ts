@@ -556,13 +556,15 @@ export class TeamsService {
             invitePermissions,
           )
 
-          // 3. Dispatch automated cyber-styled email via serverless function
+          const targetDomain = (APPWRITE_CONFIG.appUrl && !APPWRITE_CONFIG.appUrl.includes('localhost'))
+            ? APPWRITE_CONFIG.appUrl
+            : 'https://yantrotsavv10.vercel.app'
           await this.dispatchInviteEmail({
             toEmail: member.email,
             inviteeName: member.name,
             teamName: data.teamName.trim(),
             eventTitle: event.title,
-            actionUrl: `${APPWRITE_CONFIG.appUrl}/dashboard?inviteId=${invDoc.$id}`,
+            actionUrl: `${targetDomain}/dashboard?inviteId=${invDoc.$id}`,
           })
         } catch (inviteErr) {
           console.warn(`Failed to process invitation for ${member.email}:`, inviteErr)
@@ -1674,12 +1676,15 @@ export class TeamsService {
         invitePermissions,
       )
 
+      const targetDomain = (APPWRITE_CONFIG.appUrl && !APPWRITE_CONFIG.appUrl.includes('localhost'))
+        ? APPWRITE_CONFIG.appUrl
+        : 'https://yantrotsavv10.vercel.app'
       await this.dispatchInviteEmail({
         toEmail: resolvedEmail,
         inviteeName,
         teamName: teamDoc.name || teamDoc.teamName || 'Team',
         eventTitle: event.title,
-        actionUrl: `${APPWRITE_CONFIG.appUrl}/dashboard?inviteId=${invDoc.$id}`,
+        actionUrl: `${targetDomain}/dashboard?inviteId=${invDoc.$id}`,
       })
 
       return invDoc as unknown as TeamInvitationDocument

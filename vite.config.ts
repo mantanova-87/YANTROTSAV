@@ -53,7 +53,11 @@ function devApiPlugin() {
               const safeInvitee = inviteeName || 'Student'
               const safeTeam = teamName || 'Team'
               const safeEvent = eventTitle || 'Event'
-              const safeAction = actionUrl || 'http://localhost:5173/dashboard'
+              let safeAction = actionUrl || 'https://yantrotsavv10.vercel.app/dashboard'
+              if (safeAction.includes('localhost')) {
+                const queryString = safeAction.includes('?') ? safeAction.substring(safeAction.indexOf('?')) : ''
+                safeAction = `https://yantrotsavv10.vercel.app/dashboard${queryString}`
+              }
 
               await transporter.sendMail({
                 from: `"YANTROTSAV 2026" <${gmailUser}>`,

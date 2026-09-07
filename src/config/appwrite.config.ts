@@ -22,7 +22,7 @@ export const APPWRITE_CONFIG = {
     bucketId: import.meta.env.VITE_APPWRITE_STORAGE_BUCKET_ID || 'event_banners',
   },
   adminTeamId: import.meta.env.VITE_APPWRITE_ADMIN_TEAM_ID || '6a9c31f2000700d2d6c9',
-  appUrl: import.meta.env.VITE_APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'),
+  appUrl: import.meta.env.VITE_APP_URL || 'https://yantrotsavv10.vercel.app',
 } as const
 
 export type AppwriteConfig = typeof APPWRITE_CONFIG
