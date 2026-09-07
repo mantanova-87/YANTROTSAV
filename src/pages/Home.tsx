@@ -9,68 +9,94 @@ const images = import.meta.glob(
     import: 'default',
   },
 ) as Record<string, string>
+
+// ============================================================
+// MOBILE DETECTOR
+// Checked once at module load so animation variants are stable.
+// ============================================================
+
+const isMobile =
+  typeof window !== 'undefined' ? window.innerWidth < 768 : false
+
 // ============================================================
 // ANIMATION PRESETS
+// Mobile: simple opacity + y (no GPU-heavy 3D / blur filters).
+// Desktop: full cinematic 3D depth reveal.
 // ============================================================
 
-const revealFromLeft = {
-  hidden: {
-    opacity: 0,
-    x: -120,
-    y: 50,
-    rotateY: 18,
-    rotateZ: -2,
-    scale: 0.9,
-    filter: 'blur(10px)',
-  },
-  visible: {
-    opacity: 1,
-    x: 0,
-    y: 0,
-    rotateY: 0,
-    rotateZ: -1,
-    scale: 1,
-    filter: 'blur(0px)',
-  },
-}
+const revealFromLeft = isMobile
+  ? {
+      hidden: { opacity: 0, y: 30 },
+      visible: { opacity: 1, y: 0 },
+    }
+  : {
+      hidden: {
+        opacity: 0,
+        x: -120,
+        y: 50,
+        rotateY: 18,
+        rotateZ: -2,
+        scale: 0.9,
+        filter: 'blur(10px)',
+      },
+      visible: {
+        opacity: 1,
+        x: 0,
+        y: 0,
+        rotateY: 0,
+        rotateZ: -1,
+        scale: 1,
+        filter: 'blur(0px)',
+      },
+    }
 
-const revealFromRight = {
-  hidden: {
-    opacity: 0,
-    x: 120,
-    y: 50,
-    rotateY: -18,
-    rotateZ: 2,
-    scale: 0.9,
-    filter: 'blur(10px)',
-  },
-  visible: {
-    opacity: 1,
-    x: 0,
-    y: 0,
-    rotateY: 0,
-    rotateZ: 1,
-    scale: 1,
-    filter: 'blur(0px)',
-  },
-}
+const revealFromRight = isMobile
+  ? {
+      hidden: { opacity: 0, y: 30 },
+      visible: { opacity: 1, y: 0 },
+    }
+  : {
+      hidden: {
+        opacity: 0,
+        x: 120,
+        y: 50,
+        rotateY: -18,
+        rotateZ: 2,
+        scale: 0.9,
+        filter: 'blur(10px)',
+      },
+      visible: {
+        opacity: 1,
+        x: 0,
+        y: 0,
+        rotateY: 0,
+        rotateZ: 1,
+        scale: 1,
+        filter: 'blur(0px)',
+      },
+    }
 
-const revealFromDepth = {
-  hidden: {
-    opacity: 0,
-    y: 80,
-    rotateX: 20,
-    scale: 0.82,
-    filter: 'blur(12px)',
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    rotateX: 0,
-    scale: 1,
-    filter: 'blur(0px)',
-  },
-}
+const revealFromDepth = isMobile
+  ? {
+      hidden: { opacity: 0, y: 30 },
+      visible: { opacity: 1, y: 0 },
+    }
+  : {
+      hidden: {
+        opacity: 0,
+        y: 80,
+        rotateX: 20,
+        scale: 0.82,
+        filter: 'blur(12px)',
+      },
+      visible: {
+        opacity: 1,
+        y: 0,
+        rotateX: 0,
+        scale: 1,
+        filter: 'blur(0px)',
+      },
+    }
 
 // ============================================================
 // MESSAGE CARDS
@@ -140,17 +166,19 @@ function Home() {
             <motion.div
               initial={{
                 opacity: 0,
-                x: -120,
-                scale: 1.08,
+                x: isMobile ? 0 : -60,
+                y: isMobile ? 20 : 0,
+                scale: isMobile ? 1 : 1.04,
               }}
               animate={{
                 opacity: 1,
                 x: 0,
+                y: 0,
                 scale: 1,
               }}
               transition={{
-                delay: 1,
-                duration: 2,
+                delay: 0,
+                duration: isMobile ? 0.5 : 0.7,
                 ease: [0.22, 1, 0.36, 1],
               }}
               className="relative mx-auto w-[80vw] max-w-[1600px] p-2"
@@ -220,11 +248,11 @@ function Home() {
                       amount: 0.2,
                     }}
                     transition={{
-                      duration: 0.95,
+                      duration: isMobile ? 0.4 : 0.95,
                       ease: [0.22, 1, 0.36, 1],
                     }}
                     style={{
-                      perspective: 1200,
+                      perspective: isMobile ? 'none' : 1200,
                     }}
                     className={`relative w-full max-w-5xl ${index === 0
                       ? 'md:ml-[2%]'
@@ -572,12 +600,12 @@ function Home() {
                       amount: 0.2,
                     }}
                     transition={{
-                      duration: 0.85,
+                      duration: isMobile ? 0.4 : 0.85,
                       delay: index * 0.12,
                       ease: [0.22, 1, 0.36, 1],
                     }}
                     style={{
-                      perspective: 1200,
+                      perspective: isMobile ? 'none' : 1200,
                     }}
                     className="group relative"
                   >

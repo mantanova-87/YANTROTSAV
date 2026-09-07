@@ -3,6 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 import logo from '../assets/images/logo.png'
 import introAudio from '../assets/images/intro.mp3'
 
+const isMobile =
+  typeof window !== 'undefined' ? window.innerWidth < 768 : false
+
 const words = [
   'LADIES',
   'AND',
@@ -133,7 +136,7 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
 
         fallbackTimerRef.current = window.setTimeout(() => {
           completeIntro()
-        }, 5800)
+        }, 6200)
       }
     }
 
@@ -185,11 +188,14 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
     }
 
     /*
-     * Show logo after the slower word-by-word reveal.
+     * Show logo only after all words are fully revealed.
+     * With 10 words × 0.45s stagger, last word starts at 4.05s.
+     * Adding 0.6s duration → all words visible at ~4.65s.
+     * Logo fires at 4800ms for a clean sequential reveal.
      */
     const logoTimer = window.setTimeout(() => {
       setShowLogo(true)
-    }, 3200)
+    }, 4800)
 
     return () => {
       window.clearTimeout(logoTimer)
@@ -243,8 +249,8 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
                   key={word}
                   initial={{
                     opacity: 0,
-                    y: 25,
-                    filter: 'blur(8px)',
+                    y: isMobile ? 15 : 25,
+                    filter: isMobile ? 'none' : 'blur(8px)',
                   }}
                   animate={{
                     opacity: 1,
@@ -253,10 +259,12 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
                   }}
                   transition={{
                     /*
-                     * Slower cinematic reveal.
+                     * Stagger timed to match the voice track (5.63s).
+                     * 10 words × 0.45s = last word starts at 4.05s.
+                     * All words visible by ~4.5s, just before audio ends.
                      */
-                    delay: index * 0.70,
-                    duration: 0.98,
+                    delay: index * 0.45,
+                    duration: isMobile ? 0.4 : 0.6,
                     ease: [0.22, 1, 0.36, 1],
                   }}
                   className="text-[clamp(1.8rem,5vw,4.5rem)] font-black uppercase leading-none tracking-[-0.05em] text-red-600"
@@ -273,9 +281,9 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
                 <motion.div
                   initial={{
                     opacity: 0,
-                    y: 35,
-                    scale: 0.75,
-                    filter: 'blur(14px)',
+                    y: isMobile ? 20 : 35,
+                    scale: isMobile ? 0.9 : 0.75,
+                    filter: isMobile ? 'none' : 'blur(14px)',
                   }}
                   animate={{
                     opacity: 1,
@@ -284,7 +292,7 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
                     filter: 'blur(0px)',
                   }}
                   transition={{
-                    duration: 0.85,
+                    duration: 0.5,
                     ease: [0.22, 1, 0.36, 1],
                   }}
                   className="mt-12"

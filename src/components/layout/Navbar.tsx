@@ -21,20 +21,44 @@ function Navbar() {
   ]
 
 
+  const preloadRoute = (path: string) => {
+    switch (path) {
+      case '/events':
+        import('../../pages/Events')
+        break
+      case '/OurTeam':
+      case '/ourteam':
+        import('../../pages/ourteam')
+        break
+      case '/contact':
+        import('../../pages/Contact')
+        break
+      case '/dashboard':
+        import('../../pages/Dashboard')
+        break
+      case '/admin':
+        import('../../pages/AdminDashboard')
+        break
+      case '/':
+        import('../../pages/Home')
+        break
+      default:
+        break
+    }
+  }
+
   return (
     <motion.header
       initial={{
         opacity: 0,
-        y: -30,
-        filter: 'blur(8px)',
+        y: -15,
       }}
       animate={{
         opacity: 1,
         y: 0,
-        filter: 'blur(0px)',
       }}
       transition={{
-        duration: 0.8,
+        duration: 0.4,
         ease: [0.22, 1, 0.36, 1],
       }}
       className="fixed inset-x-0 top-0 z-50"
@@ -87,6 +111,8 @@ function Navbar() {
                 <Link
                   key={item.path}
                   to={item.path}
+                  onMouseEnter={() => preloadRoute(item.path)}
+                  onTouchStart={() => preloadRoute(item.path)}
                   className="group relative flex items-center gap-2 py-2"
                 >
                   <span
@@ -197,6 +223,8 @@ function Navbar() {
                 <Link
                   key={item.path}
                   to={item.path}
+                  onMouseEnter={() => preloadRoute(item.path)}
+                  onTouchStart={() => preloadRoute(item.path)}
                   onClick={closeMenu}
                   className={`group flex items-center justify-between border-b border-white/5 py-4 transition-colors ${isActive ? 'text-white' : 'text-slate-400 hover:text-white'
                     }`}
