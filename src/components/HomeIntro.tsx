@@ -2,9 +2,13 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import logo from '../assets/images/logo.png'
 
+type HomeIntroProps = {
+  onComplete: () => void
+}
+
 const words = ['LADIES', 'AND', 'GENTLEMEN,', 'ARE', 'YOU', 'READY']
 
-function HomeIntro() {
+function HomeIntro({ onComplete }: HomeIntroProps) {
   const shouldReduceMotion = useReducedMotion()
 
   const [showText, setShowText] = useState(false)
@@ -17,6 +21,7 @@ function HomeIntro() {
     // Intro already completed in this browser session.
     if (alreadyShown) {
       setSkipIntro(true)
+      onComplete()
       return
     }
 
@@ -26,8 +31,8 @@ function HomeIntro() {
       0.0s  → logo starts spinning
       3.2s  → logo stops
       3.3s  → text starts
-      6.4s  → intro fades
-      7.2s  → homepage is force-loaded
+      6.4s  → intro starts fading
+      7.2s  → homepage appears
     */
 
     const textTimer = window.setTimeout(() => {
@@ -38,26 +43,17 @@ function HomeIntro() {
       setExiting(true)
     }, shouldReduceMotion ? 1200 : 6400)
 
-    const homeTimer = window.setTimeout(() => {
+    const completeTimer = window.setTimeout(() => {
       sessionStorage.setItem('yantrotsav-intro-shown', 'true')
-
-      /*
-        Force a real homepage load.
-
-        This is intentional instead of navigate('/').
-        If HomeIntro is already mounted on "/", React Router can
-        consider navigate("/") the same route and leave the intro
-        component mounted.
-      */
-      window.location.replace('/')
+      onComplete()
     }, shouldReduceMotion ? 1800 : 7200)
 
     return () => {
       window.clearTimeout(textTimer)
       window.clearTimeout(exitTimer)
-      window.clearTimeout(homeTimer)
+      window.clearTimeout(completeTimer)
     }
-  }, [shouldReduceMotion])
+  }, [shouldReduceMotion, onComplete])
 
   // Don't render the intro after it has already been completed.
   if (skipIntro) {
@@ -81,9 +77,7 @@ function HomeIntro() {
           }}
           className="fixed inset-0 z-[100] overflow-hidden bg-[#050816] text-white"
         >
-          {/* ====================================================== */}
           {/* BACKGROUND GRID */}
-          {/* ====================================================== */}
 
           <div className="pointer-events-none absolute inset-0 opacity-35">
             <div
@@ -96,9 +90,7 @@ function HomeIntro() {
             />
           </div>
 
-          {/* ====================================================== */}
           {/* TECHNICAL CORNERS */}
-          {/* ====================================================== */}
 
           <div className="pointer-events-none absolute left-4 top-4 h-8 w-8 border-l border-t border-[#00E5FF]/50" />
 
@@ -108,22 +100,20 @@ function HomeIntro() {
 
           <div className="pointer-events-none absolute bottom-4 right-4 h-8 w-8 border-b border-r border-[#00E5FF]/50" />
 
-          {/* Side accent lines */}
+          {/* SIDE ACCENT LINES */}
+
           <div className="pointer-events-none absolute left-0 top-[30%] h-32 w-px bg-[#00E5FF]/40" />
 
           <div className="pointer-events-none absolute right-0 top-[65%] h-40 w-px bg-[#FF6B00]/40" />
 
-          {/* ====================================================== */}
           {/* MAIN CONTENT */}
-          {/* ====================================================== */}
 
           <div className="relative flex min-h-screen w-full flex-col items-center justify-center px-5 py-16">
-            {/* ================================================== */}
             {/* LOGO */}
-            {/* ================================================== */}
 
             <div className="relative flex h-[230px] w-full items-center justify-center sm:h-[280px] md:h-[320px]">
               {/* Rotating outer ring */}
+
               {!shouldReduceMotion && (
                 <motion.div
                   initial={{
@@ -154,6 +144,7 @@ function HomeIntro() {
               )}
 
               {/* Secondary rotating ring */}
+
               {!shouldReduceMotion && (
                 <motion.div
                   initial={{
@@ -175,6 +166,7 @@ function HomeIntro() {
               )}
 
               {/* Logo frame */}
+
               <div className="relative">
                 <span className="pointer-events-none absolute -left-5 -top-5 h-9 w-9 border-l-2 border-t-2 border-[#00E5FF] sm:-left-6 sm:-top-6 sm:h-11 sm:w-11" />
 
@@ -182,11 +174,9 @@ function HomeIntro() {
 
                 <span className="pointer-events-none absolute -bottom-5 -left-5 h-9 w-9 border-b-2 border-l-2 border-[#FF6B00] sm:-bottom-6 sm:-left-6 sm:h-11 sm:w-11" />
 
-                <span className="pointer-events-none absolute -bottom-5 -right-5 h-9 w-9 border-b-2 border-r-2 border-[#00E5FF] sm:-bottom-6 sm:-right-6 sm:h-11 sm:w-11" />
+                <span className="pointer-events-none absolute -bottom-5 -right-5 h-9 w-9 border-b-2 border-r-2 border-[#00E5FF] sm:-right-6 sm:-bottom-6 sm:h-11 sm:w-11" />
 
-                {/* ================================================= */}
                 {/* LOGO */}
-                {/* ================================================= */}
 
                 <motion.img
                   src={logo}
@@ -251,9 +241,7 @@ function HomeIntro() {
               </div>
             </div>
 
-            {/* ================================================== */}
             {/* LOGO STATUS */}
-            {/* ================================================== */}
 
             <motion.div
               initial={{ opacity: 0 }}
@@ -273,9 +261,7 @@ function HomeIntro() {
               <span className="h-px w-8 bg-[#FF6B00]" />
             </motion.div>
 
-            {/* ================================================== */}
             {/* TEXT */}
-            {/* ================================================== */}
 
             <AnimatePresence>
               {showText && (
@@ -294,7 +280,8 @@ function HomeIntro() {
                   }}
                   className="relative z-10 mt-12 w-full max-w-[900px] text-center sm:mt-14"
                 >
-                  {/* Label */}
+                  {/* LABEL */}
+
                   <div className="mb-5 flex items-center justify-center gap-3">
                     <span className="h-px w-8 bg-[#00E5FF] sm:w-12" />
 
@@ -305,7 +292,8 @@ function HomeIntro() {
                     <span className="h-px w-8 bg-[#FF6B00] sm:w-12" />
                   </div>
 
-                  {/* Main message */}
+                  {/* MAIN MESSAGE */}
+
                   <div className="flex flex-wrap justify-center gap-x-2 gap-y-1 px-3 sm:gap-x-4 md:gap-x-5">
                     {words.map((word, index) => (
                       <motion.span
@@ -356,9 +344,7 @@ function HomeIntro() {
               )}
             </AnimatePresence>
 
-            {/* ================================================== */}
             {/* BOTTOM STATUS */}
-            {/* ================================================== */}
 
             <motion.div
               initial={{ opacity: 0 }}
@@ -378,9 +364,7 @@ function HomeIntro() {
               </div>
             </motion.div>
 
-            {/* ================================================== */}
             {/* PROGRESS */}
-            {/* ================================================== */}
 
             {!shouldReduceMotion && (
               <motion.div
