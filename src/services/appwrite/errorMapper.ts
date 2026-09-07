@@ -24,18 +24,21 @@ export class AppError extends Error {
   public readonly code: AppErrorCode
   public readonly status: number
   public readonly originalError?: unknown
+  public suggestion?: string
 
   constructor(
     message: string,
     code: AppErrorCode = 'UNKNOWN_ERROR',
     status: number = 500,
     originalError?: unknown,
+    suggestion?: string,
   ) {
     super(message)
     this.name = 'AppError'
     this.code = code
     this.status = status
     this.originalError = originalError
+    this.suggestion = suggestion
 
     // Restore prototype chain
     Object.setPrototypeOf(this, new.target.prototype)

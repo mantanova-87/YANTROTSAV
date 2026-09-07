@@ -12,11 +12,167 @@ import type {
   TeamInviteEmailPayload,
 } from '../../types/database.types'
 
+export interface TeamMemberItem {
+  name: string
+  email: string
+  role: 'Leader' | 'Member'
+  status: string
+  invitationId?: string
+  userId?: string
+}
+
 export interface UserTeamInfo extends TeamDocument {
   userRole: 'Leader' | 'Member'
   eventTitle?: string
   teamName: string
-  members?: { name: string; email: string; role: 'Leader' | 'Member'; status: string }[]
+  minTeamSize?: number
+  maxTeamSize?: number
+  isDisbandRequested?: boolean
+  members?: TeamMemberItem[]
+}
+
+/**
+ * Damerau-Levenshtein distance helper for fuzzy typo detection (transpositions, insertions, deletions)
+ */
+function damerauLevenshtein(a: string, b: string): number {
+  const m = a.length
+  const n = b.length
+  const d: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0))
+  for (let i = 0; i <= m; i++) d[i][0] = i
+  for (let j = 0; j <= n; j++) d[0][j] = j
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + cost,
+      )
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1)
+      }
+    }
+  }
+  return d[m][n]
+}
+
+/**
+ * Intelligent helper to resolve prospective teammate from raw handle, email, or roll number.
+ * Supports normalization, exact lookup, and fuzzy typo detection with suggestions.
+ */
+function resolveProspectiveTeammate(
+  rawInput: string,
+  allUsers: any[],
+): {
+  resolvedEmail: string
+  inviteeName: string
+  inviteeUserId: string
+  matchedUser?: any
+} {
+  const input = (rawInput || '').trim()
+  const clean = input.replace(/^@/, '').trim()
+  const isExplicitHandle = input.startsWith('@')
+  const hasEmailAt = clean.includes('@')
+
+  if (!clean) {
+    throw new AppError('Please enter a valid student email, username, or roll number.', 'UNKNOWN_ERROR', 400)
+  }
+
+  // 1. If it contains @ and is formatted as an email
+  if (hasEmailAt) {
+    const emailLower = clean.toLowerCase()
+    const matched = allUsers.find((u: any) => (u.email || '').toLowerCase() === emailLower)
+    if (matched) {
+      return {
+        resolvedEmail: emailLower,
+        inviteeName: matched.fullName || matched.name || clean.split('@')[0],
+        inviteeUserId: matched.$id,
+        matchedUser: matched,
+      }
+    }
+    // Unregistered email is allowed to receive an external invite
+    return {
+      resolvedEmail: emailLower,
+      inviteeName: clean.split('@')[0],
+      inviteeUserId: '',
+    }
+  }
+
+  const cleanAlphaNum = clean.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+  const isLikelyRoll = !isExplicitHandle && /\d/.test(clean)
+  const identifierType = isExplicitHandle ? 'Username' : isLikelyRoll ? 'Roll Number' : 'Username / Roll No'
+
+  // 2. Exact or normalized matching against registered profiles
+  const matched = allUsers.find((u: any) => {
+    const uUserId = (u.userId || '').toLowerCase()
+    const uRoll = (u.rollNumber || u.rollNo || '').toLowerCase()
+    const uRollNorm = uRoll.replace(/[^a-zA-Z0-9]/g, '')
+    const uEmail = (u.email || '').toLowerCase()
+    const uEmailPrefix = uEmail.includes('@') ? uEmail.split('@')[0] : ''
+    const uName = (u.fullName || u.name || '').toLowerCase()
+
+    return (
+      (cleanAlphaNum && uRollNorm === cleanAlphaNum) ||
+      uRoll === clean.toLowerCase() ||
+      uUserId === clean.toLowerCase() ||
+      (uEmailPrefix && uEmailPrefix === clean.toLowerCase()) ||
+      uEmail === clean.toLowerCase() ||
+      uName === clean.toLowerCase()
+    )
+  })
+
+  if (matched && matched.email && matched.email.includes('@')) {
+    return {
+      resolvedEmail: matched.email.trim().toLowerCase(),
+      inviteeName: matched.fullName || matched.name || clean,
+      inviteeUserId: matched.$id,
+      matchedUser: matched,
+    }
+  }
+
+  // 3. Typo / Fuzzy match detection (Damerau-Levenshtein distance <= 2)
+  let bestMatch: any = null
+  let bestDistance = Infinity
+  let suggestedValue = ''
+
+  for (const u of allUsers) {
+    const uRoll = (u.rollNumber || u.rollNo || '').trim()
+    const uRollNorm = uRoll.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+    const uUserId = (u.userId || '').trim().toLowerCase()
+
+    if (isLikelyRoll && uRollNorm && cleanAlphaNum) {
+      const dist = damerauLevenshtein(cleanAlphaNum, uRollNorm)
+      if (dist <= 2 && dist < bestDistance) {
+        bestDistance = dist
+        bestMatch = u
+        suggestedValue = uRoll
+      }
+    } else if (uUserId) {
+      const dist = damerauLevenshtein(clean.toLowerCase(), uUserId)
+      if (dist <= 2 && dist < bestDistance) {
+        bestDistance = dist
+        bestMatch = u
+        suggestedValue = isExplicitHandle ? `@${u.userId}` : u.userId
+      }
+    }
+  }
+
+  if (bestMatch && suggestedValue) {
+    const suggestionName = bestMatch.fullName || bestMatch.name || 'Student'
+    throw new AppError(
+      `No registered student found with ${identifierType} "${clean}". Did you mean "${suggestedValue}" (${suggestionName})?`,
+      'UNKNOWN_ERROR',
+      404,
+      undefined,
+      suggestedValue,
+    )
+  }
+
+  throw new AppError(
+    `No registered student found with ${identifierType} "${clean}". Please verify the ${identifierType.toLowerCase()} or invite using their registered institutional email address.`,
+    'UNKNOWN_ERROR',
+    404,
+  )
 }
 
 export class TeamsService {
@@ -57,27 +213,56 @@ export class TeamsService {
         )
       }
 
-      // 3. Ensure document does not already exist before creating
+      // 3. Ensure active document does not already exist before creating (auto-healing orphaned registrations)
       try {
         const existingCheck = await databases.listDocuments(
           APPWRITE_CONFIG.databaseId,
           APPWRITE_CONFIG.collections.eventRegistrations,
           [Query.equal('eventId', data.eventId), Query.limit(100)],
         )
-        const alreadyExists = existingCheck.documents.some((d: any) => {
+        for (const d of existingCheck.documents) {
           const dUserId = ((d as any).userId || '').toLowerCase()
           const dEmail = ((d as any).userEmail || '').toLowerCase()
-          return (
+          const isUserMatch =
             (data.userId && dUserId === data.userId.toLowerCase()) ||
             (data.studentEmail && dEmail === data.studentEmail.trim().toLowerCase())
-          )
-        })
-        if (alreadyExists) {
-          throw new AppError(
-            'You are already registered for this event. Duplicate registrations are not permitted.',
-            'ALREADY_REGISTERED',
-            409,
-          )
+
+          if (isUserMatch) {
+            const dTeamId = (d as any).teamId
+            if (dTeamId) {
+              // Verify if the referenced team is actually alive and not cancelled
+              try {
+                const teamDoc = (await databases.getDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.teams,
+                  dTeamId,
+                )) as any
+                if (!teamDoc || teamDoc.status === 'cancelled' || teamDoc.status === 'disbanded') {
+                  // Dead team registration; purge and proceed
+                  await databases.deleteDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.eventRegistrations,
+                    d.$id,
+                  ).catch(() => {})
+                  continue
+                }
+              } catch {
+                // Team deleted; purge orphaned row and proceed
+                await databases.deleteDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.eventRegistrations,
+                  d.$id,
+                ).catch(() => {})
+                continue
+              }
+            }
+
+            throw new AppError(
+              'You are already registered for this event. Duplicate registrations are not permitted.',
+              'ALREADY_REGISTERED',
+              409,
+            )
+          }
         }
       } catch (err: any) {
         if (err instanceof AppError) throw err
@@ -163,50 +348,10 @@ export class TeamsService {
 
       for (const rawMember of cleanMemberEmails) {
         const cleanHandle = rawMember.replace(/^@/, '').trim()
-        let resolvedEmail = ''
-        let inviteeName = ''
-        let inviteeUserId = ''
-
-        if (cleanHandle.includes('@')) {
-          resolvedEmail = cleanHandle.toLowerCase()
-          const matched = allUsersRes.documents.find(
-            (u: any) => (u.email || '').toLowerCase() === resolvedEmail,
-          )
-          if (matched) {
-            inviteeName = (matched as any).fullName || (matched as any).name || cleanHandle.split('@')[0]
-            inviteeUserId = matched.$id
-          } else {
-            inviteeName = cleanHandle.split('@')[0]
-          }
-        } else {
-          // Username or rollNumber: match against registered student profiles
-          const target = cleanHandle.toLowerCase()
-          const matched = allUsersRes.documents.find((u: any) => {
-            const uUserId = (u.userId || '').toLowerCase()
-            const uRoll = (u.rollNumber || '').toLowerCase()
-            const uEmail = (u.email || '').toLowerCase()
-            const uName = (u.fullName || '').toLowerCase()
-            return (
-              uUserId === target ||
-              uRoll === target ||
-              uEmail === target ||
-              (uEmail.includes('@') && uEmail.split('@')[0] === target) ||
-              uName === target
-            )
-          })
-
-          if (matched && (matched as any).email && (matched as any).email.includes('@')) {
-            resolvedEmail = (matched as any).email.trim().toLowerCase()
-            inviteeName = (matched as any).fullName || (matched as any).name || cleanHandle
-            inviteeUserId = matched.$id
-          } else {
-            throw new AppError(
-              `Could not find registered student with username "@${cleanHandle}". Please verify their username or invite them using their registered email.`,
-              'UNKNOWN_ERROR',
-              404,
-            )
-          }
-        }
+        const resolved = resolveProspectiveTeammate(rawMember, allUsersRes.documents)
+        const resolvedEmail = resolved.resolvedEmail
+        const inviteeName = resolved.inviteeName
+        const inviteeUserId = resolved.inviteeUserId
 
         if (!resolvedEmail || !resolvedEmail.includes('@')) {
           throw new AppError(
@@ -300,7 +445,7 @@ export class TeamsService {
         docPermissions,
       )
 
-      // Register leader immediately in event_registrations (if not already registered)
+      // Register leader immediately in event_registrations (auto-healing any orphaned records)
       try {
         const existingLeaderReg = await databases.listDocuments(
           APPWRITE_CONFIG.databaseId,
@@ -308,16 +453,61 @@ export class TeamsService {
           [Query.equal('eventId', data.eventId), Query.limit(100)],
         ).catch(() => ({ documents: [] }))
 
-        const alreadyRegistered = existingLeaderReg.documents.some((d: any) => {
+        let needToCreateLeaderReg = true
+        for (const d of existingLeaderReg.documents) {
           const dUserId = ((d as any).userId || '').toLowerCase()
           const dEmail = ((d as any).userEmail || '').toLowerCase()
-          return (
+          const isMatch =
             (data.leaderId && dUserId === data.leaderId.toLowerCase()) ||
             (data.leaderEmail && dEmail === data.leaderEmail.trim().toLowerCase())
-          )
-        })
 
-        if (!alreadyRegistered) {
+          if (isMatch) {
+            const dTeamId = (d as any).teamId
+            if (dTeamId && dTeamId !== teamDoc.$id) {
+              try {
+                const oldTeam = (await databases.getDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.teams,
+                  dTeamId,
+                )) as any
+                if (!oldTeam || oldTeam.status === 'cancelled' || oldTeam.status === 'disbanded') {
+                  // Dead team registration; purge it
+                  await databases.deleteDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.eventRegistrations,
+                    d.$id,
+                  ).catch(() => {})
+                } else {
+                  needToCreateLeaderReg = false
+                }
+              } catch {
+                // Old team deleted; purge
+                await databases.deleteDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.eventRegistrations,
+                  d.$id,
+                ).catch(() => {})
+              }
+            } else if (!dTeamId) {
+              // Existing registration was solo; update it to link with new team
+              try {
+                await databases.updateDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.eventRegistrations,
+                  d.$id,
+                  { teamId: teamDoc.$id },
+                )
+                needToCreateLeaderReg = false
+              } catch {
+                // If update fails, create new doc
+              }
+            } else {
+              needToCreateLeaderReg = false
+            }
+          }
+        }
+
+        if (needToCreateLeaderReg) {
           await databases.createDocument(
             APPWRITE_CONFIG.databaseId,
             APPWRITE_CONFIG.collections.eventRegistrations,
@@ -350,7 +540,7 @@ export class TeamsService {
             Permission.delete(Role.any()),
           ]
 
-          await databases.createDocument(
+          const invDoc = await databases.createDocument(
             APPWRITE_CONFIG.databaseId,
             APPWRITE_CONFIG.collections.teamInvitations,
             ID.unique(),
@@ -372,7 +562,7 @@ export class TeamsService {
             inviteeName: member.name,
             teamName: data.teamName.trim(),
             eventTitle: event.title,
-            actionUrl: `${APPWRITE_CONFIG.appUrl}/dashboard`,
+            actionUrl: `${APPWRITE_CONFIG.appUrl}/dashboard?inviteId=${invDoc.$id}`,
           })
         } catch (inviteErr) {
           console.warn(`Failed to process invitation for ${member.email}:`, inviteErr)
@@ -402,15 +592,24 @@ export class TeamsService {
     }
   }): Promise<void> {
     try {
-      const invite = (await databases.getDocument(
-        APPWRITE_CONFIG.databaseId,
-        APPWRITE_CONFIG.collections.teamInvitations,
-        params.invitationId,
-      )) as unknown as TeamInvitationDocument
+      let invite: TeamInvitationDocument
+      try {
+        invite = (await databases.getDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.teamInvitations,
+          params.invitationId,
+        )) as unknown as TeamInvitationDocument
+      } catch {
+        throw new AppError(
+          'This invitation has been revoked by the team leader or is no longer available.',
+          'INVITATION_NOT_FOUND',
+          404,
+        )
+      }
 
       if (invite.status !== 'pending') {
         throw new AppError(
-          'This invitation has already been processed.',
+          'This invitation has already been processed or cancelled.',
           'INVITATION_ALREADY_RESPONDED',
           400,
         )
@@ -430,12 +629,29 @@ export class TeamsService {
         return
       }
 
-      // Fetch team
-      const team = (await databases.getDocument(
-        APPWRITE_CONFIG.databaseId,
-        APPWRITE_CONFIG.collections.teams,
-        invite.teamId,
-      )) as unknown as TeamDocument
+      // Fetch team with safety check
+      let team: TeamDocument
+      try {
+        team = (await databases.getDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.teams,
+          invite.teamId,
+        )) as unknown as TeamDocument
+      } catch {
+        throw new AppError(
+          'The squad for this invitation has been cancelled or disbanded.',
+          'TEAM_NOT_FOUND',
+          404,
+        )
+      }
+
+      if (team.status === 'cancelled' || (team.status as any) === 'disbanded') {
+        throw new AppError(
+          'This squad was cancelled by the team leader and is no longer accepting members.',
+          'TEAM_NOT_FOUND',
+          400,
+        )
+      }
 
       // Fetch event to know required team size
       const event = await eventsService.getEventById(team.eventId).catch(() => null)
@@ -687,7 +903,7 @@ export class TeamsService {
         }
         if (inv.teamId) {
           const parentTeam = activeTeamsMap.get(inv.teamId)
-          if (parentTeam && (parentTeam.status === 'cancelled' || parentTeam.status === 'disbanded')) {
+          if (!parentTeam || parentTeam.status === 'cancelled' || parentTeam.status === 'disbanded') {
             return false
           }
         }
@@ -751,11 +967,18 @@ export class TeamsService {
             continue
           }
 
+          const rawName = t.name || t.teamName || 'Team'
+          const isDisbandRequested = rawName.includes('[DISBAND REQUESTED]')
+          const cleanDisplayName = rawName.replace('[DISBAND REQUESTED]', '').trim()
+
           teamsMap.set(t.$id, {
             ...t,
             userRole: 'Leader',
-            teamName: t.name || t.teamName || 'Team',
+            teamName: cleanDisplayName || 'Team',
             eventTitle: evt.title,
+            minTeamSize: evt.minTeamSize,
+            maxTeamSize: evt.maxTeamSize,
+            isDisbandRequested,
           })
         }
       } catch (err) {
@@ -814,11 +1037,18 @@ export class TeamsService {
                 continue
               }
 
+              const rawName = teamDoc.name || teamDoc.teamName || 'Team'
+              const isDisbandRequested = rawName.includes('[DISBAND REQUESTED]')
+              const cleanDisplayName = rawName.replace('[DISBAND REQUESTED]', '').trim()
+
               teamsMap.set(teamDoc.$id, {
                 ...teamDoc,
                 userRole: teamDoc.leaderId === userId ? 'Leader' : 'Member',
-                teamName: teamDoc.name || teamDoc.teamName || 'Team',
+                teamName: cleanDisplayName || 'Team',
                 eventTitle: evt.title,
+                minTeamSize: evt.minTeamSize,
+                maxTeamSize: evt.maxTeamSize,
+                isDisbandRequested,
               })
             } catch (teamFetchErr) {
               // Team document was deleted; clean up orphaned invitation
@@ -834,7 +1064,7 @@ export class TeamsService {
         console.warn('Error fetching accepted team invitations:', inviteErr)
       }
 
-      // 3. For each team, fetch member roster (Leader + Accepted Invites)
+      // 3. For each team, fetch member roster (Leader + Accepted + Pending Invites)
       const teamsList = Array.from(teamsMap.values())
       for (const team of teamsList) {
         try {
@@ -844,7 +1074,7 @@ export class TeamsService {
             [Query.equal('teamId', team.$id), Query.limit(50)],
           )
 
-          const members: { name: string; email: string; role: 'Leader' | 'Member'; status: string }[] = [
+          const members: TeamMemberItem[] = [
             {
               name: team.leaderName,
               email: team.leaderEmail,
@@ -855,12 +1085,13 @@ export class TeamsService {
 
           for (const inv of invites.documents) {
             const i = inv as unknown as TeamInvitationDocument
-            if (i.status === 'accepted') {
+            if (i.status === 'accepted' || i.status === 'pending') {
               members.push({
                 name: i.inviteeName || i.inviteeEmail.split('@')[0],
                 email: i.inviteeEmail,
                 role: 'Member',
                 status: i.status,
+                invitationId: i.$id,
               })
             }
           }
@@ -1165,10 +1396,47 @@ export class TeamsService {
               (id.includes('@') && id.split('@')[0] === docEmail),
           )
           if (isMatch) {
+            const teamId = (doc as any).teamId
+            if (teamId) {
+              // Verify if the referenced team actually exists and is active!
+              try {
+                const teamDoc = (await databases.getDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.teams,
+                  teamId,
+                )) as any
+
+                if (!teamDoc || teamDoc.status === 'cancelled' || teamDoc.status === 'disbanded') {
+                  // Team is cancelled/disbanded! Purge orphaned record and DO NOT treat as enrolled
+                  databases.deleteDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.eventRegistrations,
+                    doc.$id,
+                  ).catch(() => {})
+                  continue
+                }
+
+                return {
+                  enrolled: true,
+                  reason: `Enrolled in Team (${teamDoc.name || 'Team'})`,
+                  teamName: teamDoc.name,
+                  registrationType: 'team',
+                }
+              } catch {
+                // Team document was deleted from database! Purge orphaned registration and DO NOT treat as enrolled
+                databases.deleteDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.eventRegistrations,
+                  doc.$id,
+                ).catch(() => {})
+                continue
+              }
+            }
+
             return {
               enrolled: true,
-              reason: doc.teamId ? 'Enrolled in Team' : 'Solo Registration',
-              registrationType: doc.teamId ? 'team' : 'solo',
+              reason: 'Solo Registration',
+              registrationType: 'solo',
             }
           }
         }
@@ -1220,6 +1488,42 @@ export class TeamsService {
               (id.includes('@') && id.split('@')[0] === invEmail),
           )
           if (isMatch) {
+            const invTeamId = (inv as any).teamId
+            if (invTeamId) {
+              try {
+                const teamDoc = (await databases.getDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.teams,
+                  invTeamId,
+                )) as any
+
+                if (!teamDoc || teamDoc.status === 'cancelled' || teamDoc.status === 'disbanded') {
+                  // Team cancelled/disbanded; purge orphaned invite
+                  databases.deleteDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.teamInvitations,
+                    inv.$id,
+                  ).catch(() => {})
+                  continue
+                }
+
+                return {
+                  enrolled: true,
+                  reason: `Team Member (${teamDoc.name || (inv as any).teamName || 'Team'})`,
+                  teamName: teamDoc.name || (inv as any).teamName,
+                  registrationType: 'team',
+                }
+              } catch {
+                // Team deleted; purge orphaned invite
+                databases.deleteDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.teamInvitations,
+                  inv.$id,
+                ).catch(() => {})
+                continue
+              }
+            }
+
             return {
               enrolled: true,
               reason: `Team Member (${(inv as any).teamName || 'Team'})`,
@@ -1248,8 +1552,337 @@ export class TeamsService {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-    } catch (err) {
-      console.warn('Unable to dispatch invite email:', err)
+    } catch (error) {
+      console.warn('Failed to send invite email:', error)
+    }
+  }
+
+  /**
+   * Add a new member to an existing team (Team Leader only)
+   */
+  async addMemberToTeam(data: {
+    teamId: string
+    eventId: string
+    memberHandle: string
+    leaderId: string
+    leaderName: string
+    leaderEmail: string
+  }): Promise<TeamInvitationDocument> {
+    try {
+      const event = await eventsService.getEventById(data.eventId)
+      if (event.status !== 'published') {
+        throw new AppError('Registration is closed for this event.', 'EVENT_REGISTRATION_CLOSED', 400)
+      }
+
+      if (event.registrationDeadline && new Date(event.registrationDeadline).getTime() < Date.now()) {
+        throw new AppError('Registration deadline for this event has passed.', 'EVENT_REGISTRATION_CLOSED', 400)
+      }
+
+      const teamDoc = (await databases.getDocument(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.teams,
+        data.teamId,
+      )) as unknown as TeamDocument
+
+      if (teamDoc.status === 'cancelled' || (teamDoc.status as any) === 'disbanded') {
+        throw new AppError('This team has been cancelled or disbanded.', 'UNKNOWN_ERROR', 400)
+      }
+
+      // Check capacity
+      const existingInvites = await databases.listDocuments(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.teamInvitations,
+        [Query.equal('teamId', data.teamId), Query.limit(50)],
+      ).catch(() => ({ documents: [] }))
+
+      const activeInvites = existingInvites.documents.filter(
+        (i: any) => i.status === 'accepted' || i.status === 'pending',
+      )
+
+      if (activeInvites.length + 1 >= (event.maxTeamSize || 4)) {
+        throw new AppError(
+          `Team is already at maximum capacity (${event.maxTeamSize} members).`,
+          'TEAM_FULL',
+          400,
+        )
+      }
+
+      // Resolve member handle
+      const cleanHandle = data.memberHandle.replace(/^@/, '').trim()
+      if (!cleanHandle) {
+        throw new AppError('Please enter a valid student email, username, or roll number.', 'UNKNOWN_ERROR', 400)
+      }
+
+      const allUsersRes = await databases.listDocuments(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.users,
+        [Query.limit(500)],
+      ).catch(() => ({ documents: [] }))
+
+      // Resolve prospective teammate handle, roll number, or email
+      const resolved = resolveProspectiveTeammate(data.memberHandle, allUsersRes.documents)
+      const resolvedEmail = resolved.resolvedEmail
+      const inviteeName = resolved.inviteeName
+      const inviteeUserId = resolved.inviteeUserId
+
+      if (!resolvedEmail || !resolvedEmail.includes('@')) {
+        throw new AppError('Invalid email format for prospective teammate.', 'UNKNOWN_ERROR', 400)
+      }
+
+      if (resolvedEmail === data.leaderEmail.trim().toLowerCase()) {
+        throw new AppError('You cannot invite yourself as a teammate.', 'UNKNOWN_ERROR', 400)
+      }
+
+      // Check if already in this team
+      if (activeInvites.some((i: any) => (i.inviteeEmail || '').toLowerCase() === resolvedEmail)) {
+        throw new AppError(`Student is already part of or invited to this team.`, 'ALREADY_REGISTERED', 409)
+      }
+
+      // Check if already enrolled in this event
+      const memberEnrolled = await this.checkUserEventEnrollment(
+        data.eventId,
+        inviteeUserId || resolvedEmail,
+        [resolvedEmail, cleanHandle, inviteeName],
+      )
+      if (memberEnrolled.enrolled) {
+        throw new AppError(
+          `Student "${inviteeName || cleanHandle}" is already enrolled in this event (${memberEnrolled.reason || 'Existing registration'}).`,
+          'ALREADY_REGISTERED',
+          409,
+        )
+      }
+
+      const invitePermissions = [
+        Permission.read(Role.any()),
+        Permission.update(Role.any()),
+        Permission.delete(Role.any()),
+      ]
+
+      const invDoc = await databases.createDocument(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.teamInvitations,
+        ID.unique(),
+        {
+          teamId: data.teamId,
+          eventId: data.eventId,
+          eventTitle: event.title,
+          inviterId: data.leaderId,
+          inviterName: data.leaderName.trim(),
+          inviteeEmail: resolvedEmail,
+          status: 'pending',
+        },
+        invitePermissions,
+      )
+
+      await this.dispatchInviteEmail({
+        toEmail: resolvedEmail,
+        inviteeName,
+        teamName: teamDoc.name || teamDoc.teamName || 'Team',
+        eventTitle: event.title,
+        actionUrl: `${APPWRITE_CONFIG.appUrl}/dashboard?inviteId=${invDoc.$id}`,
+      })
+
+      return invDoc as unknown as TeamInvitationDocument
+    } catch (error) {
+      throw mapAppwriteError(error, 'TeamsService.addMemberToTeam')
+    }
+  }
+
+  /**
+   * Cancel an invitation (Pending or Accepted)
+   */
+  async cancelInvitation(invitationId: string): Promise<void> {
+    try {
+      try {
+        await databases.deleteDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.teamInvitations,
+          invitationId,
+        )
+      } catch {
+        await databases.updateDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.teamInvitations,
+          invitationId,
+          { status: 'declined' },
+        )
+      }
+    } catch (error) {
+      throw mapAppwriteError(error, 'TeamsService.cancelInvitation')
+    }
+  }
+
+  /**
+   * Remove an accepted member from a team
+   */
+  async removeTeamMember(teamId: string, memberEmail: string, invitationId?: string): Promise<void> {
+    try {
+      const cleanEmail = memberEmail.trim().toLowerCase()
+
+      // 1. Cancel / delete invitation
+      if (invitationId) {
+        await this.cancelInvitation(invitationId).catch(() => {})
+      } else {
+        const invs = await databases.listDocuments(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.teamInvitations,
+          [Query.equal('teamId', teamId), Query.equal('inviteeEmail', cleanEmail)],
+        ).catch(() => ({ documents: [] }))
+        for (const inv of invs.documents) {
+          await this.cancelInvitation(inv.$id).catch(() => {})
+        }
+      }
+
+      // 2. Remove member's event_registrations row for this team
+      const regs = await databases.listDocuments(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.eventRegistrations,
+        [Query.equal('teamId', teamId), Query.equal('userEmail', cleanEmail)],
+      ).catch(() => ({ documents: [] }))
+      for (const reg of regs.documents) {
+        await databases.deleteDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.eventRegistrations,
+          reg.$id,
+        ).catch(() => {})
+      }
+
+      // 3. Check remaining accepted count; if below minTeamSize, revert to 'pending'
+      const teamDoc = (await databases.getDocument(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.teams,
+        teamId,
+      )) as any
+
+      const acceptedInvites = await databases.listDocuments(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.teamInvitations,
+        [Query.equal('teamId', teamId), Query.equal('status', 'accepted')],
+      ).catch(() => ({ total: 0 }))
+
+      const event = await eventsService.getEventById(teamDoc.eventId).catch(() => null)
+      const minSize = event?.minTeamSize || 2
+      if (acceptedInvites.total + 1 < minSize && teamDoc.status === 'confirmed') {
+        await databases.updateDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.teams,
+          teamId,
+          { status: 'pending' },
+        ).catch(() => {})
+      }
+    } catch (error) {
+      throw mapAppwriteError(error, 'TeamsService.removeTeamMember')
+    }
+  }
+
+  /**
+   * Cancel an unconfirmed / pending team immediately (Leader only)
+   */
+  async cancelPendingTeam(teamId: string, leaderId: string): Promise<void> {
+    try {
+      const teamDoc = (await databases.getDocument(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.teams,
+        teamId,
+      )) as any
+
+      if (teamDoc.leaderId !== leaderId) {
+        throw new AppError('Only the team leader can cancel this team.', 'AUTH_UNAUTHORIZED', 403)
+      }
+
+      // 1. Delete all invitations for this team
+      const invites = await databases.listDocuments(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.teamInvitations,
+        [Query.equal('teamId', teamId), Query.limit(100)],
+      ).catch(() => ({ documents: [] }))
+      for (const inv of invites.documents) {
+        await databases.deleteDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.teamInvitations,
+          inv.$id,
+        ).catch(() => {})
+      }
+
+      // 2. Delete all registrations for this team (including leader)
+      const regs = await databases.listDocuments(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.eventRegistrations,
+        [Query.equal('teamId', teamId), Query.limit(100)],
+      ).catch(() => ({ documents: [] }))
+      for (const reg of regs.documents) {
+        await databases.deleteDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.eventRegistrations,
+          reg.$id,
+        ).catch(() => {})
+      }
+
+      // 3. Mark team status as cancelled or delete document
+      try {
+        await databases.deleteDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.teams,
+          teamId,
+        )
+      } catch {
+        await databases.updateDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.teams,
+          teamId,
+          { status: 'cancelled' },
+        )
+      }
+    } catch (error) {
+      throw mapAppwriteError(error, 'TeamsService.cancelPendingTeam')
+    }
+  }
+
+  /**
+   * Request disbandment of a confirmed team (Pending Admin Approval)
+   */
+  async requestTeamDisband(teamId: string, leaderId: string, reason: string): Promise<void> {
+    try {
+      const teamDoc = (await databases.getDocument(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.teams,
+        teamId,
+      )) as any
+
+      if (teamDoc.leaderId !== leaderId) {
+        throw new AppError('Only the team leader can request team disbandment.', 'AUTH_UNAUTHORIZED', 403)
+      }
+
+      // Prefix team name with [DISBAND REQUESTED] if not already present
+      const currentName = teamDoc.name || teamDoc.teamName || 'Team'
+      if (!currentName.includes('[DISBAND REQUESTED]')) {
+        const newName = `[DISBAND REQUESTED] ${currentName}`.slice(0, 100)
+        await databases.updateDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.teams,
+          teamId,
+          { name: newName },
+        )
+      }
+
+      // Dispatch disband notification email to admin/organizers
+      try {
+        await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: teamDoc.leaderName || 'Team Leader',
+            email: teamDoc.leaderEmail,
+            phone: 'N/A',
+            queryType: 'TEAM DISBAND REQUEST',
+            message: `TEAM DISBAND REQUEST FOR YANTROTSAV\n\nTeam: ${currentName} (ID: ${teamId})\nLeader: ${teamDoc.leaderName} (${teamDoc.leaderEmail})\nReason: ${reason || 'Leader requested team disbandment.'}\n\nPlease review and approve this disband request in the Admin Dashboard.`,
+          }),
+        })
+      } catch {
+        // Continue even if notification encounters network error
+      }
+    } catch (error) {
+      throw mapAppwriteError(error, 'TeamsService.requestTeamDisband')
     }
   }
 }

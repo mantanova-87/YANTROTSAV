@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import type { Models } from 'appwrite'
 import { authService } from '../services/appwrite/auth.service'
 import type { UserProfile, RegisterPayload } from '../types/database.types'
+import { showToast } from '../utils/toast'
 
 interface AuthContextType {
   // Primary state matching architecture specification
@@ -123,6 +124,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authService.login(email, pass)
       await syncAuthSession()
       setAuthModalOpen(false)
+      showToast.dismiss()
+      showToast.success('Logged in successfully!')
     } finally {
       setLoading(false)
     }
@@ -141,6 +144,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const adminStatus = await authService.checkIsAdmin()
       setIsAdmin(adminStatus)
       setAuthModalOpen(false)
+      showToast.dismiss()
+      showToast.success(`Welcome to Yantrotsav, ${payload.fullName}!`)
     } finally {
       setLoading(false)
     }
@@ -174,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const updated = await authService.updateProfile(account.$id, data)
       setUserProfile(updated)
       await syncAuthSession()
+      showToast.success('Profile updated successfully!')
     } finally {
       setLoading(false)
     }
@@ -190,6 +196,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserProfile(null)
       setIsAdmin(false)
       setAuthModalOpen(false)
+      showToast.dismiss()
+      showToast.info('Logged out successfully.')
     } finally {
       setLoading(false)
     }

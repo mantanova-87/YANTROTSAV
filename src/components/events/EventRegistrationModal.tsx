@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { teamsService } from '../../services/appwrite/teams.service'
 import type { EventDocument } from '../../types/database.types'
+import { showToast } from '../../utils/toast'
 
 export interface EventRegistrationModalProps {
   event: EventDocument | null
@@ -33,7 +34,6 @@ export default function EventRegistrationModal({
   const [collegeName, setCollegeName] = useState('Central University of Jammu')
 
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [existingEnrollment, setExistingEnrollment] = useState<{
     enrolled: boolean
@@ -117,7 +117,6 @@ export default function EventRegistrationModal({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (isSubmittingRef.current) return
-    setError(null)
 
     if (!user) {
       openAuthModal('login')
@@ -125,19 +124,19 @@ export default function EventRegistrationModal({
     }
 
     if (existingEnrollment?.enrolled) {
-      setError(
+      showToast.info(
         `You are already enrolled in this event (${existingEnrollment.reason}). Duplicate registrations are not permitted.`,
       )
       return
     }
 
     if (event.status !== 'published') {
-      setError('Registration is closed for this event.')
+      showToast.error('Registration is closed for this event.')
       return
     }
 
     if (event.registrationDeadline && new Date(event.registrationDeadline).getTime() < Date.now()) {
-      setError('Registration deadline for this event has passed.')
+      showToast.error('Registration deadline for this event has passed.')
       return
     }
 
@@ -149,7 +148,8 @@ export default function EventRegistrationModal({
         if (studentSemester) {
           const semNum = parseInt(studentSemester, 10)
           if (isNaN(semNum) || semNum < 1 || semNum > 8) {
-            throw new Error('Please enter a valid semester number between 1 and 8.')
+            showToast.warning('Please enter a valid semester number between 1 and 8.')
+            return
           }
         }
         // Solo Registration with complete student profile attributes
@@ -165,11 +165,13 @@ export default function EventRegistrationModal({
           semester: studentSemester.trim().slice(0, 10),
           collegeName: collegeName.trim().slice(0, 100),
         })
+        showToast.success(`Registered successfully for "${event.title || 'Event'}"!`)
       } else {
         // Team Registration
         const sanitizedTeamName = teamName.trim().slice(0, 80)
         if (!sanitizedTeamName) {
-          throw new Error('Please specify a valid Team Name.')
+          showToast.warning('Please specify a valid Team Name.')
+          return
         }
 
         const validMembers = Array.from(
@@ -181,9 +183,10 @@ export default function EventRegistrationModal({
         )
 
         if (validMembers.length < requiredAdditionalMembers) {
-          throw new Error(
+          showToast.warning(
             `Minimum team size is ${event.minTeamSize}. You must invite at least ${requiredAdditionalMembers} member(s).`,
           )
+          return
         }
 
         await teamsService.createTeam({
@@ -194,15 +197,16 @@ export default function EventRegistrationModal({
           leaderEmail: user.email.trim().toLowerCase(),
           memberEmails: validMembers,
         })
+        showToast.success(`Squad "${sanitizedTeamName}" registered successfully!`)
       }
 
       setSuccess(true)
       if (onSuccess) onSuccess()
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message)
+        showToast.error(err.message)
       } else {
-        setError('Failed to complete registration.')
+        showToast.error('Failed to complete registration.')
       }
     } finally {
       isSubmittingRef.current = false
@@ -212,7 +216,6 @@ export default function EventRegistrationModal({
 
   const handleClose = () => {
     setSuccess(false)
-    setError(null)
     setTeamName('')
     setMemberEmails([''])
     onClose()
@@ -380,23 +383,34 @@ export default function EventRegistrationModal({
                   </div>
                 )}
 
-                {error && (
-                  <div className="flex items-center gap-3 border border-red-500/40 bg-red-950/30 p-3 text-xs text-red-400">
-                    <AlertCircle size={16} className="shrink-0" />
-                    <span>{error}</span>
-                  </div>
-                )}
-
                 {/* Event summary banner */}
                 <div className="border border-white/10 bg-[#050816] p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] text-slate-400">
                     <div>
                       <span className="text-slate-500">VENUE:</span>{' '}
-                      <span className="text-white">{event.venue}</span>
+                      <span className="text-white">{event.venue || 'TBA'}</span>
                     </div>
                     <div>
                       <span className="text-slate-500">DATE:</span>{' '}
-                      <span className="text-[#00E5FF]">{event.eventDate}</span>
+                      <span className="text-[#00E5FF]">
+                        {(() => {
+                          const rawDate = event.eventTiming || event.eventDate
+                          if (!rawDate) return 'TBA'
+                          const d = new Date(rawDate)
+                          if (!isNaN(d.getTime())) {
+                            const datePart = d.toLocaleDateString('en-IN', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            })
+                            const timePart = rawDate.includes('T')
+                              ? ` • ${d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`
+                              : ''
+                            return `${datePart}${timePart}`
+                          }
+                          return rawDate
+                        })()}
+                      </span>
                     </div>
                   </div>
                 </div>

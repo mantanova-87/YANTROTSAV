@@ -317,6 +317,57 @@ This message was submitted through the Yantrotsav website.
           })
           return
         }
+
+        if (req.method === 'POST' && req.url === '/api/admin/delete-file') {
+          let body = ''
+          req.on('data', (chunk: any) => {
+            body += chunk
+          })
+          req.on('end', async () => {
+            try {
+              const env = loadEnv('', process.cwd(), '')
+              const endpoint = env.VITE_APPWRITE_ENDPOINT || process.env.VITE_APPWRITE_ENDPOINT || 'https://sgp.cloud.appwrite.io/v1'
+              const projectId = env.VITE_APPWRITE_PROJECT_ID || process.env.VITE_APPWRITE_PROJECT_ID || '6a9be53300040e6fd485'
+              const apiKey = env.APPWRITE_API_KEY || process.env.APPWRITE_API_KEY || env.VITE_APPWRITE_API_KEY
+              const { fileId, bucketId } = JSON.parse(body || '{}')
+
+              if (!fileId) {
+                res.statusCode = 400
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify({ success: false, message: 'Missing fileId parameter' }))
+                return
+              }
+
+              const targetBucket = bucketId || env.VITE_APPWRITE_STORAGE_BUCKET_ID || process.env.VITE_APPWRITE_STORAGE_BUCKET_ID || 'event_banners'
+
+              if (apiKey) {
+                const delRes = await fetch(`${endpoint}/storage/buckets/${targetBucket}/files/${fileId}`, {
+                  method: 'DELETE',
+                  headers: {
+                    'X-Appwrite-Project': projectId,
+                    'X-Appwrite-Key': apiKey,
+                  },
+                })
+                if (delRes.ok || delRes.status === 204 || delRes.status === 404) {
+                  res.statusCode = 200
+                  res.setHeader('Content-Type', 'application/json')
+                  res.end(JSON.stringify({ success: true, message: `File ${fileId} deleted successfully.` }))
+                  return
+                }
+              }
+
+              res.statusCode = 200
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: false, message: 'APPWRITE_API_KEY is not configured in local environment.' }))
+            } catch (err: any) {
+              res.statusCode = 500
+              res.setHeader('Content-Type', 'application/json')
+              res.end(JSON.stringify({ success: false, message: err.message }))
+            }
+          })
+          return
+        }
+
         next()
       })
     },

@@ -9,7 +9,6 @@ import {
   GraduationCap,
   BookOpen,
   Hash,
-  AlertCircle,
   CheckCircle2,
   Loader2,
   ArrowRight,
@@ -21,6 +20,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { authService } from '../services/appwrite/auth.service'
 import { useAuth } from '../context/AuthContext'
 import { DEPARTMENT_OPTIONS, SEMESTER_OPTIONS, type RegisterPayload } from '../types/database.types'
+import { showToast } from '../utils/toast'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -42,7 +42,6 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [countdown, setCountdown] = useState(3)
@@ -60,57 +59,55 @@ export default function Register() {
 
   const updateField = (field: keyof RegisterPayload, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
-    if (error) setError(null)
   }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setError(null)
 
     // Basic frontend validation
     if (!formData.fullName.trim() || !formData.email.trim() || !formData.password) {
-      setError('Please fill in your Full Name, Email, and Password.')
+      showToast.warning('Please fill in your Full Name, Email, and Password.')
       return
     }
 
     if (formData.password.length < 8) {
-      setError('Password must contain at least 8 characters.')
+      showToast.warning('Password must contain at least 8 characters.')
       return
     }
 
     if (formData.password !== confirmPassword) {
-      setError('Passwords do not match. Please verify your confirm password.')
+      showToast.error('Passwords do not match. Please verify your confirm password.')
       return
     }
 
     if (!formData.rollNumber.trim()) {
-      setError('Student Roll Number is required.')
+      showToast.warning('Student Roll Number is required.')
       return
     }
 
     if (!formData.phone.trim() || formData.phone.trim().length < 10) {
-      setError('Please provide a valid contact number (at least 10 digits).')
+      showToast.warning('Please provide a valid contact number (at least 10 digits).')
       return
     }
 
     if (!formData.department) {
-      setError('Please select your department.')
+      showToast.warning('Please select your department.')
       return
     }
 
     if (formData.department === 'OTHER' && !formData.customDepartment?.trim()) {
-      setError('Please specify your custom department name.')
+      showToast.warning('Please specify your custom department name.')
       return
     }
 
     if (!formData.semester.trim()) {
-      setError('Please select your current semester.')
+      showToast.warning('Please select your current semester.')
       return
     }
 
     const semVal = parseInt(formData.semester, 10)
     if (isNaN(semVal) || semVal < 1 || semVal > 8) {
-      setError('Semester must be between 1 and 8.')
+      showToast.warning('Semester must be between 1 and 8.')
       return
     }
 
@@ -124,20 +121,21 @@ export default function Register() {
       }
       await authService.registerStudent(payloadToSend)
       await refreshUser()
+      showToast.success(`Welcome to Yantrotsav, ${formData.fullName}! Your registration is complete.`)
       setSuccess(true)
     } catch (err: unknown) {
       if (err instanceof Error) {
         // Friendly mapping for duplicate rollNumber, email, or other unique constraints
         const msg = err.message
         if (msg.toLowerCase().includes('roll') || msg.toLowerCase().includes('idx_rollnumber')) {
-          setError('A student with this Roll Number is already registered for Yantrotsav.')
+          showToast.error('A student with this Roll Number is already registered for Yantrotsav.')
         } else if (msg.toLowerCase().includes('email') || msg.toLowerCase().includes('user_already_exists')) {
-          setError('An account with this email address already exists. Try signing in.')
+          showToast.error('An account with this email address already exists. Try signing in.')
         } else {
-          setError(msg)
+          showToast.error(msg)
         }
       } else {
-        setError('Registration could not be completed. Please try again.')
+        showToast.error('Registration could not be completed. Please try again.')
       }
     } finally {
       setIsSubmitting(false)
@@ -217,13 +215,6 @@ export default function Register() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-              {error && (
-                <div className="flex items-center gap-3 border border-red-500/50 bg-red-950/30 p-3.5 text-xs text-red-300">
-                  <AlertCircle size={18} className="shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
               {/* Full Name & Username */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -317,7 +308,6 @@ export default function Register() {
                       value={confirmPassword}
                       onChange={(e) => {
                         setConfirmPassword(e.target.value)
-                        if (error) setError(null)
                       }}
                       placeholder="Re-enter your password"
                       className="w-full border border-white/10 bg-[#050816] py-3 pl-10 pr-10 text-xs text-white placeholder-slate-600 outline-none transition-colors focus:border-[#00E5FF]"

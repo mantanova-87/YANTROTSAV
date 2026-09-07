@@ -53,6 +53,7 @@ export class EventsService {
   async createEvent(data: CreateEventDTO): Promise<EventDocument> {
     if (!data.title?.trim()) throw new AppError('Event title is required.', 'UNKNOWN_ERROR', 400)
     if (!data.description?.trim()) throw new AppError('Event description is required.', 'UNKNOWN_ERROR', 400)
+    if (!data.bannerUrl?.trim()) throw new AppError('Event banner image is required.', 'UNKNOWN_ERROR', 400)
 
     const eventType = (data.eventType || data.format || 'team') as 'solo' | 'team'
     const isSolo = eventType === 'solo'
@@ -62,6 +63,7 @@ export class EventsService {
       title:       data.title.trim(),
       category:    (data.category || 'other').trim().toLowerCase(),
       description: data.description.trim(),
+      bannerUrl:   data.bannerUrl.trim(),
       eventType,
       minTeamSize: isSolo ? 1 : Math.max(1, Number(data.minTeamSize) || 2),
       maxTeamSize: isSolo ? 1 : Math.max(1, Number(data.maxTeamSize) || 4),
@@ -71,9 +73,6 @@ export class EventsService {
 
     // Optional: venue
     if (data.venue?.trim()) payload.venue = data.venue.trim()
-
-    // Optional: bannerUrl
-    if (data.bannerUrl?.trim()) payload.bannerUrl = data.bannerUrl.trim()
 
     // Optional: eventTiming — ISO datetime or formatted date
     if (data.eventTiming?.trim() || data.eventDate?.trim()) {
@@ -91,17 +90,32 @@ export class EventsService {
     }
 
     try {
-      const doc = await databases.createDocument(
-        APPWRITE_CONFIG.databaseId,
-        APPWRITE_CONFIG.collections.events,
-        ID.unique(),
-        payload,
-        [
-          Permission.read(Role.any()),
-          Permission.update(Role.any()),
-          Permission.delete(Role.any()),
-        ],
-      )
+      let doc: any
+      try {
+        doc = await databases.createDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.events,
+          ID.unique(),
+          payload,
+          [
+            Permission.read(Role.any()),
+            Permission.update(Role.users()),
+            Permission.delete(Role.users()),
+          ],
+        )
+      } catch (permErr: any) {
+        console.warn(
+          '[EventsService] createDocument with permissions failed, retrying with collection default permissions:',
+          permErr?.message,
+        )
+        // Fallback: inherit collection-level permissions
+        doc = await databases.createDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.events,
+          ID.unique(),
+          payload,
+        )
+      }
       return doc as unknown as EventDocument
     } catch (error) {
       throw mapAppwriteError(error, 'EventsService.createEvent')
@@ -132,7 +146,10 @@ export class EventsService {
       payload.venue = data.venue?.trim() || null
     }
     if (data.bannerUrl !== undefined) {
-      payload.bannerUrl = data.bannerUrl?.trim() || null
+      if (!data.bannerUrl?.trim()) {
+        throw new AppError('Event banner image is required and cannot be empty.', 'UNKNOWN_ERROR', 400)
+      }
+      payload.bannerUrl = data.bannerUrl.trim()
     }
     if (data.eventTiming !== undefined || data.eventDate !== undefined) {
       const timeVal = (data.eventTiming || data.eventDate || '').trim()
@@ -173,14 +190,16 @@ export class EventsService {
    * 4. uploaded storage banner asset
    * 5. the event document itself
    */
-  async deleteEvent(eventId: string): Promise<void> {
+  async deleteEvent(eventId: string, knownBannerUrl?: string): Promise<void> {
     try {
-      // 1. Fetch event metadata to locate storage banner
+      // 1. Fetch event metadata to locate storage banner if not directly provided
       let eventDoc: EventDocument | null = null
-      try {
-        eventDoc = await this.getEventById(eventId)
-      } catch {
-        // continue if getEventById fails
+      if (!knownBannerUrl) {
+        try {
+          eventDoc = await this.getEventById(eventId)
+        } catch (err) {
+          console.warn(`[EventsService] Could not fetch event ${eventId} metadata:`, err)
+        }
       }
 
       // 2. Cascade delete all event_registrations for this event
@@ -372,14 +391,18 @@ export class EventsService {
       }
 
       // 5. Delete banner file from Storage bucket if exists
-      if (eventDoc?.bannerUrl) {
+      const targetBanner = knownBannerUrl || eventDoc?.bannerUrl
+      if (targetBanner) {
         try {
-          const fileMatch = eventDoc.bannerUrl.match(/\/files\/([a-zA-Z0-9_-]+)\/(view|preview|download)/)
-          if (fileMatch && fileMatch[1]) {
-            await storageService.deleteEventBanner(fileMatch[1])
+          console.log(`[EventsService] Deleting event banner for event ${eventId}:`, targetBanner)
+          const deleted = await storageService.deleteEventBannerFromUrl(targetBanner)
+          if (deleted) {
+            console.log(`[EventsService] ✅ Successfully deleted banner file for event ${eventId}`)
+          } else {
+            console.warn(`[EventsService] ⚠️ Banner file could not be deleted for event ${eventId} (may not exist or permission denied)`)
           }
         } catch (storageErr) {
-          console.warn('Error deleting event banner asset:', storageErr)
+          console.warn('[EventsService] Error deleting event banner asset:', storageErr)
         }
       }
 

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { Mail, MapPin, Send, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Mail, MapPin, Send } from 'lucide-react'
 import { z } from 'zod'
+import { showToast } from '../utils/toast'
 
 const querySchema = z.object({
   name: z
@@ -63,8 +64,6 @@ export default function Contact() {
 
   const [form, setForm] = useState<FormData>(initialForm)
   const [errors, setErrors] = useState<FormErrors>({})
-  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSending, setIsSending] = useState(false)
 
   const updateField = (
@@ -82,11 +81,6 @@ export default function Contact() {
         ...previous,
         [field]: undefined,
       }))
-    }
-
-    if (status !== 'idle') {
-      setStatus('idle')
-      setErrorMessage(null)
     }
   }
 
@@ -112,15 +106,12 @@ export default function Contact() {
     return false
   }
 
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    setStatus('idle')
-    setErrorMessage(null)
-
     // Validate with Zod before sending anything.
     if (!validateForm()) {
+      showToast.warning('Please correct the highlighted fields before submitting.')
       return
     }
 
@@ -151,13 +142,12 @@ export default function Contact() {
         throw new Error(data.message || 'Failed to send query.')
       }
 
-      setStatus('success')
+      showToast.success('Your query has been submitted successfully! The team will get back to you soon.')
       setForm(initialForm)
       setErrors({})
     } catch (error: any) {
       console.error('Contact form error:', error)
-      setErrorMessage(error?.message || 'Something went wrong. Please try again.')
-      setStatus('error')
+      showToast.error(error?.message || 'Something went wrong. Please try again.')
     } finally {
       setIsSending(false)
     }
@@ -507,37 +497,6 @@ export default function Contact() {
                   </p>
                 )}
               </div>
-
-              {/* Status */}
-              {status === 'success' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-3 border border-[#00E5FF]/30 bg-[#00E5FF]/5 px-4 py-3"
-                >
-                  <CheckCircle2
-                    size={16}
-                    className="shrink-0 text-[#00E5FF]"
-                  />
-
-                  <p className="text-[10px] uppercase tracking-[0.08em] text-[#00E5FF]">
-                    Query submitted successfully.
-                  </p>
-                </motion.div>
-              )}
-
-              {status === 'error' && (
-                <div className="flex items-center gap-3 border border-red-500/30 bg-red-500/5 px-4 py-3">
-                  <AlertCircle
-                    size={16}
-                    className="shrink-0 text-red-400"
-                  />
-
-                  <p className="text-[10px] uppercase tracking-[0.08em] text-red-400">
-                    {errorMessage || 'Something went wrong. Please try again.'}
-                  </p>
-                </div>
-              )}
 
               {/* Submit */}
               <button

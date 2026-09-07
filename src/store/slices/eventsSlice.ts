@@ -84,9 +84,11 @@ export const updateEventThunk = createAsyncThunk(
  */
 export const deleteEventThunk = createAsyncThunk(
   'events/deleteEvent',
-  async (eventId: string, { rejectWithValue }) => {
+  async (payload: string | { eventId: string; bannerUrl?: string }, { rejectWithValue }) => {
     try {
-      await eventsService.deleteEvent(eventId)
+      const eventId = typeof payload === 'string' ? payload : payload.eventId
+      const bannerUrl = typeof payload === 'string' ? undefined : payload.bannerUrl
+      await eventsService.deleteEvent(eventId, bannerUrl)
       return eventId
     } catch (err: any) {
       return rejectWithValue(err?.message || 'Failed to delete event.')
