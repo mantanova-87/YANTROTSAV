@@ -16,61 +16,46 @@ const images = import.meta.glob(
 const revealFromLeft = {
   hidden: {
     opacity: 0,
-    x: -120,
-    y: 50,
-    rotateY: 18,
-    rotateZ: -2,
-    scale: 0.9,
-    filter: 'blur(10px)',
+    x: -30,
+    y: 20,
+    scale: 0.98,
   },
   visible: {
     opacity: 1,
     x: 0,
     y: 0,
-    rotateY: 0,
-    rotateZ: -1,
     scale: 1,
-    filter: 'blur(0px)',
   },
 }
 
 const revealFromRight = {
   hidden: {
     opacity: 0,
-    x: 120,
-    y: 50,
-    rotateY: -18,
-    rotateZ: 2,
-    scale: 0.9,
-    filter: 'blur(10px)',
+    x: 30,
+    y: 20,
+    scale: 0.98,
   },
   visible: {
     opacity: 1,
     x: 0,
     y: 0,
-    rotateY: 0,
-    rotateZ: 1,
     scale: 1,
-    filter: 'blur(0px)',
   },
 }
 
 const revealFromDepth = {
   hidden: {
     opacity: 0,
-    y: 80,
-    rotateX: 20,
-    scale: 0.82,
-    filter: 'blur(12px)',
+    y: 25,
+    scale: 0.97,
   },
   visible: {
     opacity: 1,
     y: 0,
-    rotateX: 0,
     scale: 1,
-    filter: 'blur(0px)',
   },
 }
+
 
 // ============================================================
 // MESSAGE CARDS
@@ -140,24 +125,23 @@ function Home() {
             <motion.div
               initial={{
                 opacity: 0,
-                x: -120,
-                scale: 1.08,
+                y: 15,
+                scale: 0.99,
               }}
               animate={{
                 opacity: 1,
-                x: 0,
+                y: 0,
                 scale: 1,
               }}
               transition={{
-                delay: 1,
-                duration: 2,
+                duration: 0.45,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              className="relative mx-auto w-[80vw] max-w-[1600px] p-2"
+              className="relative mx-auto w-full max-w-5xl px-3 sm:px-6"
             >
 
               {/* Hero shadow */}
-              <div className="pointer-events-none absolute inset-2 translate-x-4 translate-y-4 bg-black/50 blur-xl" />
+              <div className="pointer-events-none absolute inset-2 translate-x-3 translate-y-3 bg-black/40 blur-lg" />
 
               {/* Technical frame */}
               <div className="pointer-events-none absolute inset-0 z-20">
@@ -167,16 +151,16 @@ function Home() {
                 <div className="absolute inset-2 border border-white/10" />
 
                 {/* Top-left */}
-                <span className="absolute left-0 top-0 h-14 w-14 border-l-2 border-t-2 border-[#00E5FF]" />
+                <span className="absolute left-0 top-0 h-10 w-10 sm:h-14 sm:w-14 border-l-2 border-t-2 border-[#00E5FF]" />
 
                 {/* Top-right */}
-                <span className="absolute right-0 top-0 h-14 w-14 border-r-2 border-t-2 border-[#FF6B00]" />
+                <span className="absolute right-0 top-0 h-10 w-10 sm:h-14 sm:w-14 border-r-2 border-t-2 border-[#FF6B00]" />
 
                 {/* Bottom-left */}
-                <span className="absolute bottom-0 left-0 h-14 w-14 border-b-2 border-l-2 border-[#FF6B00]" />
+                <span className="absolute bottom-0 left-0 h-10 w-10 sm:h-14 sm:w-14 border-b-2 border-l-2 border-[#FF6B00]" />
 
                 {/* Bottom-right */}
-                <span className="absolute bottom-0 right-0 h-14 w-14 border-b-2 border-r-2 border-[#00E5FF]" />
+                <span className="absolute bottom-0 right-0 h-10 w-10 sm:h-14 sm:w-14 border-b-2 border-r-2 border-[#00E5FF]" />
 
                 {/* Technical markers */}
                 <span className="absolute left-3 top-3 h-1.5 w-1.5 bg-[#00E5FF]" />
@@ -188,7 +172,7 @@ function Home() {
               <img
                 src={poster}
                 alt="YANTROTSAV event poster"
-                className="relative z-10 block h-100 w-full max-w-[80vw] object-fill"
+                className="relative z-10 block w-full max-h-[75vh] object-contain shadow-2xl"
               />
             </motion.div>
           </section>
@@ -220,11 +204,8 @@ function Home() {
                       amount: 0.2,
                     }}
                     transition={{
-                      duration: 0.95,
+                      duration: 0.5,
                       ease: [0.22, 1, 0.36, 1],
-                    }}
-                    style={{
-                      perspective: 1200,
                     }}
                     className={`relative w-full max-w-5xl ${index === 0
                       ? 'md:ml-[2%]'
@@ -414,18 +395,18 @@ function Home() {
           <motion.div
             initial={{
               opacity: 0,
-              x: -120,
+              y: 24,
             }}
             whileInView={{
               opacity: 1,
-              x: 0,
+              y: 0,
             }}
             viewport={{
               once: true,
               amount: 0.2,
             }}
             transition={{
-              duration: 0.9,
+              duration: 0.5,
               ease: [0.22, 1, 0.36, 1],
             }}
             className="group relative mx-4 w-auto max-w-6xl overflow-hidden bg-[#080A0F] md:mx-auto"
@@ -504,22 +485,20 @@ function Home() {
             <motion.div
               initial={{
                 opacity: 0,
-                y: 50,
-                scale: 0.95,
-                filter: 'blur(8px)',
+                y: 30,
+                scale: 0.98,
               }}
               whileInView={{
                 opacity: 1,
                 y: 0,
                 scale: 1,
-                filter: 'blur(0px)',
               }}
               viewport={{
                 once: true,
                 amount: 0.3,
               }}
               transition={{
-                duration: 0.8,
+                duration: 0.45,
                 ease: [0.22, 1, 0.36, 1],
               }}
               className="relative border-b border-white/10 pb-7"
@@ -572,12 +551,9 @@ function Home() {
                       amount: 0.2,
                     }}
                     transition={{
-                      duration: 0.85,
-                      delay: index * 0.12,
+                      duration: 0.5,
+                      delay: index * 0.08,
                       ease: [0.22, 1, 0.36, 1],
-                    }}
-                    style={{
-                      perspective: 1200,
                     }}
                     className="group relative"
                   >

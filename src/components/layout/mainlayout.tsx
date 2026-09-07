@@ -1,9 +1,9 @@
-import { useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useLocation, Outlet } from 'react-router-dom'
+import { useState, Suspense } from 'react'
 import Navbar from '../layout/Navbar'
 import Footer from '../layout/Footer'
 import HomeIntro from '../HomeIntro'
-import { Outlet } from 'react-router-dom'
+import CyberLoader from '../common/CyberLoader'
 
 function MainLayout() {
   const location = useLocation()
@@ -27,14 +27,25 @@ function MainLayout() {
   }
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col bg-[#050816]">
       <Navbar />
 
-      <Outlet />
+      <main className="flex-1">
+        <Suspense
+          fallback={
+            <div className="flex min-h-[70vh] items-center justify-center bg-[#050816]">
+              <CyberLoader variant="inline" size="sm" text="SYNCING SECTOR DATA..." />
+            </div>
+          }
+        >
+          <Outlet />
+        </Suspense>
+      </main>
 
       <Footer />
-    </>
+    </div>
   )
 }
 
 export default MainLayout
+

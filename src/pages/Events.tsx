@@ -190,10 +190,10 @@ function Events() {
         </motion.div>
 
         <motion.h1
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 35 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.1 }}
-          className="max-w-5xl text-[clamp(4rem,12vw,10rem)] font-black leading-[0.78] tracking-[-0.07em]"
+          transition={{ duration: 0.5, delay: 0.05 }}
+          className="max-w-5xl text-[clamp(2.75rem,10vw,8rem)] font-black leading-[0.85] tracking-[-0.05em]"
         >
           EVENTS
           <span className="text-[#00E5FF]">.</span>
@@ -364,115 +364,50 @@ function Events() {
 
               <div className="relative border border-white/10 bg-[#080A0F]">
                 {/* Corner brackets */}
-                <div className="pointer-events-none absolute -left-px -top-px h-7 w-7 border-l-2 border-t-2 border-[#00E5FF]" />
+                <div className="pointer-events-none absolute -left-px -top-px h-7 w-7 border-l-2 border-t-2 border-[#00E5FF] z-20" />
+                <div className="pointer-events-none absolute -right-px -top-px h-7 w-7 border-r-2 border-t-2 border-[#FF6B00] z-20" />
+                <div className="pointer-events-none absolute -bottom-px -left-px h-7 w-7 border-b-2 border-l-2 border-[#FF6B00] z-20" />
+                <div className="pointer-events-none absolute -bottom-px -right-px h-7 w-7 border-b-2 border-r-2 border-[#00E5FF] z-20" />
 
-                <div className="pointer-events-none absolute -right-px -top-px h-7 w-7 border-r-2 border-t-2 border-[#FF6B00]" />
+                {/* Mobile scroll wrapper */}
+                <div className="overflow-x-auto">
+                  <div className="min-w-[560px]">
+                    {/* Table header */}
+                    <div className="grid grid-cols-[90px_130px_1fr_1.2fr] border-b border-white/10 bg-[#050816] px-5 py-3 font-mono text-[8px] uppercase tracking-[0.22em] text-slate-500 sm:px-8">
+                      <div>Date</div>
+                      <div>Time</div>
+                      <div>Event</div>
+                      <div>Venue</div>
+                    </div>
 
-                <div className="pointer-events-none absolute -bottom-px -left-px h-7 w-7 border-b-2 border-l-2 border-[#FF6B00]" />
+                    <div className="divide-y divide-white/[0.06]">
+                      {dynamicSchedule.map((item, index) => (
+                        <div
+                          key={index}
+                          className="relative overflow-hidden transition-colors duration-150 hover:bg-white/[0.03]"
+                        >
+                          {/* REAL TABLE ROW */}
+                          <div className="grid grid-cols-[90px_130px_1fr_1.2fr] items-center px-5 py-4 text-xs sm:px-8 sm:text-sm">
+                            <div className="font-mono text-[10px] text-[#00E5FF] sm:text-xs">
+                              {item.day}
+                            </div>
 
-                <div className="pointer-events-none absolute -bottom-px -right-px h-7 w-7 border-b-2 border-r-2 border-[#00E5FF]" />
+                            <div className="font-mono text-[10px] text-slate-400 sm:text-xs">
+                              {item.time}
+                            </div>
 
-                {/* Table header */}
-                <div className="relative z-10 grid grid-cols-[80px_1fr_1fr_1.2fr] border-b border-white/10 bg-[#050816] px-5 py-3 font-mono text-[8px] uppercase tracking-[0.22em] text-slate-500 sm:grid-cols-[100px_140px_1fr_1.2fr] sm:px-8">
-                  <div>Date</div>
-                  <div>Time</div>
-                  <div>Event</div>
-                  <div>Venue</div>
-                </div>
+                            <div className="font-bold uppercase tracking-tight text-white">
+                              {item.event}
+                            </div>
 
-                <div className="divide-y divide-white/[0.06]">
-                  {dynamicSchedule.map((item, index) => {
-                    const fromLeft = index % 2 === 0
-
-                    return (
-                      <div
-                        key={index}
-                        className="relative overflow-hidden"
-                      >
-                        {/* REAL TABLE ROW */}
-                        <div className="relative z-10 grid grid-cols-[80px_1fr_1fr_1.2fr] items-center px-5 py-4 text-xs transition-colors duration-200 hover:bg-white/[0.03] sm:grid-cols-[100px_140px_1fr_1.2fr] sm:px-8 sm:text-sm">
-                          <div className="font-mono text-[10px] text-[#00E5FF] sm:text-xs">
-                            {item.day}
-                          </div>
-
-                          <div className="font-mono text-[10px] text-slate-400 sm:text-xs">
-                            {item.time}
-                          </div>
-
-                          <div className="font-bold uppercase tracking-tight text-white">
-                            {item.event}
-                          </div>
-
-                          <div className="font-mono text-[10px] uppercase text-slate-400 sm:text-xs">
-                            {item.venue}
+                            <div className="font-mono text-[10px] uppercase text-slate-400 sm:text-xs">
+                              {item.venue}
+                            </div>
                           </div>
                         </div>
-
-                        {/* ================================================= */}
-                        {/* PAPER STRIPS */}
-                        {/* ================================================= */}
-
-                        {!shouldReduceMotion && (
-                          <div className="pointer-events-none absolute inset-0 z-20">
-                            {Array.from({ length: 5 }).map(
-                              (_, stripIndex) => {
-                                const top = `${stripIndex * 20}%`
-                                const bottom = `${
-                                  (4 - stripIndex) * 20
-                                }%`
-
-                                return (
-                                  <motion.div
-                                    key={stripIndex}
-                                    initial={{
-                                      x: fromLeft ? '-110%' : '110%',
-                                    }}
-                                    whileInView={{
-                                      x: '0%',
-                                    }}
-                                    viewport={{
-                                      once: true,
-                                      amount: 0.35,
-                                    }}
-                                    transition={{
-                                      delay:
-                                        index * 0.1 +
-                                        stripIndex * 0.07,
-                                      duration: 0.55,
-                                      ease: [0.22, 1, 0.36, 1],
-                                    }}
-                                    style={{
-                                      top,
-                                      bottom,
-                                    }}
-                                    className="absolute left-0 right-0 bg-[#0B0F18]"
-                                  >
-                                    {/* Paper edge */}
-                                    <span
-                                      className={`absolute left-0 right-0 top-0 h-px ${
-                                        stripIndex === 0
-                                          ? 'bg-[#00E5FF]/40'
-                                          : 'bg-white/[0.05]'
-                                      }`}
-                                    />
-
-                                    {/* Technical paper mark */}
-                                    <span
-                                      className={`absolute top-1/2 h-px w-8 -translate-y-1/2 ${
-                                        fromLeft
-                                          ? 'right-5 bg-[#FF6B00]/50'
-                                          : 'left-5 bg-[#00E5FF]/50'
-                                      }`}
-                                    />
-                                  </motion.div>
-                                )
-                              }
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -541,11 +476,11 @@ function Events() {
               const cardInitial = shouldReduceMotion
                 ? {
                     opacity: 1,
-                    x: 0,
+                    y: 0,
                   }
                 : {
                     opacity: 0,
-                    x: isReversed ? 120 : -120,
+                    y: 20,
                   }
 
               return (
@@ -554,14 +489,14 @@ function Events() {
                   initial={cardInitial}
                   whileInView={{
                     opacity: 1,
-                    x: 0,
+                    y: 0,
                   }}
                   viewport={{
                     once: true,
-                    amount: 0.2,
+                    amount: 0.15,
                   }}
                   transition={{
-                    duration: 0.9,
+                    duration: 0.45,
                     delay: 0.05,
                     ease: [0.22, 1, 0.36, 1],
                   }}
