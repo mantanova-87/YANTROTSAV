@@ -1236,13 +1236,8 @@ export class TeamsService {
 
           if (isMatch && invData.eventId) {
             const matchingEvt = allEvents.find((e) => e.$id === invData.eventId)
-            // If the event was deleted, skip and clean up invitation
+            // If the event was deleted, skip this invitation
             if (!matchingEvt) {
-              databases.deleteDocument(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.teamInvitations,
-                invData.$id,
-              ).catch(() => {})
               continue
             }
 
@@ -1649,7 +1644,6 @@ export class TeamsService {
       const resolvedEmail = resolved.resolvedEmail
       const inviteeName = resolved.inviteeName
       const inviteeUserId = resolved.inviteeUserId
-      const inviteeUsername = resolved.inviteeUsername
 
       if (!resolvedEmail || !resolvedEmail.includes('@')) {
         throw new AppError('Invalid email format for prospective teammate.', 'UNKNOWN_ERROR', 400)

@@ -836,7 +836,7 @@ export default function Dashboard() {
                                           : 'bg-yellow-400'
                                       }`}
                                     />
-                                    <span className="text-white font-medium">@{m.username || m.name}</span>
+                                    <span className="text-white font-medium">@{((m.username || m.name || '').replace(/^@/, ''))}</span>
                                     <span className="text-[8px] text-slate-500 uppercase">
                                       ({m.role === 'Leader' ? 'Leader' : m.status === 'pending' ? 'Invited' : 'Joined'})
                                     </span>
