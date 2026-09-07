@@ -1,5 +1,11 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { Mail, MessageCircle } from 'lucide-react'
+import mantavya from '../assets/images/mantavya.png'
+import mehak from '../assets/images/mehak.png'
+import priyanshu from '../assets/images/priyanshu.jpeg'
+import sachin from '../assets/images/sachin.jpg'
+import abhinav from '../assets/images/abhinav.png'
+import Harsh from '../assets/images/Harsh.jpeg'
 
 const teamMembers = [
   {
@@ -11,40 +17,40 @@ const teamMembers = [
     instagram: '#',
     linkedin: '#',
     whatsapp: '#',
-    image: '',
+    image: abhinav,
   },
   {
     name: 'HARSH SAXENA',
-    designation: 'Technical Lead',
+    designation: '',
     course: 'B.Tech CSE',
-    semester: 'Semester 2',
+    semester: '',
     email: 'member2@example.com',
     instagram: '#',
     linkedin: '#',
     whatsapp: '#',
-    image: '',
+    image: Harsh,
   },
   {
     name: 'MANTVAYA KUMAR',
-    designation: 'Creative Lead',
-    course: 'B.Tech CSE',
-    semester: 'Semester 3',
-    email: 'member3@example.com',
-    instagram: '#',
-    linkedin: '#',
-    whatsapp: '#',
-    image: '',
+    designation: '',
+    course: 'B.Tech CSE (CYBER)',
+    semester: '',
+    email: 'Cdt.mantavyakumar@gmail.com',
+    instagram: 'https://www.instagram.com/mantanova_87?stkn=ZzAycDlvMDM3NW5l',
+    linkedin: 'https://www.linkedin.com/in/mantavyakumar7487',
+    whatsapp: 'https://wa.me/918862962250',
+    image: mantavya,
   },
   {
     name: 'PRIYANSHU GUPTA',
-    designation: 'Media & Outreach',
+    designation: '',
     course: 'B.Tech CSE',
-    semester: 'Semester 4',
+    semester: '',
     email: 'member4@example.com',
     instagram: '#',
     linkedin: '#',
     whatsapp: '#',
-    image: '',
+    image: priyanshu,
   },
   {
     name: 'KUMAR SACHIN',
@@ -55,18 +61,18 @@ const teamMembers = [
     instagram: '#',
     linkedin: '#',
     whatsapp: '#',
-    image: '',
+    image: sachin,
   },
   {
     name: 'MEHAK SHARMA',
-    designation: 'Design & Experience',
+    designation: '',
     course: 'B.Tech CSE',
-    semester: 'Semester 6',
+    semester: '',
     email: 'member6@example.com',
     instagram: '#',
     linkedin: '#',
     whatsapp: '#',
-    image: '',
+    image: mehak,
   },
 ]
 
