@@ -77,6 +77,7 @@ export interface TeamInvitationDocument extends Models.Document {
   invitedByUserId?: string
   invitedByUserName?: string
   inviteeName?: string
+  inviteeUsername?: string
   respondedAt?: string
 }
 

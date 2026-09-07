@@ -14,6 +14,7 @@ import type {
 
 export interface TeamMemberItem {
   name: string
+  username?: string
   email: string
   role: 'Leader' | 'Member'
   status: string
@@ -66,6 +67,7 @@ function resolveProspectiveTeammate(
 ): {
   resolvedEmail: string
   inviteeName: string
+  inviteeUsername: string
   inviteeUserId: string
   matchedUser?: any
 } {
@@ -83,9 +85,11 @@ function resolveProspectiveTeammate(
     const emailLower = clean.toLowerCase()
     const matched = allUsers.find((u: any) => (u.email || '').toLowerCase() === emailLower)
     if (matched) {
+      const username = matched.userId || matched.username || emailLower.split('@')[0]
       return {
         resolvedEmail: emailLower,
-        inviteeName: matched.fullName || matched.name || clean.split('@')[0],
+        inviteeName: matched.fullName || matched.name || username,
+        inviteeUsername: username,
         inviteeUserId: matched.$id,
         matchedUser: matched,
       }
@@ -94,6 +98,7 @@ function resolveProspectiveTeammate(
     return {
       resolvedEmail: emailLower,
       inviteeName: clean.split('@')[0],
+      inviteeUsername: clean.split('@')[0],
       inviteeUserId: '',
     }
   }
@@ -122,9 +127,11 @@ function resolveProspectiveTeammate(
   })
 
   if (matched && matched.email && matched.email.includes('@')) {
+    const username = matched.userId || matched.username || clean
     return {
       resolvedEmail: matched.email.trim().toLowerCase(),
-      inviteeName: matched.fullName || matched.name || clean,
+      inviteeName: matched.fullName || matched.name || username,
+      inviteeUsername: username,
       inviteeUserId: matched.$id,
       matchedUser: matched,
     }
@@ -173,6 +180,31 @@ function resolveProspectiveTeammate(
     'UNKNOWN_ERROR',
     404,
   )
+}
+
+function buildUsernameByEmailLookup(allUsers: any[]): Map<string, string> {
+  const lookup = new Map<string, string>()
+  for (const user of allUsers) {
+    const email = (user.email || '').trim().toLowerCase()
+    if (!email) continue
+    const username =
+      user.userId ||
+      user.username ||
+      (email.includes('@') ? email.split('@')[0] : email)
+    if (username) lookup.set(email, username)
+  }
+  return lookup
+}
+
+function resolveInviteeUsername(
+  invite: TeamInvitationDocument,
+  usernameByEmail: Map<string, string>,
+): string {
+  const stored = (invite.inviteeUsername || '').trim()
+  if (stored) return stored
+  const email = (invite.inviteeEmail || '').trim().toLowerCase()
+  if (email && usernameByEmail.has(email)) return usernameByEmail.get(email)!
+  return email.includes('@') ? email.split('@')[0] : email || 'member'
 }
 
 export class TeamsService {
@@ -343,6 +375,7 @@ export class TeamsService {
         rawHandle: string
         email: string
         name: string
+        username: string
         userId: string
       }> = []
 
@@ -352,6 +385,7 @@ export class TeamsService {
         const resolvedEmail = resolved.resolvedEmail
         const inviteeName = resolved.inviteeName
         const inviteeUserId = resolved.inviteeUserId
+        const inviteeUsername = resolved.inviteeUsername
 
         if (!resolvedEmail || !resolvedEmail.includes('@')) {
           throw new AppError(
@@ -387,6 +421,7 @@ export class TeamsService {
           rawHandle: cleanHandle,
           email: resolvedEmail,
           name: inviteeName,
+          username: inviteeUsername,
           userId: inviteeUserId,
         })
       }
@@ -551,6 +586,7 @@ export class TeamsService {
               inviterId: data.leaderId,
               inviterName: data.leaderName.trim(),
               inviteeEmail: member.email,
+              inviteeName: member.name,
               status: 'pending',
             },
             invitePermissions,
@@ -895,12 +931,6 @@ export class TeamsService {
       const results = Array.from(foundDocsMap.values()).filter((inv) => {
         const evt = allEvents.find((e) => e.$id === inv.eventId)
         if (!evt) {
-          // Event was deleted; clean up invitation
-          databases.deleteDocument(
-            APPWRITE_CONFIG.databaseId,
-            APPWRITE_CONFIG.collections.teamInvitations,
-            inv.$id,
-          ).catch(() => {})
           return false
         }
         if (inv.teamId) {
@@ -959,13 +989,8 @@ export class TeamsService {
             continue
           }
           const evt = allEvents.find((e) => e.$id === t.eventId)
-          // If the event no longer exists, clean up orphaned team and do not display
+          // If the event no longer exists, skip orphaned team
           if (!evt) {
-            databases.deleteDocument(
-              APPWRITE_CONFIG.databaseId,
-              APPWRITE_CONFIG.collections.teams,
-              t.$id,
-            ).catch(() => {})
             continue
           }
 
@@ -1030,12 +1055,6 @@ export class TeamsService {
 
               const evt = allEvents.find((e) => e.$id === teamDoc.eventId)
               if (!evt) {
-                // Event was deleted; purge orphaned invitation
-                databases.deleteDocument(
-                  APPWRITE_CONFIG.databaseId,
-                  APPWRITE_CONFIG.collections.teamInvitations,
-                  invData.$id,
-                ).catch(() => {})
                 continue
               }
 
@@ -1052,13 +1071,8 @@ export class TeamsService {
                 maxTeamSize: evt.maxTeamSize,
                 isDisbandRequested,
               })
-            } catch (teamFetchErr) {
-              // Team document was deleted; clean up orphaned invitation
-              databases.deleteDocument(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.teamInvitations,
-                invData.$id,
-              ).catch(() => {})
+            } catch {
+              // Team document was deleted; skip orphaned invitation
             }
           }
         }
@@ -1067,6 +1081,13 @@ export class TeamsService {
       }
 
       // 3. For each team, fetch member roster (Leader + Accepted + Pending Invites)
+      const allUsersRes = await databases
+        .listDocuments(APPWRITE_CONFIG.databaseId, APPWRITE_CONFIG.collections.users, [
+          Query.limit(500),
+        ])
+        .catch(() => ({ documents: [] }))
+      const usernameByEmail = buildUsernameByEmailLookup(allUsersRes.documents)
+
       const teamsList = Array.from(teamsMap.values())
       for (const team of teamsList) {
         try {
@@ -1076,20 +1097,29 @@ export class TeamsService {
             [Query.equal('teamId', team.$id), Query.limit(50)],
           )
 
+          const leaderEmail = (team.leaderEmail || '').trim().toLowerCase()
+          const leaderUsername =
+            usernameByEmail.get(leaderEmail) ||
+            (leaderEmail.includes('@') ? leaderEmail.split('@')[0] : team.leaderName)
+
           const members: TeamMemberItem[] = [
             {
-              name: team.leaderName,
+              name: leaderUsername,
+              username: leaderUsername,
               email: team.leaderEmail,
               role: 'Leader',
               status: 'confirmed',
+              userId: team.leaderId,
             },
           ]
 
           for (const inv of invites.documents) {
             const i = inv as unknown as TeamInvitationDocument
             if (i.status === 'accepted' || i.status === 'pending') {
+              const memberUsername = resolveInviteeUsername(i, usernameByEmail)
               members.push({
-                name: i.inviteeName || i.inviteeEmail.split('@')[0],
+                name: memberUsername,
+                username: memberUsername,
                 email: i.inviteeEmail,
                 role: 'Member',
                 status: i.status,
@@ -1206,13 +1236,8 @@ export class TeamsService {
 
           if (isMatch && invData.eventId) {
             const matchingEvt = allEvents.find((e) => e.$id === invData.eventId)
-            // If the event was deleted, skip and clean up invitation
+            // If the event was deleted, skip this invitation
             if (!matchingEvt) {
-              databases.deleteDocument(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.teamInvitations,
-                invData.$id,
-              ).catch(() => {})
               continue
             }
 
@@ -1500,12 +1525,6 @@ export class TeamsService {
                 )) as any
 
                 if (!teamDoc || teamDoc.status === 'cancelled' || teamDoc.status === 'disbanded') {
-                  // Team cancelled/disbanded; purge orphaned invite
-                  databases.deleteDocument(
-                    APPWRITE_CONFIG.databaseId,
-                    APPWRITE_CONFIG.collections.teamInvitations,
-                    inv.$id,
-                  ).catch(() => {})
                   continue
                 }
 
@@ -1516,12 +1535,6 @@ export class TeamsService {
                   registrationType: 'team',
                 }
               } catch {
-                // Team deleted; purge orphaned invite
-                databases.deleteDocument(
-                  APPWRITE_CONFIG.databaseId,
-                  APPWRITE_CONFIG.collections.teamInvitations,
-                  inv.$id,
-                ).catch(() => {})
                 continue
               }
             }
@@ -1549,11 +1562,16 @@ export class TeamsService {
    */
   private async dispatchInviteEmail(payload: TeamInviteEmailPayload): Promise<void> {
     try {
-      await fetch('/api/send-invite', {
+      const response = await fetch('/api/send-invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}))
+        console.warn('Invite email API returned an error:', response.status, errorBody)
+      }
     } catch (error) {
       console.warn('Failed to send invite email:', error)
     }
@@ -1671,6 +1689,7 @@ export class TeamsService {
           inviterId: data.leaderId,
           inviterName: data.leaderName.trim(),
           inviteeEmail: resolvedEmail,
+          inviteeName,
           status: 'pending',
         },
         invitePermissions,

@@ -1,7 +1,6 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import nodemailer from 'nodemailer'
 
 function devApiPlugin() {
   return {
@@ -42,6 +41,7 @@ function devApiPlugin() {
                 return
               }
 
+              const { default: nodemailer } = await import('nodemailer')
               const transporter = nodemailer.createTransport({
                 service: 'gmail',
                 auth: {
@@ -138,6 +138,7 @@ function devApiPlugin() {
                 return
               }
 
+              const { default: nodemailer } = await import('nodemailer')
               const transporter = nodemailer.createTransport({
                 service: 'gmail',
                 auth: {
