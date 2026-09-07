@@ -1,6 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { Mail, MessageCircle } from 'lucide-react'
-import mantavya from '../assets/images/mantavya.png'
+import mantavya from '../assets/images/mantavya.jpeg'
 import mehak from '../assets/images/mehak.png'
 import priyanshu from '../assets/images/priyanshu.jpeg'
 import sachin from '../assets/images/sachin.jpg'
