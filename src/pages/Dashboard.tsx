@@ -13,15 +13,11 @@ import {
   ShieldCheck,
   Edit3,
   X,
-  QrCode,
   AtSign,
-  Maximize2,
-  Download,
   UserPlus,
   Trash2,
   GraduationCap,
 } from 'lucide-react'
-import QRCode from 'qrcode'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -69,62 +65,6 @@ export default function Dashboard() {
     customDepartment: '',
     semester: 'Semester 4',
   })
-
-  // Dynamic Gate Pass & QR State
-  const [badgeQrUrl, setBadgeQrUrl] = useState<string | null>(null)
-  const [isPassModalOpen, setIsPassModalOpen] = useState(false)
-  const [activePassData, setActivePassData] = useState<{
-    title: string
-    code: string
-    name: string
-    roll: string
-    subtitle?: string
-    qrUrl: string
-  } | null>(null)
-
-  const passIdentifier = (profile?.rollNumber || profile?.rollNo || profile?.userId || user?.$id || '').trim()
-
-  useEffect(() => {
-    if (!passIdentifier) return
-    QRCode.toDataURL(passIdentifier, {
-      width: 256,
-      margin: 2,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF',
-      },
-      errorCorrectionLevel: 'M',
-    })
-      .then((url) => setBadgeQrUrl(url))
-      .catch((err) => console.error('Failed to generate badge QR code:', err))
-  }, [passIdentifier])
-
-  const openPassModal = async (passInfo: {
-    title: string
-    code: string
-    name: string
-    roll: string
-    subtitle?: string
-  }) => {
-    try {
-      const url = await QRCode.toDataURL(passInfo.code, {
-        width: 320,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF',
-        },
-        errorCorrectionLevel: 'M',
-      })
-      setActivePassData({
-        ...passInfo,
-        qrUrl: url,
-      })
-      setIsPassModalOpen(true)
-    } catch (err) {
-      console.error('Failed to generate pass QR:', err)
-    }
-  }
 
   const loadStudentData = useCallback(async () => {
     if (!user) return
@@ -677,29 +617,12 @@ export default function Dashboard() {
                         <div className="text-right flex items-center gap-4 sm:flex-col sm:items-end">
                           <div>
                             <span className="font-mono text-[9px] text-slate-500 block uppercase tracking-widest">
-                              Pass Clearance ID
+                              Registration ID
                             </span>
                             <span className="font-mono text-xs text-[#00E5FF] font-bold tracking-wider">
                               {reg.qrCode ? `${reg.qrCode.slice(0, 18)}...` : `YTR-${reg.$id.slice(0, 8).toUpperCase()}`}
                             </span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const passCode = reg.qrCode || `YTR-${reg.$id.slice(0, 8).toUpperCase()}`
-                              openPassModal({
-                                title: `${reg.eventTitle} Pass`,
-                                code: passCode,
-                                name: profile?.fullName || user?.name || 'Student',
-                                roll: profile?.rollNumber || profile?.rollNo || 'N/A',
-                                subtitle: `Clearance Pass • ${reg.teamName ? `Squad: ${reg.teamName}` : 'Solo Registration'}`,
-                              })
-                            }}
-                            className="flex items-center gap-1 border border-[#00E5FF]/40 bg-[#00E5FF]/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase text-[#00E5FF] hover:bg-[#00E5FF] hover:text-black transition-colors mt-1"
-                          >
-                            <QrCode size={11} />
-                            <span>View Pass QR</span>
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -1082,87 +1005,6 @@ export default function Dashboard() {
                 </button>
               </div>
             </section>
-
-            {/* =========================================================================
-                WIDGET 5: PARTICIPANT CARD
-            ========================================================================= */}
-            <section className="relative overflow-hidden border border-white/10 bg-[#080A0F] p-6 shadow-xl">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2">
-                  <QrCode size={16} className="text-[#FF6B00]" />
-                  <h3 className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-white">
-                    Participant Card
-                  </h3>
-                </div>
-                <span className="font-mono text-[9px] text-[#00E5FF] uppercase">
-                  ACTIVE 2026
-                </span>
-              </div>
-
-              <div className="mt-4 border border-white/10 bg-[#050816] p-4 text-center">
-                {/* Scannable QR Matrix Canvas / Image */}
-                <div className="relative inline-block my-2 group">
-                  <div className="p-2 bg-white rounded border-2 border-[#00E5FF] shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-transform group-hover:scale-[1.02]">
-                    {badgeQrUrl ? (
-                      <img
-                        src={badgeQrUrl}
-                        alt={`Participant QR - ${passIdentifier}`}
-                        className="w-36 h-36 sm:w-40 sm:h-40 block object-contain mx-auto"
-                      />
-                    ) : (
-                      <div className="w-36 h-36 flex flex-col items-center justify-center text-slate-800 font-mono text-xs gap-2">
-                        <Loader2 size={24} className="animate-spin text-[#00E5FF]" />
-                        <span className="text-[10px] text-slate-500">Generating...</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-2 font-mono text-xs font-bold uppercase tracking-wider text-white">
-                  {profile?.fullName || user.name}
-                </div>
-                <div className="font-mono text-xs font-bold text-[#00E5FF] tracking-wider mt-0.5">
-                  {profile?.rollNumber || profile?.rollNo || `ID: ${user.$id.slice(0, 10)}`}
-                </div>
-                <p className="mt-1 font-mono text-[8px] uppercase tracking-widest text-slate-400">
-                  Scan QR code for quick event check-in and attendance
-                </p>
-
-                <div className="mt-3 flex items-center justify-center gap-2 pt-2 border-t border-white/10">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (badgeQrUrl) {
-                        setActivePassData({
-                          title: 'PARTICIPANT CARD',
-                          code: passIdentifier,
-                          name: profile?.fullName || user.name,
-                          roll: profile?.rollNumber || profile?.rollNo || 'N/A',
-                          subtitle: profile?.department ? `${profile.department} • ${profile.college || profile.collegeName || 'Central University of Jammu'}` : 'Central University of Jammu',
-                          qrUrl: badgeQrUrl,
-                        })
-                        setIsPassModalOpen(true)
-                      }
-                    }}
-                    className="flex items-center gap-1.5 border border-[#00E5FF]/40 bg-[#00E5FF]/10 px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase text-[#00E5FF] hover:bg-[#00E5FF] hover:text-black transition-colors"
-                  >
-                    <Maximize2 size={11} />
-                    <span>View Card</span>
-                  </button>
-
-                  {badgeQrUrl && (
-                    <a
-                      href={badgeQrUrl}
-                      download={`Participant_Card_${passIdentifier || 'card'}.png`}
-                      className="flex items-center gap-1.5 border border-white/20 bg-white/5 px-2.5 py-1.5 font-mono text-[10px] font-bold uppercase text-slate-300 hover:border-white hover:text-white transition-colors"
-                    >
-                      <Download size={11} />
-                      <span>Save QR</span>
-                    </a>
-                  )}
-                </div>
-              </div>
-            </section>
           </div>
         </div>
       </div>
@@ -1347,97 +1189,6 @@ export default function Dashboard() {
                   </button>
                 </div>
               </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* =========================================================================
-          FULLSCREEN / EXPANDED GATE PASS MODAL
-      ========================================================================= */}
-      <AnimatePresence>
-        {isPassModalOpen && activePassData && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-sm border border-[#00E5FF]/40 bg-[#080A0F] p-6 shadow-[0_0_50px_rgba(0,229,255,0.25)] text-center"
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  setIsPassModalOpen(false)
-                  setActivePassData(null)
-                }}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white"
-              >
-                <X size={20} />
-              </button>
-
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <QrCode size={16} className="text-[#00E5FF]" />
-                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#00E5FF] font-bold">
-                  Yantrotsav 2026
-                </span>
-              </div>
-
-              <h2 className="font-mono text-sm font-black uppercase tracking-wider text-white">
-                {activePassData.title}
-              </h2>
-
-              {activePassData.subtitle && (
-                <p className="mt-1 font-mono text-[10px] text-slate-400">
-                  {activePassData.subtitle}
-                </p>
-              )}
-
-              {/* Large, High-Contrast QR Code Card */}
-              <div className="mx-auto my-5 p-3 bg-white rounded-lg border-4 border-[#00E5FF] shadow-[0_0_30px_rgba(0,229,255,0.5)] inline-block">
-                <img
-                  src={activePassData.qrUrl}
-                  alt={`QR code for ${activePassData.code}`}
-                  className="w-56 h-56 block object-contain mx-auto"
-                />
-              </div>
-
-              {/* Clearance Identifier Details */}
-              <div className="bg-[#050816] border border-white/10 p-3 space-y-1 font-mono text-xs">
-                <div className="text-white font-bold text-sm tracking-wide">
-                  {activePassData.name}
-                </div>
-                <div className="text-[#00E5FF] font-bold text-xs tracking-wider">
-                  ROLL / ID: {activePassData.roll}
-                </div>
-                <div className="text-emerald-400 text-[11px] font-bold tracking-widest pt-1 border-t border-white/10">
-                  INDIVIDUAL PASS ID: {activePassData.code}
-                </div>
-              </div>
-
-              <p className="mt-3 font-mono text-[9px] uppercase tracking-widest text-slate-400">
-                Show this QR code at event desks for quick verification and check-in
-              </p>
-
-              <div className="mt-4 flex items-center justify-center gap-2">
-                <a
-                  href={activePassData.qrUrl}
-                  download={`Participant_Card_${activePassData.code}.png`}
-                  className="flex items-center justify-center gap-2 w-full border border-[#00E5FF] bg-[#00E5FF] px-4 py-2 font-mono text-xs font-bold uppercase tracking-wider text-black hover:bg-transparent hover:text-[#00E5FF] transition-colors"
-                >
-                  <Download size={14} />
-                  <span>Download QR</span>
-                </a>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsPassModalOpen(false)
-                    setActivePassData(null)
-                  }}
-                  className="px-4 py-2 border border-white/20 font-mono text-xs font-bold uppercase text-slate-300 hover:text-white hover:border-white transition-colors"
-                >
-                  Close
-                </button>
-              </div>
             </motion.div>
           </div>
         )}
