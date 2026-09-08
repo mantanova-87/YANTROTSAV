@@ -154,7 +154,7 @@ function Home() {
       {/* ======================================================
           01 / ABOUT THE EVENT - FULL HERO SECTION
           ====================================================== */}
-      <section className="relative w-full overflow-hidden py-24 md:py-36 border-y border-white/10 bg-[#050816]">
+      <section className="relative w-full overflow-hidden border-y border-white/10 bg-[#050816] pb-12 pt-24 md:pb-16 md:pt-36">
         {/* Ambient Cyberpunk Glows */}
         <div className="pointer-events-none absolute -left-40 top-1/4 h-96 w-96 rounded-full bg-[#00E5FF]/10 blur-[120px]" />
         <div className="pointer-events-none absolute -right-40 bottom-1/4 h-96 w-96 rounded-full bg-[#FF6B00]/10 blur-[120px]" />
@@ -246,7 +246,7 @@ function Home() {
               transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
               className="relative flex items-center justify-center lg:col-span-5"
             >
-              <div className="relative w-full max-w-md border border-white/10 bg-[#080A0F]/80 p-8 shadow-2xl backdrop-blur-md">
+              <div className="group relative w-full max-w-md border border-white/10 bg-[#080A0F]/80 p-8 shadow-2xl backdrop-blur-md transition duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:border-[#00E5FF]/40 hover:shadow-[0_24px_60px_rgba(0,229,255,0.18)]">
                 {/* Sci-Fi Decorative Corner Brackets */}
                 <span className="absolute -left-2 -top-2 h-6 w-6 border-l-2 border-t-2 border-[#00E5FF]" />
                 <span className="absolute -right-2 -top-2 h-6 w-6 border-r-2 border-t-2 border-[#FF6B00]" />
@@ -277,7 +277,7 @@ function Home() {
           </div>
         </div>
       </section>
-      <div className="min-h-screen mt-10 overflow-hidden bg-[#050816] text-white">
+      <div className="min-h-screen overflow-hidden bg-[#050816] text-white">
         {/* ======================================================
           MESSAGE CARDS
       ====================================================== */}
@@ -304,7 +304,7 @@ function Home() {
               duration: 0.8,
               ease: [0.22, 1, 0.36, 1],
             }}
-            className="relative mx-auto mb-16 w-fit border-b border-white/10 pb-7 text-center md:mb-20"
+            className="relative mx-auto mb-16 w-fit border-b border-white/10 pb-7 text-left md:mb-20"
           >
             <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
               02 / Words From Visionaries
