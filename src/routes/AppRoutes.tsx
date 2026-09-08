@@ -11,7 +11,6 @@ const Contact = lazy(() => import('../pages/Contact'))
 const Dashboard = lazy(() => import('../pages/Dashboard'))
 const AdminDashboard = lazy(() => import('../pages/AdminDashboard'))
 const Register = lazy(() => import('../components/Register'))
-
 function AppRoutes() {
   return (
     <Suspense fallback={<CyberLoader variant="fullscreen" text="INITIALIZING QUANTUM RUNTIME..." />}>
