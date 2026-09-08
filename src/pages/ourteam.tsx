@@ -11,31 +11,25 @@ const teamMembers = [
   {
     name: 'ABHINAV KUMAR',
     designation: '',
-    course: 'B.Tech CSE CYBER',
-    semester: '',
-    email: 'member1@example.com',
-    instagram: '#',
-    linkedin: '#',
-    whatsapp: '#',
+    email: '25BECCS04.cse@cujammu.ac.in',
+    instagram: 'https://www.instagram.com/the_abhinav__singh',
+    linkedin: 'https://www.linkedin.com/in/abhinav-kumar-4a9336382',
+    whatsapp: 'https://wa.me/+919693291146',
     image: abhinav,
   },
   {
     name: 'HARSH SAXENA',
     designation: '',
-    course: 'B.Tech CSE',
-    semester: '',
-    email: 'member2@example.com',
-    instagram: '#',
-    linkedin: '#',
-    whatsapp: '#',
+    email: '25BECCS76.cse@cujammu.ac.in',
+    instagram: 'https://www.instagram.com/its_saxena_harsh',
+    linkedin: 'https://www.linkedin.com/in/harshsaxena1409',
+    whatsapp: 'https://wa.me/919045898320',
     image: Harsh,
   },
   {
     name: 'MANTVAYA KUMAR',
     designation: '',
-    course: 'B.Tech CSE (CYBER)',
-    semester: '',
-    email: 'Cdt.mantavyakumar@gmail.com',
+    email: '25BECCS43.cse@cujammu.ac.in',
     instagram: 'https://www.instagram.com/mantanova_87?stkn=ZzAycDlvMDM3NW5l',
     linkedin: 'https://www.linkedin.com/in/mantavyakumar7487',
     whatsapp: 'https://wa.me/918862962250',
@@ -44,9 +38,7 @@ const teamMembers = [
   {
     name: 'PRIYANSHU GUPTA',
     designation: '',
-    course: 'B.Tech CSE',
-    semester: '',
-    email: 'member4@example.com',
+    email: '25BECSE52.cse@cujammu.ac.in',
     instagram: '#',
     linkedin: '#',
     whatsapp: '#',
@@ -55,23 +47,19 @@ const teamMembers = [
   {
     name: 'KUMAR SACHIN',
     designation: '',
-    course: 'B.Tech CSE',
-    semester: '',
-    email: 'member5@example.com',
-    instagram: '#',
-    linkedin: '#',
-    whatsapp: '#',
+    email: '24BECSE22.cse@cujammu.ac.in',
+    instagram: 'https://www.instagram.com/cyros_sachin',
+    linkedin: 'https://www.linkedin.com/in/cyrossachin',
+    whatsapp: 'https://wa.me/918602948023',
     image: sachin,
   },
   {
     name: 'MEHAK SHARMA',
     designation: '',
-    course: 'B.Tech CSE',
-    semester: '',
-    email: 'member6@example.com',
-    instagram: '#',
-    linkedin: '#',
-    whatsapp: '#',
+    email: '25BECCS46.cse@cujammu.ac.in',
+    instagram: 'https://www.instagram.com/9613mehak',
+    linkedin: 'https://www.linkedin.com/in/mehak-sharma-cyber',
+    whatsapp: 'https://wa.me/919906814723',
     image: mehak,
   },
 ]
@@ -166,26 +154,7 @@ function TeamMemberCard({
               {member.designation}
             </p>
 
-            <div className="mt-5 grid grid-cols-2 border-y border-white/10">
-              <div className="border-r border-white/10 py-3 text-center">
-                <span className="block text-[8px] uppercase tracking-[0.15em] text-slate-600">
-                  Course
-                </span>
-                <span className="mt-1 block text-[10px] font-medium text-slate-300">
-                  {member.course}
-                </span>
-              </div>
-
-              <div className="py-3 text-center">
-                <span className="block text-[8px] uppercase tracking-[0.15em] text-slate-600">
-                  Semester
-                </span>
-                <span className="mt-1 block text-[10px] font-medium text-slate-300">
-                  {member.semester}
-                </span>
-              </div>
-            </div>
-
+            
             {/* Social links */}
             <div className="mt-4 flex justify-center gap-2">
               <a
