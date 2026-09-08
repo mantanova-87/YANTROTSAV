@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+import EventDetailsModal from '../components/events/EventDetailsModal'
 import GeneralGuidelines from '../pages/GeneralGuidelines'
 import {
   ArrowDownRight,
@@ -38,6 +39,8 @@ function Events() {
   const [selectedEvent, setSelectedEvent] = useState<EventDocument | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [guidelinesOpen, setGuidelinesOpen] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [detailsEvent, setDetailsEvent] = useState<EventDocument | null>(null)
   const { user, profile } = useAuth()
   const [enrolledEventIds, setEnrolledEventIds] = useState<Set<string>>(
     new Set()
@@ -798,39 +801,49 @@ function Events() {
                                         : 'Registration Closed'}
                                 </span>
                               </div>
-
-                              {enrolledEventIds.has(event.$id) ? (
-                                <Link
-                                  to="/dashboard"
-                                  className="flex cursor-pointer items-center justify-center gap-2 border border-emerald-500/60 bg-emerald-500/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all hover:bg-emerald-500 hover:text-black"
-                                >
-                                  <CheckCircle2 size={13} />
-
-                                  <span>Already Enrolled ✓</span>
-                                </Link>
-                              ) : isRegistrationOpen ? (
+                              <div className="flex flex-col gap-3 sm:flex-row">
                                 <button
                                   type="button"
-                                  onClick={() =>
-                                    handleOpenRegistration(event)
-                                  }
-                                  className="flex cursor-pointer items-center justify-center gap-3 border border-[#00E5FF] bg-[#00E5FF]/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-[#00E5FF] transition-all hover:bg-[#00E5FF] hover:text-black"
+                                  onClick={() => {
+                                    setDetailsEvent(event)
+                                    setDetailsOpen(true)
+                                  }}
+                                  className="flex cursor-pointer items-center justify-center gap-2 border border-[#FF6B00]/70 bg-[#FF6B00]/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-[#FF6B00] transition-all hover:bg-[#FF6B00] hover:text-black"
                                 >
-                                  <span>Register Now</span>
-
-                                  {isReversed ? (
-                                    <ArrowUpRight size={14} />
-                                  ) : (
-                                    <ArrowDownRight size={14} />
-                                  )}
+                                  <span>More Details</span>
                                 </button>
-                              ) : (
-                                <span className="border border-white/10 px-4 py-2 font-mono text-[9px] uppercase tracking-wider text-slate-500">
-                                  {isDeadlinePassed
-                                    ? 'Deadline Passed'
-                                    : 'Registrations Closed'}
-                                </span>
-                              )}
+                                {enrolledEventIds.has(event.$id) ? (
+                                  <Link
+                                    to="/dashboard"
+                                    className="flex cursor-pointer items-center justify-center gap-2 border border-emerald-500/60 bg-emerald-500/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all hover:bg-emerald-500 hover:text-black"
+                                  >
+                                    <CheckCircle2 size={13} />
+
+                                    <span>Already Enrolled ✓</span>
+                                  </Link>
+                                ) : isRegistrationOpen ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleOpenRegistration(event)
+                                    }
+                                    className="flex cursor-pointer items-center justify-center gap-3 border border-[#00E5FF] bg-[#00E5FF]/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-[#00E5FF] transition-all hover:bg-[#00E5FF] hover:text-black"
+                                  >
+                                    <span>Register Now</span>
+
+                                    {isReversed ? (
+                                      <ArrowUpRight size={14} />
+                                    ) : (
+                                      <ArrowDownRight size={14} />
+                                    )}
+                                  </button>
+                                ) : (
+                                  <span className="border border-white/10 px-4 py-2 font-mono text-[9px] uppercase tracking-wider text-slate-500">
+                                    {isDeadlinePassed
+                                      ? 'Deadline Passed'
+                                      : 'Registrations Closed'}
+                                  </span>
+                                )}</div>
                             </div>
                           )
                         })()}
@@ -870,6 +883,14 @@ function Events() {
         event={selectedEvent}
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
+      />
+      <EventDetailsModal
+        event={detailsEvent}
+        isOpen={detailsOpen}
+        onClose={() => {
+          setDetailsOpen(false)
+          setDetailsEvent(null)
+        }}
       />
     </main>
   )
