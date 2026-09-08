@@ -1,87 +1,85 @@
-import { motion, useReducedMotion } from 'framer-motion'
-import { FaInstagram, FaWhatsapp, FaLinkedin } from 'react-icons/fa6';
-import { BiLogoGmail } from 'react-icons/bi'; 
-import mantavya from '../assets/images/mantavya.jpeg'
-import mehak from '../assets/images/mehak.png'
-import priyanshu from '../assets/images/priyanshu.jpeg'
-import sachin from '../assets/images/sachin.jpg'
-import abhinav from '../assets/images/abhinav.png'
-import Harsh from '../assets/images/Harsh.jpeg'
+import { motion, useReducedMotion } from "framer-motion";
+import { FaInstagram, FaWhatsapp, FaLinkedin } from "react-icons/fa6";
+import { BiLogoGmail } from "react-icons/bi";
+import mantavya from "../assets/images/mantavya.jpeg";
+import mehak from "../assets/images/mehak.png";
+import priyanshu from "../assets/images/priyanshu.jpeg";
+import sachin from "../assets/images/sachin.jpg";
+import abhinav from "../assets/images/abhinav.png";
+import Harsh from "../assets/images/Harsh.jpeg";
 
 const teamMembers = [
   {
-    name: 'ABHINAV KUMAR',
-    designation: '',
-    email: '25BECCS04.cse@cujammu.ac.in',
-    instagram: 'https://www.instagram.com/the_abhinav__singh',
-    linkedin: 'https://www.linkedin.com/in/abhinav-kumar-4a9336382',
-    whatsapp: 'https://wa.me/+919693291146',
+    name: "ABHINAV KUMAR",
+    designation: "",
+    email: "25BECCS04.cse@cujammu.ac.in",
+    instagram: "https://www.instagram.com/the_abhinav__singh",
+    linkedin: "https://www.linkedin.com/in/abhinav-kumar-4a9336382",
+    whatsapp: "https://wa.me/+919693291146",
     image: abhinav,
   },
   {
-    name: 'HARSH SAXENA',
-    designation: '',
-    email: '25BECCS76.cse@cujammu.ac.in',
-    instagram: 'https://www.instagram.com/its_saxena_harsh',
-    linkedin: 'https://www.linkedin.com/in/harshsaxena1409',
-    whatsapp: 'https://wa.me/919045898320',
+    name: "HARSH SAXENA",
+    designation: "",
+    email: "25BECCS76.cse@cujammu.ac.in",
+    instagram: "https://www.instagram.com/its_saxena_harsh",
+    linkedin: "https://www.linkedin.com/in/harshsaxena1409",
+    whatsapp: "https://wa.me/919045898320",
     image: Harsh,
   },
   {
-    name: 'MANTVAYA KUMAR',
-    designation: '',
-    email: '25BECCS43.cse@cujammu.ac.in',
-    instagram: 'https://www.instagram.com/mantanova_87?stkn=ZzAycDlvMDM3NW5l',
-    linkedin: 'https://www.linkedin.com/in/mantavyakumar7487',
-    whatsapp: 'https://wa.me/918862962250',
+    name: "MANTVAYA KUMAR",
+    designation: "",
+    email: "25BECCS43.cse@cujammu.ac.in",
+    instagram: "https://www.instagram.com/mantanova_87?stkn=ZzAycDlvMDM3NW5l",
+    linkedin: "https://www.linkedin.com/in/mantavyakumar7487",
+    whatsapp: "https://wa.me/918862962250",
     image: mantavya,
   },
   {
-    name: 'PRIYANSHU GUPTA',
-    designation: '',
-    email: '25BECSE52.cse@cujammu.ac.in',
-    instagram: '#',
-    linkedin: '#',
-    whatsapp: '#',
+    name: "PRIYANSHU GUPTA",
+    designation: "",
+    email: "priyanshuguptawebdev@gmail.com",
+    instagram: "https://www.instagram.com/priyanshu_perhaps/",
+    linkedin: "https://www.linkedin.com/in/techyyp/",
+    whatsapp: "https://wa.me/919341803923",
     image: priyanshu,
   },
   {
-    name: 'KUMAR SACHIN',
-    designation: '',
-    email: '24BECSE22.cse@cujammu.ac.in',
-    instagram: 'https://www.instagram.com/cyros_sachin',
-    linkedin: 'https://www.linkedin.com/in/cyrossachin',
-    whatsapp: 'https://wa.me/918602948023',
+    name: "KUMAR SACHIN",
+    designation: "",
+    email: "24BECSE22.cse@cujammu.ac.in",
+    instagram: "https://www.instagram.com/cyros_sachin",
+    linkedin: "https://www.linkedin.com/in/cyrossachin",
+    whatsapp: "https://wa.me/918602948023",
     image: sachin,
   },
   {
-    name: 'MEHAK SHARMA',
-    designation: '',
-    email: '25BECCS46.cse@cujammu.ac.in',
-    instagram: 'https://www.instagram.com/9613mehak',
-    linkedin: 'https://www.linkedin.com/in/mehak-sharma-cyber',
-    whatsapp: 'https://wa.me/919906814723',
+    name: "MEHAK SHARMA",
+    designation: "",
+    email: "25BECCS46.cse@cujammu.ac.in",
+    instagram: "https://www.instagram.com/9613mehak",
+    linkedin: "https://www.linkedin.com/in/mehak-sharma-cyber",
+    whatsapp: "https://wa.me/919906814723",
     image: mehak,
   },
-]
+];
 
-const stripCount = 5
+const stripCount = 5;
 
 function TeamMemberCard({
   member,
   index,
 }: {
-  member: (typeof teamMembers)[number]
-  index: number
+  member: (typeof teamMembers)[number];
+  index: number;
 }) {
-  const reducedMotion = useReducedMotion()
+  const reducedMotion = useReducedMotion();
 
   return (
     <motion.article
       initial={
-        reducedMotion
-          ? { opacity: 1 }
-          : { opacity: 0, y: 35, scale: 0.97 }
+        reducedMotion ? { opacity: 1 } : { opacity: 0, y: 35, scale: 0.97 }
       }
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, amount: 0.15 }}
@@ -91,7 +89,7 @@ function TeamMemberCard({
         ease: [0.22, 1, 0.36, 1],
       }}
       className={`group relative mx-auto w-full max-w-[360px] ${
-        index % 2 === 1 ? 'lg:translate-y-12' : ''
+        index % 2 === 1 ? "lg:translate-y-12" : ""
       }`}
     >
       {/* Card frame */}
@@ -122,12 +120,12 @@ function TeamMemberCard({
               <img
                 src={member.image}
                 alt={member.name}
-                className="relative z-10 h-55 w-55  object-center p-5 transition-transform duration-700 group-hover:scale-105"
+                className="relative z-10 h-full w-full max-h-full max-w-full object-contain p-5 transition-transform duration-700 group-hover:scale-105"
               />
             ) : (
               <div className="relative z-10 flex h-28 w-28 items-center justify-center border border-white/10">
                 <span className="font-mono text-4xl font-bold text-slate-700">
-                  {String(index + 1).padStart(2, '0')}
+                  {String(index + 1).padStart(2, "0")}
                 </span>
               </div>
             )}
@@ -155,7 +153,6 @@ function TeamMemberCard({
               {member.designation}
             </p>
 
-            
             {/* Social links */}
             <div className="mt-4 flex justify-center gap-2">
               <a
@@ -163,7 +160,7 @@ function TeamMemberCard({
                 aria-label={`${member.name} Instagram`}
                 className="flex h-8 w-8 items-center justify-center border border-white/10 text-[9px] font-bold text-slate-500 transition-all duration-300 hover:border-[#FF6B00] hover:text-[#FF6B00]"
               >
-                <FaInstagram/>
+                <FaInstagram />
               </a>
 
               <a
@@ -171,7 +168,7 @@ function TeamMemberCard({
                 aria-label={`${member.name} LinkedIn`}
                 className="flex h-8 w-8 items-center justify-center border border-white/10 text-[9px] font-bold text-slate-500 transition-all duration-300 hover:border-[#00E5FF] hover:text-[#00E5FF]"
               >
-                <FaLinkedin/>
+                <FaLinkedin />
               </a>
 
               <a
@@ -179,7 +176,7 @@ function TeamMemberCard({
                 aria-label={`${member.name} WhatsApp`}
                 className="flex h-8 w-8 items-center justify-center border border-white/10 text-slate-500 transition-all duration-300 hover:border-[#00E5FF] hover:text-[#00E5FF]"
               >
-                <FaWhatsapp/>
+                <FaWhatsapp />
               </a>
 
               <a
@@ -187,7 +184,7 @@ function TeamMemberCard({
                 aria-label={`Email ${member.name}`}
                 className="flex h-8 w-8 items-center justify-center border border-white/10 text-slate-500 transition-all duration-300 hover:border-[#FF6B00] hover:text-[#FF6B00]"
               >
-                <BiLogoGmail/>
+                <BiLogoGmail />
               </a>
             </div>
 
@@ -204,13 +201,13 @@ function TeamMemberCard({
         {/* PAPER STRIPS — overlay only */}
         {!reducedMotion &&
           Array.from({ length: stripCount }).map((_, strip) => {
-            const fromLeft = strip % 2 === 0
+            const fromLeft = strip % 2 === 0;
 
             return (
               <motion.div
                 key={strip}
                 initial={{
-                  x: fromLeft ? '-110%' : '110%',
+                  x: fromLeft ? "-110%" : "110%",
                   rotateZ: fromLeft ? -3 : 3,
                   opacity: 1,
                 }}
@@ -231,27 +228,25 @@ function TeamMemberCard({
                 className="pointer-events-none absolute left-0 right-0 z-30 bg-[#0B0E15]"
                 style={{
                   top: `${strip * 20}%`,
-                  height: '20.5%',
-                  borderTop: '1px solid rgba(255,255,255,0.08)',
-                  borderBottom: '1px solid rgba(255,255,255,0.08)',
+                  height: "20.5%",
+                  borderTop: "1px solid rgba(255,255,255,0.08)",
+                  borderBottom: "1px solid rgba(255,255,255,0.08)",
                 }}
               >
                 <span
                   className={`absolute top-1/2 h-px w-10 ${
-                    fromLeft
-                      ? 'left-4 bg-[#00E5FF]'
-                      : 'right-4 bg-[#FF6B00]'
+                    fromLeft ? "left-4 bg-[#00E5FF]" : "right-4 bg-[#FF6B00]"
                   }`}
                 />
               </motion.div>
-            )
+            );
           })}
 
         {/* Hover edge */}
         <div className="pointer-events-none absolute inset-0 z-40 border border-white/10 transition-colors duration-500 group-hover:border-white/20" />
       </div>
     </motion.article>
-  )
+  );
 }
 
 export default function OurTeam() {
@@ -280,8 +275,8 @@ export default function OurTeam() {
           </h1>
 
           <p className="mx-auto mt-3 max-w-xl text-xs leading-6 text-slate-500 md:text-sm">
-            The people behind Yantrotsav 2026 — building, organizing and
-            shaping the experience.
+            The people behind Yantrotsav 2026 — building, organizing and shaping
+            the experience.
           </p>
         </motion.div>
       </section>
@@ -290,14 +285,10 @@ export default function OurTeam() {
       <section className="mx-auto max-w-[1200px] px-5 pb-24 md:px-8">
         <div className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-24">
           {teamMembers.map((member, index) => (
-            <TeamMemberCard
-              key={member.name}
-              member={member}
-              index={index}
-            />
+            <TeamMemberCard key={member.name} member={member} index={index} />
           ))}
         </div>
       </section>
     </main>
-  )
+  );
 }

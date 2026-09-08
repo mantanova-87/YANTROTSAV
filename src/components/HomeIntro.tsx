@@ -1,6 +1,6 @@
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useEffect, useState } from 'react'
-import logo from '../assets/images/logo.png'
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useEffect, useState } from "react";
+import logo from "../assets/images/logo.png";
 // import introAudio from '../assets/images/intro.mp3'
 
 /*
@@ -222,7 +222,7 @@ function LegacyHomeIntro({ onComplete }: HomeIntroProps) {
                 </motion.div>
               )}
 
-              {/* Secondary rotating ring */}
+              Secondary rotating ring
 
               {!shouldReduceMotion && (
                 <motion.div
@@ -244,7 +244,7 @@ function LegacyHomeIntro({ onComplete }: HomeIntroProps) {
                 />
               )}
 
-              {/* Logo frame */}
+              Logo frame
 
               <div className="relative">
                 <span className="pointer-events-none absolute -left-5 -top-5 h-9 w-9 border-l-2 border-t-2 border-[#00E5FF] sm:-left-6 sm:-top-6 sm:h-11 sm:w-11" />
@@ -255,7 +255,7 @@ function LegacyHomeIntro({ onComplete }: HomeIntroProps) {
 
                 <span className="pointer-events-none absolute -bottom-5 -right-5 h-9 w-9 border-b-2 border-r-2 border-[#00E5FF] sm:-right-6 sm:-bottom-6 sm:h-11 sm:w-11" />
 
-                {/* LOGO */}
+                LOGO
 
                 <motion.img
                   src={logo}
@@ -320,7 +320,7 @@ function LegacyHomeIntro({ onComplete }: HomeIntroProps) {
               </div>
             </div>
 
-            {/* LOGO STATUS */}
+            LOGO STATUS
 
             <motion.div
               initial={{ opacity: 0 }}
@@ -340,7 +340,7 @@ function LegacyHomeIntro({ onComplete }: HomeIntroProps) {
               <span className="h-px w-8 bg-[#FF6B00]" />
             </motion.div>
 
-            {/* TEXT */}
+            TEXT
 
             <AnimatePresence>
               {showText && (
@@ -372,7 +372,7 @@ function LegacyHomeIntro({ onComplete }: HomeIntroProps) {
                     />
                   </div>
 
-                  {/* MAIN MESSAGE */}
+                  MAIN MESSAGE
 
                   <div className="flex flex-wrap justify-center gap-x-2 gap-y-1 px-3 sm:gap-x-4 md:gap-x-5">
                     {words.map((word, index) => (
@@ -424,7 +424,7 @@ function LegacyHomeIntro({ onComplete }: HomeIntroProps) {
               )}
             </AnimatePresence>
 
-            {/* BOTTOM STATUS */}
+            BOTTOM STATUS
 
             <motion.div
               initial={{ opacity: 0 }}
@@ -444,7 +444,7 @@ function LegacyHomeIntro({ onComplete }: HomeIntroProps) {
               </div>
             </motion.div>
 
-            {/* PROGRESS */}
+            PROGRESS
 
             {!shouldReduceMotion && (
               <motion.div
@@ -477,55 +477,55 @@ function LegacyHomeIntro({ onComplete }: HomeIntroProps) {
 */
 
 type HomeIntroProps = {
-  onComplete: () => void
-}
+  onComplete: () => void;
+};
 
 /**
  * Fast modern intro: ~0.8s total duration.
  * Displays YANTROTSAV 2026 logo, name, and tagline 'Where Tech Meets Innovation'.
  */
 function HomeIntro({ onComplete }: HomeIntroProps) {
-  const shouldReduceMotion = useReducedMotion()
+  const shouldReduceMotion = useReducedMotion();
 
   const [showIntro, setShowIntro] = useState(() => {
-    if (typeof window === 'undefined') {
-      return true
+    if (typeof window === "undefined") {
+      return true;
     }
-    return !sessionStorage.getItem('yantrotsav-intro-shown')
-  })
+    return !sessionStorage.getItem("yantrotsav-intro-shown");
+  });
 
-  const [exiting, setExiting] = useState(false)
+  const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
     if (!showIntro) {
-      onComplete()
-      return
+      onComplete();
+      return;
     }
 
     if (shouldReduceMotion) {
-      sessionStorage.setItem('yantrotsav-intro-shown', 'true')
-      onComplete()
-      return
+      sessionStorage.setItem("yantrotsav-intro-shown", "true");
+      onComplete();
+      return;
     }
 
     // Display for 650ms, then trigger smooth 200ms exit (total ~0.85s)
     const displayTimer = window.setTimeout(() => {
-      setExiting(true)
+      setExiting(true);
       const exitTimer = window.setTimeout(() => {
-        sessionStorage.setItem('yantrotsav-intro-shown', 'true')
-        setShowIntro(false)
-        onComplete()
-      }, 200)
-      return () => window.clearTimeout(exitTimer)
-    }, 650)
+        sessionStorage.setItem("yantrotsav-intro-shown", "true");
+        setShowIntro(false);
+        onComplete();
+      }, 200);
+      return () => window.clearTimeout(exitTimer);
+    }, 650);
 
     return () => {
-      window.clearTimeout(displayTimer)
-    }
-  }, [showIntro, shouldReduceMotion, onComplete])
+      window.clearTimeout(displayTimer);
+    };
+  }, [showIntro, shouldReduceMotion, onComplete]);
 
   if (!showIntro) {
-    return null
+    return null;
   }
 
   return (
@@ -537,7 +537,7 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
           exit={{
             opacity: 0,
             scale: 1.04,
-            filter: 'blur(6px)',
+            filter: "blur(6px)",
           }}
           transition={{
             duration: 0.2,
@@ -607,15 +607,14 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
             animate={{ scaleX: 1 }}
             transition={{
               duration: 0.65,
-              ease: 'easeInOut',
+              ease: "easeInOut",
             }}
             className="absolute bottom-0 left-0 h-1 w-full origin-left bg-gradient-to-r from-[#00E5FF] via-white to-[#FF6B00]"
           />
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  );
 }
 
-export default HomeIntro
-
+export default HomeIntro;
