@@ -202,7 +202,7 @@ function Home() {
             >
 
               <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
-                01 / About The Event
+                1.1 / About The Event
               </span>
 
               <h2 className="mt-4 text-3xl font-black uppercase tracking-tight text-white sm:text-4xl md:text-4xl lg:text-5xl">
@@ -407,7 +407,7 @@ function Home() {
           className="relative border-b border-white/10 pb-7 text-center"
         >
           <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
-            02 / The Message
+            1.2 / The Message
           </span>
 
           <h2 className="mt-3 text-4xl font-black uppercase tracking-tight md:text-6xl">
@@ -626,7 +626,7 @@ function Home() {
         >
 
           <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
-            03 / The Watcher
+            1.3 / The Watcher
           </span>
 
           <h2 className="mt-3 text-4xl font-black uppercase tracking-tight md:text-6xl">

@@ -179,8 +179,8 @@ export default function Contact() {
           <div className="flex items-center justify-center gap-3">
             <span className="h-px w-8 bg-[#00E5FF]" />
 
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-slate-500">
-              01 / Contact
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#FF6B00]">
+              4.1 / Contact
             </span>
 
             <span className="h-px w-8 bg-[#FF6B00]" />

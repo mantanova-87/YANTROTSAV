@@ -268,8 +268,8 @@ export default function OurTeam() {
           <div className="flex items-center justify-center gap-3">
             <span className="h-px w-8 bg-[#00E5FF]" />
 
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-slate-500">
-              03 / Team
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#FF6B00]">
+              3.1 / Team
             </span>
 
             <span className="h-px w-8 bg-[#FF6B00]" />
