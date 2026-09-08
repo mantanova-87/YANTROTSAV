@@ -1,8 +1,12 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import logo from '../assets/images/logo.png'
-import introAudio from '../assets/images/intro.mp3'
+// import introAudio from '../assets/images/intro.mp3'
 
+/*
+======================================================================
+LEGACY INTRO (COMMENTED OUT AS REQUESTED)
+======================================================================
 const isMobile =
   typeof window !== 'undefined' ? window.innerWidth < 768 : false
 
@@ -19,11 +23,7 @@ const words = [
   'THIS',
 ]
 
-type HomeIntroProps = {
-  onComplete: () => void
-}
-
-function HomeIntro({ onComplete }: HomeIntroProps) {
+function LegacyHomeIntro({ onComplete }: HomeIntroProps) {
   const shouldReduceMotion = useReducedMotion()
 
   const [showIntro, setShowIntro] = useState(() => {
@@ -40,31 +40,6 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const fallbackTimerRef = useRef<number | null>(null)
   const exitTimerRef = useRef<number | null>(null)
-
-  /*
-   * --------------------------------------------------
-   * AUDIO
-   * --------------------------------------------------
-   *
-   * The audio controls the actual completion of the intro.
-   *
-   * This means:
-   *
-   * Text animation
-   *       ↓
-   * Logo animation
-   *       ↓
-   * Audio continues
-   *       ↓
-   * Audio finishes
-   *       ↓
-   * Intro exits
-   *       ↓
-   * Home page
-   *
-   * Browser autoplay restrictions may still prevent
-   * sound until the user has interacted with the page.
-   */
 
   useEffect(() => {
     if (!showIntro || shouldReduceMotion) {
@@ -92,9 +67,6 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
         fallbackTimerRef.current = null
       }
 
-      /*
-       * Start visual exit after audio has completely finished.
-       */
       setExiting(true)
 
       exitTimerRef.current = window.setTimeout(() => {
@@ -110,25 +82,10 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
 
     audio.addEventListener('ended', handleAudioEnded)
 
-    /*
-     * Attempt automatic playback.
-     */
     const playAudio = async () => {
       try {
         await audio.play()
-
-        /*
-         * Audio is playing successfully.
-         * No fallback timer is needed because the
-         * 'ended' event will control completion.
-         */
       } catch (error) {
-        /*
-         * Browser autoplay policy may block audio.
-         *
-         * We don't want the visitor to get stuck on
-         * the intro forever, so use a visual fallback.
-         */
         console.warn(
           'YANTROTSAV intro audio autoplay was blocked:',
           error,
@@ -162,15 +119,6 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
     }
   }, [showIntro, shouldReduceMotion, onComplete])
 
-  /*
-   * --------------------------------------------------
-   * VISUAL INTRO TIMELINE
-   * --------------------------------------------------
-   *
-   * These timers only control visual elements.
-   * They do NOT control when the page exits.
-   */
-
   useEffect(() => {
     if (!showIntro) {
       onComplete()
@@ -187,12 +135,6 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
       return () => window.clearTimeout(timer)
     }
 
-    /*
-     * Show logo only after all words are fully revealed.
-     * With 10 words × 0.45s stagger, last word starts at 4.05s.
-     * Adding 0.6s duration → all words visible at ~4.65s.
-     * Logo fires at 4800ms for a clean sequential reveal.
-     */
     const logoTimer = window.setTimeout(() => {
       setShowLogo(true)
     }, 4800)
@@ -222,27 +164,14 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
           }}
           className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#050816]"
         >
-          {/* Technical frame */}
-
           <span className="absolute left-5 top-5 h-8 w-8 border-l border-t border-[#FF6B00]/70" />
-
           <span className="absolute right-5 top-5 h-8 w-8 border-r border-t border-[#00E5FF]/70" />
-
           <span className="absolute bottom-5 left-5 h-8 w-8 border-b border-l border-[#00E5FF]/70" />
-
           <span className="absolute bottom-5 right-5 h-8 w-8 border-b border-r border-[#FF6B00]/70" />
-
-          {/* Side lines */}
-
           <span className="absolute left-0 top-1/2 h-px w-[18%] bg-[#FF6B00]/70" />
-
           <span className="absolute right-0 top-1/2 h-px w-[18%] bg-[#00E5FF]/70" />
 
-          {/* Main content */}
-
           <div className="relative z-10 flex w-full max-w-5xl flex-col items-center px-6 text-center">
-            {/* Word-by-word text */}
-
             <div className="flex max-w-4xl flex-wrap justify-center gap-x-3 gap-y-2 md:gap-x-5">
               {words.map((word, index) => (
                 <motion.span
@@ -258,11 +187,6 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
                     filter: 'blur(0px)',
                   }}
                   transition={{
-                    /*
-                     * Stagger timed to match the voice track (5.63s).
-                     * 10 words × 0.45s = last word starts at 4.05s.
-                     * All words visible by ~4.5s, just before audio ends.
-                     */
                     delay: index * 0.45,
                     duration: isMobile ? 0.4 : 0.6,
                     ease: [0.22, 1, 0.36, 1],
@@ -273,8 +197,6 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
                 </motion.span>
               ))}
             </div>
-
-            {/* Logo */}
 
             <AnimatePresence>
               {showLogo && (
@@ -298,14 +220,9 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
                   className="mt-12"
                 >
                   <div className="relative">
-                    {/* Logo frame */}
-
                     <span className="absolute -left-4 -top-4 h-5 w-5 border-l-2 border-t-2 border-[#00E5FF]" />
-
                     <span className="absolute -right-4 -top-4 h-5 w-5 border-r-2 border-t-2 border-[#FF6B00]" />
-
                     <span className="absolute -bottom-4 -left-4 h-5 w-5 border-b-2 border-l-2 border-[#FF6B00]" />
-
                     <span className="absolute -bottom-4 -right-4 h-5 w-5 border-b-2 border-r-2 border-[#00E5FF]" />
 
                     <img
@@ -331,16 +248,10 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
             </AnimatePresence>
           </div>
 
-          {/* Progress line */}
-
           <motion.div
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{
-              /*
-               * This is only a visual progress indicator.
-               * The audio still controls actual completion.
-               */
               duration: 5.8,
               ease: 'linear',
             }}
@@ -351,5 +262,149 @@ function HomeIntro({ onComplete }: HomeIntroProps) {
     </AnimatePresence>
   )
 }
+======================================================================
+*/
+
+type HomeIntroProps = {
+  onComplete: () => void
+}
+
+/**
+ * Fast modern intro: ~0.8s total duration.
+ * Displays YANTROTSAV 2026 logo, name, and tagline 'Where Tech Meets Innovation'.
+ */
+function HomeIntro({ onComplete }: HomeIntroProps) {
+  const shouldReduceMotion = useReducedMotion()
+
+  const [showIntro, setShowIntro] = useState(() => {
+    if (typeof window === 'undefined') {
+      return true
+    }
+    return !sessionStorage.getItem('yantrotsav-intro-shown')
+  })
+
+  const [exiting, setExiting] = useState(false)
+
+  useEffect(() => {
+    if (!showIntro) {
+      onComplete()
+      return
+    }
+
+    if (shouldReduceMotion) {
+      sessionStorage.setItem('yantrotsav-intro-shown', 'true')
+      onComplete()
+      return
+    }
+
+    // Display for 650ms, then trigger smooth 200ms exit (total ~0.85s)
+    const displayTimer = window.setTimeout(() => {
+      setExiting(true)
+      const exitTimer = window.setTimeout(() => {
+        sessionStorage.setItem('yantrotsav-intro-shown', 'true')
+        setShowIntro(false)
+        onComplete()
+      }, 200)
+      return () => window.clearTimeout(exitTimer)
+    }, 650)
+
+    return () => {
+      window.clearTimeout(displayTimer)
+    }
+  }, [showIntro, shouldReduceMotion, onComplete])
+
+  if (!showIntro) {
+    return null
+  }
+
+  return (
+    <AnimatePresence>
+      {!exiting && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{
+            opacity: 0,
+            scale: 1.04,
+            filter: 'blur(6px)',
+          }}
+          transition={{
+            duration: 0.2,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#050816]"
+        >
+          {/* Cyberpunk ambient glow */}
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,229,255,0.08)_0%,transparent_70%)]" />
+
+          {/* Sci-Fi Corner Brackets */}
+          <span className="absolute left-6 top-6 h-6 w-6 border-l-2 border-t-2 border-[#00E5FF]" />
+          <span className="absolute right-6 top-6 h-6 w-6 border-r-2 border-t-2 border-[#FF6B00]" />
+          <span className="absolute bottom-6 left-6 h-6 w-6 border-b-2 border-l-2 border-[#FF6B00]" />
+          <span className="absolute bottom-6 right-6 h-6 w-6 border-b-2 border-r-2 border-[#00E5FF]" />
+
+          {/* Horizontal Accent Lines */}
+          <span className="absolute left-0 top-1/2 h-px w-20 bg-gradient-to-r from-transparent to-[#00E5FF]/60" />
+          <span className="absolute right-0 top-1/2 h-px w-20 bg-gradient-to-l from-transparent to-[#FF6B00]/60" />
+
+          {/* Central Fest Content */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{
+              duration: 0.35,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            className="relative z-10 flex flex-col items-center px-6 text-center"
+          >
+            {/* Logo with technical cyberpunk frame */}
+            <div className="relative mb-5">
+              <span className="absolute -left-3 -top-3 h-4 w-4 border-l-2 border-t-2 border-[#00E5FF]" />
+              <span className="absolute -right-3 -top-3 h-4 w-4 border-r-2 border-t-2 border-[#FF6B00]" />
+              <span className="absolute -bottom-3 -left-3 h-4 w-4 border-b-2 border-l-2 border-[#FF6B00]" />
+              <span className="absolute -bottom-3 -right-3 h-4 w-4 border-b-2 border-r-2 border-[#00E5FF]" />
+
+              <img
+                src={logo}
+                alt="Yantrotsav 2026 Logo"
+                className="h-24 w-24 object-contain sm:h-28 sm:w-28 drop-shadow-[0_0_20px_rgba(0,229,255,0.4)]"
+              />
+            </div>
+
+            {/* Fest Title */}
+            <div className="flex items-center gap-2">
+              <h1 className="font-black tracking-[0.16em] text-white text-2xl sm:text-4xl md:text-5xl">
+                YANTROTSAV <span className="text-[#00E5FF]">2026</span>
+              </h1>
+              <span className="h-2 w-2 rounded-full bg-[#FF6B00] animate-pulse" />
+            </div>
+
+            {/* Tagline from Navbar */}
+            <p className="mt-3 text-xs sm:text-sm font-medium tracking-[0.25em] uppercase text-slate-300">
+              <i>Where Tech Meets Innovation</i>
+            </p>
+
+            {/* Sub-label */}
+            <span className="mt-4 font-mono text-[9px] uppercase tracking-[0.3em] text-slate-500">
+              Central University of Jammu
+            </span>
+          </motion.div>
+
+          {/* Quick loading progress indicator bar (~0.65s) */}
+          <motion.div
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{
+              duration: 0.65,
+              ease: 'easeInOut',
+            }}
+            className="absolute bottom-0 left-0 h-1 w-full origin-left bg-gradient-to-r from-[#00E5FF] via-white to-[#FF6B00]"
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
 
 export default HomeIntro
+

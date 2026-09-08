@@ -439,6 +439,9 @@ function Home() {
             </div>
           </section>
 
+          {/* ======================================================
+          03 / ABOUT THE EVENT (LEGACY CARD - COMMENTED OUT)
+          ======================================================
           <motion.div
             initial={{
               opacity: 0,
@@ -458,27 +461,14 @@ function Home() {
             }}
             className="group relative mx-4 w-auto max-w-6xl overflow-hidden bg-[#080A0F] md:mx-auto"
           >
-            {/* Outer technical border */}
             <div className="pointer-events-none absolute inset-0 z-20 border border-white/20" />
-
-            {/* Inner border */}
             <div className="pointer-events-none absolute inset-[4px] z-20 border border-white/5" />
-
-            {/* Top accent */}
             <span className="absolute left-0 top-0 z-30 h-px w-32 bg-[#00E5FF]" />
-
-            {/* Bottom accent */}
             <span className="absolute bottom-0 right-0 z-30 h-px w-32 bg-[#FF6B00]" />
-
-            {/* Corner brackets */}
             <span className="absolute left-0 top-0 z-30 h-9 w-9 border-l-2 border-t-2 border-[#00E5FF]" />
-
             <span className="absolute bottom-0 right-0 z-30 h-9 w-9 border-b-2 border-r-2 border-[#FF6B00]" />
 
-            {/* CARD CONTENT */}
             <div className="grid min-h-[320px] md:grid-cols-[1.35fr_0.65fr]">
-
-              {/* TEXT */}
               <div className="flex flex-col justify-center p-4 md:mx-auto md:p-12 lg:p-14">
                 <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
                   03 / About The Event
@@ -509,7 +499,6 @@ function Home() {
                 </div>
               </div>
 
-              {/* IMAGE */}
               <div className="relative flex min-h-[240px] items-center justify-center overflow-hidden bg-[#050816] p-4">
                 <img
                   src={logo}
@@ -519,9 +508,151 @@ function Home() {
 
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#00E5FF]/10 via-transparent to-[#FF6B00]/10" />
               </div>
-
             </div>
           </motion.div>
+          ====================================================== */}
+
+          {/* ======================================================
+          03 / ABOUT THE EVENT - FULL HERO SECTION
+          ====================================================== */}
+          <section className="relative w-full overflow-hidden py-24 md:py-36 border-y border-white/10 bg-[#050816]">
+            {/* Ambient Cyberpunk Glows */}
+            <div className="pointer-events-none absolute -left-40 top-1/4 h-96 w-96 rounded-full bg-[#00E5FF]/10 blur-[120px]" />
+            <div className="pointer-events-none absolute -right-40 bottom-1/4 h-96 w-96 rounded-full bg-[#FF6B00]/10 blur-[120px]" />
+
+            {/* Technical grid pattern background */}
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+
+            <div className="relative mx-auto max-w-[1400px] px-5 md:px-8">
+              {/* Section Tag */}
+              <div className="mb-6 flex items-center gap-3">
+                <span className="font-mono text-[10px] tracking-[0.25em] text-[#FF6B00] font-bold">
+                  03
+                </span>
+                <span className="h-px w-10 bg-[#FF6B00]" />
+                <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+                  About The Event / Fest Overview
+                </span>
+              </div>
+
+              {/* Two-Column Hero Showcase */}
+              <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+                {/* Left Column: Heading, Tagline, Story & Stats (7 cols) */}
+                <motion.div
+                  initial={{ opacity: 0, y: 35 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                  className="lg:col-span-7"
+                >
+                  <h2 className="text-4xl font-black uppercase tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+                    YANTROTSAV <span className="text-[#00E5FF]">2026</span>
+                  </h2>
+
+                  <div className="mt-4 flex items-center gap-3">
+                    <span className="h-2 w-2 rounded-full bg-[#FF6B00]" />
+                    <p className="text-base sm:text-lg font-medium tracking-[0.2em] uppercase text-slate-300">
+                      <i>Where Tech Meets Innovation</i>
+                    </p>
+                  </div>
+
+                  <p className="mt-7 text-base leading-relaxed text-slate-400 sm:text-lg">
+                    <strong className="text-white font-semibold">YANTROTSAV 2026</strong> is the premier university-level
+                    technology fest organised by the Department of Computer Science &amp; Engineering, Central University of Jammu,
+                    held in grand celebration of Engineers' Day.
+                  </p>
+
+                  <p className="mt-4 text-sm leading-relaxed text-slate-400 sm:text-base">
+                    Bringing together brightest minds, developers, creators, and innovators from across the region to compete,
+                    collaborate, and push the boundaries of technical prowess, algorithmic thinking, robotics, and creative problem-solving.
+                  </p>
+
+                  {/* Highlights Pill Badges */}
+                  <div className="mt-8 flex flex-wrap gap-2.5">
+                    <span className="border border-[#00E5FF]/40 bg-[#00E5FF]/5 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-[#00E5FF]">
+                      // Coding &amp; Hackathons
+                    </span>
+                    <span className="border border-[#FF6B00]/40 bg-[#FF6B00]/5 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-[#FF6B00]">
+                      // Robotics &amp; AI
+                    </span>
+                    <span className="border border-white/20 bg-white/5 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-slate-300">
+                      // Esports &amp; Gaming
+                    </span>
+                    <span className="border border-purple-500/40 bg-purple-950/20 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-purple-300">
+                      // Tech Workshops
+                    </span>
+                  </div>
+
+                  {/* Metrics Counter Bar */}
+                  <div className="mt-10 grid grid-cols-3 gap-4 border-t border-white/10 pt-6">
+                    <div>
+                      <span className="block font-mono text-2xl font-black text-white sm:text-3xl">
+                        18-19
+                      </span>
+                      <span className="mt-0.5 block font-mono text-[10px] uppercase tracking-wider text-slate-500">
+                        OCTOBER 2026
+                      </span>
+                    </div>
+
+                    <div className="border-l border-white/10 pl-4">
+                      <span className="block font-mono text-2xl font-black text-[#00E5FF] sm:text-3xl">
+                        CUJ
+                      </span>
+                      <span className="mt-0.5 block font-mono text-[10px] uppercase tracking-wider text-slate-500">
+                        JAMMU CAMPUS
+                      </span>
+                    </div>
+
+                    <div className="border-l border-white/10 pl-4">
+                      <span className="block font-mono text-2xl font-black text-[#FF6B00] sm:text-3xl">
+                        CSE
+                      </span>
+                      <span className="mt-0.5 block font-mono text-[10px] uppercase tracking-wider text-slate-500">
+                        DEPARTMENT DECK
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Right Column: Interactive Cyber Emblem (5 cols) */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                  className="relative flex items-center justify-center lg:col-span-5"
+                >
+                  <div className="relative w-full max-w-md border border-white/10 bg-[#080A0F]/80 p-8 shadow-2xl backdrop-blur-md">
+                    {/* Sci-Fi Decorative Corner Brackets */}
+                    <span className="absolute -left-2 -top-2 h-6 w-6 border-l-2 border-t-2 border-[#00E5FF]" />
+                    <span className="absolute -right-2 -top-2 h-6 w-6 border-r-2 border-t-2 border-[#FF6B00]" />
+                    <span className="absolute -bottom-2 -left-2 h-6 w-6 border-b-2 border-l-2 border-[#FF6B00]" />
+                    <span className="absolute -bottom-2 -right-2 h-6 w-6 border-b-2 border-r-2 border-[#00E5FF]" />
+
+                    {/* Emblem Halo Glow */}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-[#00E5FF]/15 via-transparent to-[#FF6B00]/15" />
+
+                    <div className="relative z-10 flex flex-col items-center text-center">
+                      <img
+                        src={logo}
+                        alt="Yantrotsav Official Fest Logo"
+                        className="h-56 w-56 object-contain drop-shadow-[0_0_35px_rgba(0,229,255,0.4)] sm:h-64 sm:w-64"
+                      />
+
+                      <div className="mt-6 border-t border-white/10 pt-4 w-full">
+                        <span className="font-mono text-xs font-bold uppercase tracking-[0.25em] text-white">
+                          Central University of Jammu
+                        </span>
+                        <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                          Dept. of Computer Science &amp; Engineering
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </section>
 
           {/* ======================================================
           Watcher HEADING
