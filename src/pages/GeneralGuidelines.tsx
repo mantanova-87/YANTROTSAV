@@ -59,91 +59,112 @@ function GeneralGuidelines({ onClose }: GeneralGuidelinesProps) {
               </h3>
 
               <p className="mt-2">
-                Participants must complete the registration process before
-                participating in any event. Valid participant details must be
-                provided during registration.
+                Registration for any event will be accepted only through this website that is official website of <b>"Yantrotsav 2026"</b>
               </p>
             </div>
 
             <div>
               <h3 className="font-bold uppercase tracking-wide text-white">
-                02 / Participation
+                02 / Eligibility
               </h3>
 
               <p className="mt-2">
-                Participants must report to the respective event venue before
-                the scheduled reporting time. Late entries may not be permitted.
+                Participants is open only for the students enrolled in any course of Central University of Jammu.
               </p>
             </div>
 
             <div>
               <h3 className="font-bold uppercase tracking-wide text-white">
-                03 / Discipline
+                03 / Code of Conduct
               </h3>
 
               <p className="mt-2">
-                All participants are expected to maintain proper discipline and
-                follow the instructions provided by event coordinators and
-                volunteers.
+                Any form of misconduct, including harassment, abusive language, intimidation, or disruptive behaviour, is strictly prohibited. The Organising Committee reserves the right to remove or disqualify participants if found in violation.
               </p>
             </div>
 
             <div>
               <h3 className="font-bold uppercase tracking-wide text-white">
-                04 / Event Rules
+                04 / Team Structure
               </h3>
 
               <p className="mt-2">
-                Participants must follow the specific rules and regulations of
-                the respective event. The decision of the event coordinators and
-                judges shall be considered final.
+                Team size, composition, and policies shall be governed by the individual competition rules published on the respective event pages.
               </p>
             </div>
 
             <div>
               <h3 className="font-bold uppercase tracking-wide text-white">
-                05 / Technical Requirements
+                05 / Originality and Use of Tools
               </h3>
 
               <p className="mt-2">
-                Participants are responsible for bringing any required
-                equipment, software, documents, or other materials specified for
-                their event.
+                All submissions must be original work of the participants. Use of AI tools or third-party resources must comply with competition-specific rules and, where required, be explicitly disclosed.
               </p>
             </div>
 
             <div>
               <h3 className="font-bold uppercase tracking-wide text-white">
-                06 / Code of Conduct
+                06 / Evaluation and Result
               </h3>
 
               <p className="mt-2">
-                Any form of misconduct, cheating, plagiarism, harassment, or
-                violation of event rules may result in disqualification.
+                Participants shall be evaluated based on pre-published criteria. Decisions of the judging panel and Organising Committee shall be final, binding, and not subject to challenge.
               </p>
             </div>
 
             <div>
               <h3 className="font-bold uppercase tracking-wide text-white">
-                07 / Timings
+                07 / Prizes and Verification
               </h3>
 
               <p className="mt-2">
-                Participants should strictly adhere to the event schedule.
-                Organizers reserve the right to modify timings or venues if
-                required.
+                Prizes and Verification: Prize distribution is subject to successful completion of verification procedures. Winners shall be solely responsible for any applicable taxes or statutory compliances.
               </p>
             </div>
 
             <div>
               <h3 className="font-bold uppercase tracking-wide text-white">
-                08 / Final Decision
+                08 / Data Storage and Other Data Related Policies
               </h3>
 
               <p className="mt-2">
-                The organizers and judges reserve the right to make the final
-                decision regarding eligibility, evaluation, disqualification,
-                and other event-related matters.
+                <h3>Data Collection</h3>
+                <p>Information provided directly by users:</p>
+                <p>• Full name, email address, phone number<br/>• College/institution name, department, year of study and enrollment number.<br/>
+                  • Team name and team members' details (for group events)<br/>
+                  • Any info submitted via contact/feedback forms
+                </p>
+                <h3>Information collected automatically:</h3>
+                <p>
+                • IP address, browser type/version, device information<br/>
+                • Pages visited, time on site, referring pages<br/>
+                • Cookies and similar tracking technologies
+                </p>
+
+                <h3>Storage & Sharing</h3>
+                <p>
+                <b>Storage:</b><br/>
+                • Data is stored securely and retained only as long as necessary — for the event cycle, participation records, or legal compliance — then securely deleted or anonymized.<br/>
+                • Reasonable technical/organizational safeguards are used to protect data, though no online storage or transmission can be guaranteed 100% secure.<br/>
+
+                <b>Sharing:</b><br/>
+                We do not sell, rent, or trade personal information. Data may be shared only with:<br/>
+                • Event organizers/faculty coordinators** — to manage registrations and logistics<br/>
+                • Service providers— hosting (Vercel), analytics, or email tools, under confidentiality obligations<br/>
+                • Legal authorities — if required by law or to protect rights/safety<br/>
+                • With your consent — for any other disclosed purpose</p>
+              </p>
+            </div>
+            <div>
+              <h3 className="font-bold uppercase tracking-wide text-white">
+                09 / Amendments and Liability
+              </h3>
+
+              <p className="mt-2">
+                The Organising Committee reserves the right to modify competition rules, format, or schedule at any stage.Central Univaersity of Jammu and the Yantrotsav Organising Team shall not be held liable for any technical failures, losses, or damages arising from participation.
+                By visiting this site or registering for any competition under Yantrotsav, participants unconditionally agree to abide by these guidelines and all event-specific rules.
+                Note: The Organising Committee reserves the right to disqualify any participant or team found violating the guidelines, event rules, or code of conduct, at any stage of the competition.
               </p>
             </div>
 
