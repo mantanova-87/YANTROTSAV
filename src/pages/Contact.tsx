@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { Mail, MapPin, Send } from 'lucide-react'
+import { FaMapMarkerAlt, FaPaperPlane } from 'react-icons/fa';
+import { BiLogoGmail } from 'react-icons/bi'; 
 import { z } from 'zod'
 import { showToast } from '../utils/toast'
 
@@ -236,7 +237,7 @@ export default function Contact() {
               <div className="group border border-white/10 p-4 transition-colors duration-300 hover:border-[#00E5FF]/40">
                 <div className="flex items-start gap-4">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-white/10 text-[#00E5FF]">
-                    <Mail size={15} />
+                    <BiLogoGmail/>
                   </div>
 
                   <div>
@@ -245,7 +246,7 @@ export default function Contact() {
                     </p>
 
                     <p className="mt-1 text-xs text-slate-300">
-                      mantavya4729@gmail.com
+                      yantrotsav2026@gmail.com
                     </p>
                   </div>
                 </div>
@@ -254,7 +255,7 @@ export default function Contact() {
               <div className="group border border-white/10 p-4 transition-colors duration-300 hover:border-[#FF6B00]/40">
                 <div className="flex items-start gap-4">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center border border-white/10 text-[#FF6B00]">
-                    <MapPin size={15} />
+                    <FaMapMarkerAlt/>
                   </div>
 
                   <div>
@@ -508,10 +509,7 @@ export default function Contact() {
                   {isSending ? 'Transmitting...' : 'Send Query'}
                 </span>
 
-                <Send
-                  size={15}
-                  className="transition-transform duration-300 group-hover:translate-x-1"
-                />
+                <FaPaperPlane/>
               </button>
             </form>
           </div>
