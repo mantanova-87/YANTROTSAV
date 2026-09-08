@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion'
-import { Mail, MessageCircle } from 'lucide-react'
+import { FaInstagram, FaWhatsapp, FaLinkedin } from 'react-icons/fa6';
+import { BiLogoGmail } from 'react-icons/bi'; 
 import mantavya from '../assets/images/mantavya.jpeg'
 import mehak from '../assets/images/mehak.png'
 import priyanshu from '../assets/images/priyanshu.jpeg'
@@ -121,7 +122,7 @@ function TeamMemberCard({
               <img
                 src={member.image}
                 alt={member.name}
-                className="relative z-10 h-full w-full object-contain object-center p-5 transition-transform duration-700 group-hover:scale-105"
+                className="relative z-10 h-55 w-55  object-center p-5 transition-transform duration-700 group-hover:scale-105"
               />
             ) : (
               <div className="relative z-10 flex h-28 w-28 items-center justify-center border border-white/10">
@@ -162,7 +163,7 @@ function TeamMemberCard({
                 aria-label={`${member.name} Instagram`}
                 className="flex h-8 w-8 items-center justify-center border border-white/10 text-[9px] font-bold text-slate-500 transition-all duration-300 hover:border-[#FF6B00] hover:text-[#FF6B00]"
               >
-                IG
+                <FaInstagram/>
               </a>
 
               <a
@@ -170,7 +171,7 @@ function TeamMemberCard({
                 aria-label={`${member.name} LinkedIn`}
                 className="flex h-8 w-8 items-center justify-center border border-white/10 text-[9px] font-bold text-slate-500 transition-all duration-300 hover:border-[#00E5FF] hover:text-[#00E5FF]"
               >
-                IN
+                <FaLinkedin/>
               </a>
 
               <a
@@ -178,7 +179,7 @@ function TeamMemberCard({
                 aria-label={`${member.name} WhatsApp`}
                 className="flex h-8 w-8 items-center justify-center border border-white/10 text-slate-500 transition-all duration-300 hover:border-[#00E5FF] hover:text-[#00E5FF]"
               >
-                <MessageCircle size={13} />
+                <FaWhatsapp/>
               </a>
 
               <a
@@ -186,7 +187,7 @@ function TeamMemberCard({
                 aria-label={`Email ${member.name}`}
                 className="flex h-8 w-8 items-center justify-center border border-white/10 text-slate-500 transition-all duration-300 hover:border-[#FF6B00] hover:text-[#FF6B00]"
               >
-                <Mail size={13} />
+                <BiLogoGmail/>
               </a>
             </div>
 
