@@ -60,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     await transporter.sendMail({
       from: gmailUser,
-      to: "priyanshuguptawebdev@gmail.com",
+      to: gmailUser,
       replyTo: email.trim(),
       subject: `[YANTROTSAV QUERY] ${queryType.trim()}`,
 

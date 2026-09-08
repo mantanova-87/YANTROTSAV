@@ -1,62 +1,70 @@
-import { defineConfig, loadEnv } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig, loadEnv } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 function devApiPlugin() {
   return {
-    name: 'dev-api-middleware',
+    name: "dev-api-middleware",
     configureServer(server: any) {
       server.middlewares.use(async (req: any, res: any, next: any) => {
-        if (req.method === 'POST' && req.url === '/api/send-invite') {
-          let body = ''
-          req.on('data', (chunk: any) => {
-            body += chunk
-          })
-          req.on('end', async () => {
+        if (req.method === "POST" && req.url === "/api/send-invite") {
+          let body = "";
+          req.on("data", (chunk: any) => {
+            body += chunk;
+          });
+          req.on("end", async () => {
             try {
-              const env = loadEnv('', process.cwd(), '')
-              const gmailUser = env.GMAIL_USER || process.env.GMAIL_USER
-              const gmailAppPassword = env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD
+              const env = loadEnv("", process.cwd(), "");
+              const gmailUser = env.GMAIL_USER || process.env.GMAIL_USER;
+              const gmailAppPassword =
+                env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD;
 
               if (!gmailUser || !gmailAppPassword) {
-                res.statusCode = 500
-                res.setHeader('Content-Type', 'application/json')
+                res.statusCode = 500;
+                res.setHeader("Content-Type", "application/json");
                 res.end(
                   JSON.stringify({
                     success: false,
-                    message: 'Gmail SMTP credentials missing in .env',
+                    message: "Gmail SMTP credentials missing in .env",
                   }),
-                )
-                return
+                );
+                return;
               }
 
-              const { toEmail, inviteeName, teamName, eventTitle, actionUrl } = JSON.parse(
-                body || '{}',
-              )
+              const { toEmail, inviteeName, teamName, eventTitle, actionUrl } =
+                JSON.parse(body || "{}");
 
               if (!toEmail) {
-                res.statusCode = 400
-                res.setHeader('Content-Type', 'application/json')
-                res.end(JSON.stringify({ success: false, message: 'Missing toEmail' }))
-                return
+                res.statusCode = 400;
+                res.setHeader("Content-Type", "application/json");
+                res.end(
+                  JSON.stringify({
+                    success: false,
+                    message: "Missing toEmail",
+                  }),
+                );
+                return;
               }
 
-              const { default: nodemailer } = await import('nodemailer')
+              const { default: nodemailer } = await import("nodemailer");
               const transporter = nodemailer.createTransport({
-                service: 'gmail',
+                service: "gmail",
                 auth: {
                   user: gmailUser,
                   pass: gmailAppPassword,
                 },
-              })
+              });
 
-              const safeInvitee = inviteeName || 'Student'
-              const safeTeam = teamName || 'Team'
-              const safeEvent = eventTitle || 'Event'
-              let safeAction = actionUrl || 'https://yantrotsavv10.vercel.app/dashboard'
-              if (safeAction.includes('localhost')) {
-                const queryString = safeAction.includes('?') ? safeAction.substring(safeAction.indexOf('?')) : ''
-                safeAction = `https://yantrotsavv10.vercel.app/dashboard${queryString}`
+              const safeInvitee = inviteeName || "Student";
+              const safeTeam = teamName || "Team";
+              const safeEvent = eventTitle || "Event";
+              let safeAction =
+                actionUrl || "https://yantrotsavv10.vercel.app/dashboard";
+              if (safeAction.includes("localhost")) {
+                const queryString = safeAction.includes("?")
+                  ? safeAction.substring(safeAction.indexOf("?"))
+                  : "";
+                safeAction = `https://yantrotsavv10.vercel.app/dashboard${queryString}`;
               }
 
               await transporter.sendMail({
@@ -86,61 +94,75 @@ function devApiPlugin() {
                     </div>
                   </div>
                 `,
-              })
+              });
 
-              res.statusCode = 200
-              res.setHeader('Content-Type', 'application/json')
-              res.end(JSON.stringify({ success: true, message: 'Invitation email dispatched successfully.' }))
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
+              res.end(
+                JSON.stringify({
+                  success: true,
+                  message: "Invitation email dispatched successfully.",
+                }),
+              );
             } catch (err: any) {
-              console.error('Dev email dispatch error:', err)
-              res.statusCode = 500
-              res.setHeader('Content-Type', 'application/json')
-              res.end(JSON.stringify({ success: false, message: err.message }))
+              console.error("Dev email dispatch error:", err);
+              res.statusCode = 500;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ success: false, message: err.message }));
             }
-          })
-          return
+          });
+          return;
         }
 
-        if (req.method === 'POST' && req.url === '/api/contact') {
-          let body = ''
-          req.on('data', (chunk: any) => {
-            body += chunk
-          })
-          req.on('end', async () => {
+        if (req.method === "POST" && req.url === "/api/contact") {
+          let body = "";
+          req.on("data", (chunk: any) => {
+            body += chunk;
+          });
+          req.on("end", async () => {
             try {
-              const env = loadEnv('', process.cwd(), '')
-              const gmailUser = env.GMAIL_USER || process.env.GMAIL_USER
-              const gmailAppPassword = env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD
+              const env = loadEnv("", process.cwd(), "");
+              const gmailUser = env.GMAIL_USER || process.env.GMAIL_USER;
+              const gmailAppPassword =
+                env.GMAIL_APP_PASSWORD || process.env.GMAIL_APP_PASSWORD;
 
               if (!gmailUser || !gmailAppPassword) {
-                res.statusCode = 500
-                res.setHeader('Content-Type', 'application/json')
+                res.statusCode = 500;
+                res.setHeader("Content-Type", "application/json");
                 res.end(
                   JSON.stringify({
                     success: false,
-                    message: 'Email service is not configured (Gmail credentials missing in .env).',
+                    message:
+                      "Email service is not configured (Gmail credentials missing in .env).",
                   }),
-                )
-                return
+                );
+                return;
               }
 
-              const { name, email, phone, queryType, message } = JSON.parse(body || '{}')
+              const { name, email, phone, queryType, message } = JSON.parse(
+                body || "{}",
+              );
 
-              if (!name?.trim() || !email?.trim() || !queryType?.trim() || !message?.trim()) {
-                res.statusCode = 400
-                res.setHeader('Content-Type', 'application/json')
+              if (
+                !name?.trim() ||
+                !email?.trim() ||
+                !queryType?.trim() ||
+                !message?.trim()
+              ) {
+                res.statusCode = 400;
+                res.setHeader("Content-Type", "application/json");
                 res.end(
                   JSON.stringify({
                     success: false,
-                    message: 'Please fill in all required fields.',
+                    message: "Please fill in all required fields.",
                   }),
-                )
-                return
+                );
+                return;
               }
 
-              const { default: nodemailer } = await import('nodemailer')
+              const { default: nodemailer } = await import("nodemailer");
               const transporter = nodemailer.createTransport({
-                service: 'gmail',
+                service: "gmail",
                 auth: {
                   user: gmailUser,
                   pass: gmailAppPassword,
@@ -148,19 +170,19 @@ function devApiPlugin() {
                 connectionTimeout: 8000,
                 greetingTimeout: 5000,
                 socketTimeout: 10000,
-              })
+              });
 
               const escapeHtml = (value: string) =>
                 value
-                  .replace(/&/g, '&amp;')
-                  .replace(/</g, '&lt;')
-                  .replace(/>/g, '&gt;')
-                  .replace(/"/g, '&quot;')
-                  .replace(/'/g, '&#039;')
+                  .replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#039;");
 
               await transporter.sendMail({
                 from: `"YANTROTSAV Contact Desk" <${gmailUser}>`,
-                to: 'priyanshuguptawebdev@gmail.com',
+                to: gmailUser,
                 replyTo: email.trim(),
                 subject: `[YANTROTSAV QUERY] ${queryType.trim()} - ${name.trim()}`,
                 text: `
@@ -170,7 +192,7 @@ New Query Received
 
 Name: ${name.trim()}
 Email: ${email.trim()}
-Phone / WhatsApp: ${phone?.trim() || 'Not provided'}
+Phone / WhatsApp: ${phone?.trim() || "Not provided"}
 Query Type: ${queryType.trim()}
 
 Message:
@@ -190,7 +212,7 @@ This message was submitted through the Yantrotsav website.
                       <table style="width:100%;font-size:13px;color:#cbd5e1;margin-bottom:16px;border-collapse:collapse;">
                         <tr><td style="padding:6px 0;color:#94a3b8;width:120px;">Name:</td><td style="font-weight:bold;color:#fff;">${escapeHtml(name.trim())}</td></tr>
                         <tr><td style="padding:6px 0;color:#94a3b8;">Email:</td><td><a href="mailto:${escapeHtml(email.trim())}" style="color:#00E5FF;">${escapeHtml(email.trim())}</a></td></tr>
-                        <tr><td style="padding:6px 0;color:#94a3b8;">Phone:</td><td style="color:#fff;">${escapeHtml(phone?.trim() || 'Not provided')}</td></tr>
+                        <tr><td style="padding:6px 0;color:#94a3b8;">Phone:</td><td style="color:#fff;">${escapeHtml(phone?.trim() || "Not provided")}</td></tr>
                         <tr><td style="padding:6px 0;color:#94a3b8;">Query Type:</td><td><span style="background:#FF6B00;color:#fff;padding:2px 8px;font-size:11px;font-weight:bold;">${escapeHtml(queryType.trim())}</span></td></tr>
                       </table>
                       <div style="background:#0d121f;border-left:3px solid #FF6B00;padding:14px;margin:16px 0;">
@@ -203,109 +225,147 @@ This message was submitted through the Yantrotsav website.
                     </div>
                   </div>
                 `,
-              })
+              });
 
-              res.statusCode = 200
-              res.setHeader('Content-Type', 'application/json')
-              res.end(JSON.stringify({ success: true, message: 'Query sent successfully.' }))
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
+              res.end(
+                JSON.stringify({
+                  success: true,
+                  message: "Query sent successfully.",
+                }),
+              );
             } catch (err: any) {
-              console.error('Dev contact dispatch error:', err)
-              res.statusCode = 500
-              res.setHeader('Content-Type', 'application/json')
-              res.end(JSON.stringify({ success: false, message: err.message || 'Failed to dispatch email' }))
+              console.error("Dev contact dispatch error:", err);
+              res.statusCode = 500;
+              res.setHeader("Content-Type", "application/json");
+              res.end(
+                JSON.stringify({
+                  success: false,
+                  message: err.message || "Failed to dispatch email",
+                }),
+              );
             }
-          })
-          return
+          });
+          return;
         }
 
-        if (req.method === 'POST' && req.url === '/api/admin/delete-user') {
-          let body = ''
-          req.on('data', (chunk: any) => {
-            body += chunk
-          })
-          req.on('end', async () => {
+        if (req.method === "POST" && req.url === "/api/admin/delete-user") {
+          let body = "";
+          req.on("data", (chunk: any) => {
+            body += chunk;
+          });
+          req.on("end", async () => {
             try {
-              const env = loadEnv('', process.cwd(), '')
-              const endpoint = env.VITE_APPWRITE_ENDPOINT || process.env.VITE_APPWRITE_ENDPOINT || 'https://sgp.cloud.appwrite.io/v1'
-              const projectId = env.VITE_APPWRITE_PROJECT_ID || process.env.VITE_APPWRITE_PROJECT_ID || '6a9be53300040e6fd485'
-              const databaseId = env.VITE_APPWRITE_DATABASE_ID || process.env.VITE_APPWRITE_DATABASE_ID || '6a9be599001bf72a4855'
-              const apiKey = env.APPWRITE_API_KEY || process.env.APPWRITE_API_KEY || env.VITE_APPWRITE_API_KEY
+              const env = loadEnv("", process.cwd(), "");
+              const endpoint =
+                env.VITE_APPWRITE_ENDPOINT ||
+                process.env.VITE_APPWRITE_ENDPOINT ||
+                "https://sgp.cloud.appwrite.io/v1";
+              const projectId =
+                env.VITE_APPWRITE_PROJECT_ID ||
+                process.env.VITE_APPWRITE_PROJECT_ID ||
+                "6a9be53300040e6fd485";
+              const databaseId =
+                env.VITE_APPWRITE_DATABASE_ID ||
+                process.env.VITE_APPWRITE_DATABASE_ID ||
+                "6a9be599001bf72a4855";
+              const apiKey =
+                env.APPWRITE_API_KEY ||
+                process.env.APPWRITE_API_KEY ||
+                env.VITE_APPWRITE_API_KEY;
 
-              const { userId, docId, email } = JSON.parse(body || '{}')
+              const { userId, docId, email } = JSON.parse(body || "{}");
 
-              let authDeleted = false
-              let tableDeleted = false
-              const errors: string[] = []
+              let authDeleted = false;
+              let tableDeleted = false;
+              const errors: string[] = [];
 
               if (apiKey) {
                 try {
-                  let targetAuthId = userId
+                  let targetAuthId = userId;
                   if (email) {
                     try {
-                      const listRes = await fetch(`${endpoint}/users?search=${encodeURIComponent(email)}`, {
-                        headers: {
-                          'X-Appwrite-Project': projectId,
-                          'X-Appwrite-Key': apiKey,
+                      const listRes = await fetch(
+                        `${endpoint}/users?search=${encodeURIComponent(email)}`,
+                        {
+                          headers: {
+                            "X-Appwrite-Project": projectId,
+                            "X-Appwrite-Key": apiKey,
+                          },
                         },
-                      })
+                      );
                       if (listRes.ok) {
-                        const listData = (await listRes.json()) as any
+                        const listData = (await listRes.json()) as any;
                         const matched = listData.users?.find(
-                          (u: any) => u.email?.toLowerCase() === email.toLowerCase(),
-                        )
+                          (u: any) =>
+                            u.email?.toLowerCase() === email.toLowerCase(),
+                        );
                         if (matched) {
-                          targetAuthId = matched.$id
+                          targetAuthId = matched.$id;
                         }
                       }
                     } catch (e: any) {
-                      console.warn('Dev search user by email error:', e.message)
+                      console.warn(
+                        "Dev search user by email error:",
+                        e.message,
+                      );
                     }
                   }
 
                   if (targetAuthId) {
-                    const delAuthRes = await fetch(`${endpoint}/users/${targetAuthId}`, {
-                      method: 'DELETE',
-                      headers: {
-                        'X-Appwrite-Project': projectId,
-                        'X-Appwrite-Key': apiKey,
+                    const delAuthRes = await fetch(
+                      `${endpoint}/users/${targetAuthId}`,
+                      {
+                        method: "DELETE",
+                        headers: {
+                          "X-Appwrite-Project": projectId,
+                          "X-Appwrite-Key": apiKey,
+                        },
                       },
-                    })
+                    );
                     if (delAuthRes.ok || delAuthRes.status === 404) {
-                      authDeleted = true
+                      authDeleted = true;
                     } else {
-                      const errText = await delAuthRes.text()
-                      errors.push(`Auth delete status: ${delAuthRes.status} ${errText}`)
+                      const errText = await delAuthRes.text();
+                      errors.push(
+                        `Auth delete status: ${delAuthRes.status} ${errText}`,
+                      );
                     }
                   }
 
-                  const targetDocId = docId || userId
+                  const targetDocId = docId || userId;
                   if (targetDocId) {
                     const delDocRes = await fetch(
                       `${endpoint}/databases/${databaseId}/collections/users/documents/${targetDocId}`,
                       {
-                        method: 'DELETE',
+                        method: "DELETE",
                         headers: {
-                          'X-Appwrite-Project': projectId,
-                          'X-Appwrite-Key': apiKey,
+                          "X-Appwrite-Project": projectId,
+                          "X-Appwrite-Key": apiKey,
                         },
                       },
-                    )
+                    );
                     if (delDocRes.ok || delDocRes.status === 404) {
-                      tableDeleted = true
+                      tableDeleted = true;
                     } else {
-                      const errText = await delDocRes.text()
-                      errors.push(`Table delete status: ${delDocRes.status} ${errText}`)
+                      const errText = await delDocRes.text();
+                      errors.push(
+                        `Table delete status: ${delDocRes.status} ${errText}`,
+                      );
                     }
                   }
                 } catch (err: any) {
-                  errors.push(`Server API error: ${err.message}`)
+                  errors.push(`Server API error: ${err.message}`);
                 }
               } else {
-                errors.push('APPWRITE_API_KEY is not configured in environment. Auth deletion skipped.')
+                errors.push(
+                  "APPWRITE_API_KEY is not configured in environment. Auth deletion skipped.",
+                );
               }
 
-              res.statusCode = 200
-              res.setHeader('Content-Type', 'application/json')
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
               res.end(
                 JSON.stringify({
                   success: true,
@@ -313,72 +373,108 @@ This message was submitted through the Yantrotsav website.
                   tableDeleted,
                   warnings: errors.length > 0 ? errors : undefined,
                 }),
-              )
+              );
             } catch (err: any) {
-              res.statusCode = 500
-              res.setHeader('Content-Type', 'application/json')
-              res.end(JSON.stringify({ success: false, message: err.message }))
+              res.statusCode = 500;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ success: false, message: err.message }));
             }
-          })
-          return
+          });
+          return;
         }
 
-        if (req.method === 'POST' && req.url === '/api/admin/delete-file') {
-          let body = ''
-          req.on('data', (chunk: any) => {
-            body += chunk
-          })
-          req.on('end', async () => {
+        if (req.method === "POST" && req.url === "/api/admin/delete-file") {
+          let body = "";
+          req.on("data", (chunk: any) => {
+            body += chunk;
+          });
+          req.on("end", async () => {
             try {
-              const env = loadEnv('', process.cwd(), '')
-              const endpoint = env.VITE_APPWRITE_ENDPOINT || process.env.VITE_APPWRITE_ENDPOINT || 'https://sgp.cloud.appwrite.io/v1'
-              const projectId = env.VITE_APPWRITE_PROJECT_ID || process.env.VITE_APPWRITE_PROJECT_ID || '6a9be53300040e6fd485'
-              const apiKey = env.APPWRITE_API_KEY || process.env.APPWRITE_API_KEY || env.VITE_APPWRITE_API_KEY
-              const { fileId, bucketId } = JSON.parse(body || '{}')
+              const env = loadEnv("", process.cwd(), "");
+              const endpoint =
+                env.VITE_APPWRITE_ENDPOINT ||
+                process.env.VITE_APPWRITE_ENDPOINT ||
+                "https://sgp.cloud.appwrite.io/v1";
+              const projectId =
+                env.VITE_APPWRITE_PROJECT_ID ||
+                process.env.VITE_APPWRITE_PROJECT_ID ||
+                "6a9be53300040e6fd485";
+              const apiKey =
+                env.APPWRITE_API_KEY ||
+                process.env.APPWRITE_API_KEY ||
+                env.VITE_APPWRITE_API_KEY;
+              const { fileId, bucketId } = JSON.parse(body || "{}");
 
               if (!fileId) {
-                res.statusCode = 400
-                res.setHeader('Content-Type', 'application/json')
-                res.end(JSON.stringify({ success: false, message: 'Missing fileId parameter' }))
-                return
+                res.statusCode = 400;
+                res.setHeader("Content-Type", "application/json");
+                res.end(
+                  JSON.stringify({
+                    success: false,
+                    message: "Missing fileId parameter",
+                  }),
+                );
+                return;
               }
 
-              const targetBucket = bucketId || env.VITE_APPWRITE_STORAGE_BUCKET_ID || process.env.VITE_APPWRITE_STORAGE_BUCKET_ID || 'event_banners'
+              const targetBucket =
+                bucketId ||
+                env.VITE_APPWRITE_STORAGE_BUCKET_ID ||
+                process.env.VITE_APPWRITE_STORAGE_BUCKET_ID ||
+                "event_banners";
 
               if (apiKey) {
-                const delRes = await fetch(`${endpoint}/storage/buckets/${targetBucket}/files/${fileId}`, {
-                  method: 'DELETE',
-                  headers: {
-                    'X-Appwrite-Project': projectId,
-                    'X-Appwrite-Key': apiKey,
+                const delRes = await fetch(
+                  `${endpoint}/storage/buckets/${targetBucket}/files/${fileId}`,
+                  {
+                    method: "DELETE",
+                    headers: {
+                      "X-Appwrite-Project": projectId,
+                      "X-Appwrite-Key": apiKey,
+                    },
                   },
-                })
-                if (delRes.ok || delRes.status === 204 || delRes.status === 404) {
-                  res.statusCode = 200
-                  res.setHeader('Content-Type', 'application/json')
-                  res.end(JSON.stringify({ success: true, message: `File ${fileId} deleted successfully.` }))
-                  return
+                );
+                if (
+                  delRes.ok ||
+                  delRes.status === 204 ||
+                  delRes.status === 404
+                ) {
+                  res.statusCode = 200;
+                  res.setHeader("Content-Type", "application/json");
+                  res.end(
+                    JSON.stringify({
+                      success: true,
+                      message: `File ${fileId} deleted successfully.`,
+                    }),
+                  );
+                  return;
                 }
               }
 
-              res.statusCode = 200
-              res.setHeader('Content-Type', 'application/json')
-              res.end(JSON.stringify({ success: false, message: 'APPWRITE_API_KEY is not configured in local environment.' }))
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
+              res.end(
+                JSON.stringify({
+                  success: false,
+                  message:
+                    "APPWRITE_API_KEY is not configured in local environment.",
+                }),
+              );
             } catch (err: any) {
-              res.statusCode = 500
-              res.setHeader('Content-Type', 'application/json')
-              res.end(JSON.stringify({ success: false, message: err.message }))
+              res.statusCode = 500;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ success: false, message: err.message }));
             }
-          })
-          return
+          });
+          return;
         }
 
-        next()
-      })
+        next();
+      });
     },
-  }
+  };
 }
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), devApiPlugin()],
-})
+});

@@ -106,14 +106,14 @@ const messageCards = [
     title: "Hon'ble Vice-Chancellor's Message",
     text: "It gives me immense pleasure to extend my best wishes on the occasion of Yantrotsav at Central University of Jammu. This event celebrates technology, innovation, creativity, and the talent of our young minds. I hope Yantrotsav inspires students to explore, innovate, and transform ideas into meaningful solutions. I congratulate the organizers and wish the event great success.",
     text1: "Prof. Dr. Sanjeev Jain",
-    text2: "Hon'ble Vice Chancellor",
+    text2: "HON'BLE VICE CHANCELLOR",
     image: "vc.jpg",
   },
   {
     title: "Message from the HOD",
     text: "It gives me immense pleasure to extend my warm wishes on the occasion of Yantrotsav at Central University of Jammu. This event provides a wonderful platform for our students to showcase their creativity, technical skills, and innovative ideas. I hope Yantrotsav inspires our students to learn, explore, and contribute to the ever-evolving world of technology. I congratulate the organizing team and wish the event great success.",
     text1: "Dr. Dinesh Kumar",
-    text2: "Head of Department(CSE)",
+    text2: "HEAD OF DEPARTMENT (CSE)",
     image: "DRDINESHCSE.jpeg",
   },
 ];
@@ -215,13 +215,10 @@ function Home() {
                   // Coding &amp; Hackathons
                 </span>
                 <span className="border border-[#FF6B00]/40 bg-[#FF6B00]/5 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-[#FF6B00]">
-                  // Robotics &amp; AI
-                </span>
-                <span className="border border-white/20 bg-white/5 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-slate-300">
                   // Esports &amp; Gaming
                 </span>
-                <span className="border border-purple-500/40 bg-purple-950/20 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-purple-300">
-                  // Tech Workshops
+                <span className="border border-white/20 bg-white/5 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wider text-slate-300">
+                  // Quizzes &amp; Debates
                 </span>
               </div>
 
@@ -285,7 +282,41 @@ function Home() {
           MESSAGE CARDS
       ====================================================== */}
 
-        <section className="mx-auto max-w-[1400px] px-5 py-28 md:px-8 md:py-40">
+        <section className="mx-auto max-w-[1400px] px-5 py-8 md:px-8 md:py-12">
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 50,
+              scale: 0.95,
+              filter: "blur(8px)",
+            }}
+            whileInView={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              filter: "blur(0px)",
+            }}
+            viewport={{
+              once: true,
+              amount: 0.3,
+            }}
+            transition={{
+              duration: 0.8,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            className="relative mx-auto mb-16 w-fit border-b border-white/10 pb-7 text-center md:mb-20"
+          >
+            <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
+              02 / Words From Visionaries
+            </span>
+
+            <h2 className="mt-3 text-4xl font-black uppercase tracking-tight md:text-6xl">
+              Words From Visionaries
+            </h2>
+
+            <span className="absolute bottom-[-1px] left-0 h-px w-20 bg-[#00E5FF]" />
+          </motion.div>
+
           {/* No negative spacing — cards do NOT overlap */}
           <div className="space-y-20 md:space-y-[-10]">
             {messageCards.map((card, index) => {
@@ -420,10 +451,7 @@ function Home() {
                         </div>
                       )}
                       <div className="text-center">
-                        <p className="mt-3 max-w-2xl  font-bold text-lg leading-8 md:text-base md:leading-8">
-                          {card.text1}
-                        </p>
-                        <p className="mt-1 max-w-2xl  font-bold leading-8   text-lg md:text-base md:leading-8">
+                        <p className="mt-3 max-w-2xl font-bold text-lg leading-8 md:text-base md:leading-8">
                           {card.text2}
                         </p>
                       </div>
@@ -440,11 +468,6 @@ function Home() {
                   ================================================== */}
 
                     <div className="relative z-30 flex flex-col justify-center p-2 md:p-4 lg:p-6">
-                      {/* Label */}
-                      <span className="mb-5 font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
-                        0{index + 1} / Message
-                      </span>
-
                       {/* Title */}
                       <h2 className="max-w-2xl text-2xl font-black uppercase tracking-tight md:text-2xl lg:text-3xl">
                         {card.title}
