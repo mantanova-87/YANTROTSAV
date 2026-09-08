@@ -1,72 +1,67 @@
 import { motion, useReducedMotion } from 'framer-motion'
-import { Mail, MessageCircle } from 'lucide-react'
+import { FaInstagram, FaWhatsapp, FaLinkedin } from 'react-icons/fa6';
+import { BiLogoGmail } from 'react-icons/bi'; 
+import mantavya from '../assets/images/mantavya.jpeg'
+import mehak from '../assets/images/mehak.png'
+import priyanshu from '../assets/images/priyanshu.jpeg'
+import sachin from '../assets/images/sachin.jpg'
+import abhinav from '../assets/images/abhinav.png'
+import Harsh from '../assets/images/Harsh.jpeg'
 
 const teamMembers = [
   {
-    name: 'Member One',
-    designation: 'Event Coordinator',
-    course: 'B.Tech CSE',
-    semester: 'Semester 1',
-    email: 'member1@example.com',
-    instagram: '#',
-    linkedin: '#',
-    whatsapp: '#',
-    image: '',
+    name: 'ABHINAV KUMAR',
+    designation: '',
+    email: '25BECCS04.cse@cujammu.ac.in',
+    instagram: 'https://www.instagram.com/the_abhinav__singh',
+    linkedin: 'https://www.linkedin.com/in/abhinav-kumar-4a9336382',
+    whatsapp: 'https://wa.me/+919693291146',
+    image: abhinav,
   },
   {
-    name: 'Member Two',
-    designation: 'Technical Lead',
-    course: 'B.Tech CSE',
-    semester: 'Semester 2',
-    email: 'member2@example.com',
-    instagram: '#',
-    linkedin: '#',
-    whatsapp: '#',
-    image: '',
+    name: 'HARSH SAXENA',
+    designation: '',
+    email: '25BECCS76.cse@cujammu.ac.in',
+    instagram: 'https://www.instagram.com/its_saxena_harsh',
+    linkedin: 'https://www.linkedin.com/in/harshsaxena1409',
+    whatsapp: 'https://wa.me/919045898320',
+    image: Harsh,
   },
   {
-    name: 'Member Three',
-    designation: 'Creative Lead',
-    course: 'B.Tech CSE',
-    semester: 'Semester 3',
-    email: 'member3@example.com',
-    instagram: '#',
-    linkedin: '#',
-    whatsapp: '#',
-    image: '',
+    name: 'MANTVAYA KUMAR',
+    designation: '',
+    email: '25BECCS43.cse@cujammu.ac.in',
+    instagram: 'https://www.instagram.com/mantanova_87?stkn=ZzAycDlvMDM3NW5l',
+    linkedin: 'https://www.linkedin.com/in/mantavyakumar7487',
+    whatsapp: 'https://wa.me/918862962250',
+    image: mantavya,
   },
   {
-    name: 'Member Four',
-    designation: 'Media & Outreach',
-    course: 'B.Tech CSE',
-    semester: 'Semester 4',
-    email: 'member4@example.com',
+    name: 'PRIYANSHU GUPTA',
+    designation: '',
+    email: '25BECSE52.cse@cujammu.ac.in',
     instagram: '#',
     linkedin: '#',
     whatsapp: '#',
-    image: '',
+    image: priyanshu,
   },
   {
-    name: 'Member Five',
-    designation: 'Operations Lead',
-    course: 'B.Tech CSE',
-    semester: 'Semester 5',
-    email: 'member5@example.com',
-    instagram: '#',
-    linkedin: '#',
-    whatsapp: '#',
-    image: '',
+    name: 'KUMAR SACHIN',
+    designation: '',
+    email: '24BECSE22.cse@cujammu.ac.in',
+    instagram: 'https://www.instagram.com/cyros_sachin',
+    linkedin: 'https://www.linkedin.com/in/cyrossachin',
+    whatsapp: 'https://wa.me/918602948023',
+    image: sachin,
   },
   {
-    name: 'Member Six',
-    designation: 'Design & Experience',
-    course: 'B.Tech CSE',
-    semester: 'Semester 6',
-    email: 'member6@example.com',
-    instagram: '#',
-    linkedin: '#',
-    whatsapp: '#',
-    image: '',
+    name: 'MEHAK SHARMA',
+    designation: '',
+    email: '25BECCS46.cse@cujammu.ac.in',
+    instagram: 'https://www.instagram.com/9613mehak',
+    linkedin: 'https://www.linkedin.com/in/mehak-sharma-cyber',
+    whatsapp: 'https://wa.me/919906814723',
+    image: mehak,
   },
 ]
 
@@ -127,7 +122,7 @@ function TeamMemberCard({
               <img
                 src={member.image}
                 alt={member.name}
-                className="relative z-10 h-full w-full object-contain object-center p-5 transition-transform duration-700 group-hover:scale-105"
+                className="relative z-10 h-55 w-55  object-center p-5 transition-transform duration-700 group-hover:scale-105"
               />
             ) : (
               <div className="relative z-10 flex h-28 w-28 items-center justify-center border border-white/10">
@@ -160,26 +155,7 @@ function TeamMemberCard({
               {member.designation}
             </p>
 
-            <div className="mt-5 grid grid-cols-2 border-y border-white/10">
-              <div className="border-r border-white/10 py-3 text-center">
-                <span className="block text-[8px] uppercase tracking-[0.15em] text-slate-600">
-                  Course
-                </span>
-                <span className="mt-1 block text-[10px] font-medium text-slate-300">
-                  {member.course}
-                </span>
-              </div>
-
-              <div className="py-3 text-center">
-                <span className="block text-[8px] uppercase tracking-[0.15em] text-slate-600">
-                  Semester
-                </span>
-                <span className="mt-1 block text-[10px] font-medium text-slate-300">
-                  {member.semester}
-                </span>
-              </div>
-            </div>
-
+            
             {/* Social links */}
             <div className="mt-4 flex justify-center gap-2">
               <a
@@ -187,7 +163,7 @@ function TeamMemberCard({
                 aria-label={`${member.name} Instagram`}
                 className="flex h-8 w-8 items-center justify-center border border-white/10 text-[9px] font-bold text-slate-500 transition-all duration-300 hover:border-[#FF6B00] hover:text-[#FF6B00]"
               >
-                IG
+                <FaInstagram/>
               </a>
 
               <a
@@ -195,7 +171,7 @@ function TeamMemberCard({
                 aria-label={`${member.name} LinkedIn`}
                 className="flex h-8 w-8 items-center justify-center border border-white/10 text-[9px] font-bold text-slate-500 transition-all duration-300 hover:border-[#00E5FF] hover:text-[#00E5FF]"
               >
-                IN
+                <FaLinkedin/>
               </a>
 
               <a
@@ -203,7 +179,7 @@ function TeamMemberCard({
                 aria-label={`${member.name} WhatsApp`}
                 className="flex h-8 w-8 items-center justify-center border border-white/10 text-slate-500 transition-all duration-300 hover:border-[#00E5FF] hover:text-[#00E5FF]"
               >
-                <MessageCircle size={13} />
+                <FaWhatsapp/>
               </a>
 
               <a
@@ -211,7 +187,7 @@ function TeamMemberCard({
                 aria-label={`Email ${member.name}`}
                 className="flex h-8 w-8 items-center justify-center border border-white/10 text-slate-500 transition-all duration-300 hover:border-[#FF6B00] hover:text-[#FF6B00]"
               >
-                <Mail size={13} />
+                <BiLogoGmail/>
               </a>
             </div>
 
@@ -292,8 +268,8 @@ export default function OurTeam() {
           <div className="flex items-center justify-center gap-3">
             <span className="h-px w-8 bg-[#00E5FF]" />
 
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-slate-500">
-              04 / Team
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#FF6B00]">
+              3.1 / Team
             </span>
 
             <span className="h-px w-8 bg-[#FF6B00]" />

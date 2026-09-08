@@ -179,7 +179,7 @@ function Events() {
           className="mb-7 flex items-center gap-3"
         >
           <span className="font-mono text-[10px] tracking-[0.25em] text-[#FF6B00]">
-            03
+            2.1
           </span>
 
           <span className="h-px w-10 bg-[#FF6B00]" />
@@ -241,7 +241,7 @@ function Events() {
             <div className="mb-5 flex items-end justify-between">
               <div>
                 <p className="mb-2 font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
-                  01 / Timeline
+                  2.2 / Timeline
                 </p>
 
                 <h2 className="text-2xl font-bold uppercase tracking-[-0.03em] md:text-3xl">
@@ -487,8 +487,8 @@ function Events() {
       <section className="mx-auto max-w-[1240px] px-5 pb-28 md:px-8 md:pb-40">
         <div className="mb-10 flex flex-col gap-6 border-b border-white/10 pb-6 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="mb-2 font-mono text-[9px] uppercase tracking-[0.25em] text-[#00E5FF]">
-              02 / Registry
+            <p className="mb-2 font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
+              2.3 / Registry
             </p>
 
             <h2 className="text-3xl font-black uppercase tracking-tight md:text-4xl">

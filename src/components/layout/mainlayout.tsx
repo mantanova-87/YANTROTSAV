@@ -7,7 +7,6 @@ import { Outlet } from 'react-router-dom'
 
 function MainLayout() {
   const location = useLocation()
-
   const isHome = location.pathname === '/'
 
   const [introComplete, setIntroComplete] = useState(() => {
@@ -21,7 +20,10 @@ function MainLayout() {
   if (isHome && !introComplete) {
     return (
       <HomeIntro
-        onComplete={() => setIntroComplete(true)}
+        onComplete={() => {
+          sessionStorage.setItem('yantrotsav-intro-shown', 'true')
+          setIntroComplete(true)
+        }}
       />
     )
   }

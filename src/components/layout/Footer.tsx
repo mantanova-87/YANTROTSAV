@@ -1,4 +1,6 @@
-import { Mail, ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
+import { FaInstagram, FaWhatsapp} from 'react-icons/fa6';
+import { BiLogoGmail } from 'react-icons/bi';
 import { Link } from 'react-router-dom'
 import logo from "../../assets/images/logo.png";
 const footerLinks = [
@@ -13,38 +15,17 @@ const socialLinks = [
     name: 'Instagram',
     href: '#',
     icon: (
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        className="h-4 w-4"
-      >
-        <rect x="3" y="3" width="18" height="18" rx="5" />
-        <circle cx="12" cy="12" r="4" />
-        <circle
-          cx="17.5"
-          cy="6.5"
-          r="1"
-          fill="currentColor"
-          stroke="none"
-        />
-      </svg>
+      <FaInstagram/>
     ),
   },
   {
-    name: 'LinkedIn',
+    name: 'WhatsApp',
     href: '#',
     icon: (
-      <svg
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        className="h-4 w-4"
-      >
-        <path d="M5.2 3.5a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 0 0 0-4.4ZM3.4 9h3.6v11.5H3.4V9Zm5.8 0h3.5v1.6h.1c.5-.9 1.7-2 3.5-2 3.7 0 4.4 2.4 4.4 5.6v6.3h-3.6v-5.6c0-1.3 0-3-1.8-3s-2.1 1.4-2.1 2.9v5.7H9.2V9Z" />
-      </svg>
+      <FaWhatsapp/>
     ),
   },
+  
 
 ]
 
@@ -182,11 +163,11 @@ function Footer() {
               ))}
 
               <a
-                href="mailto:"
+                href="mailto:yantrotsav2026@gmail.com"
                 aria-label="Email"
                 className="flex items-center gap-2 border border-white/10 bg-[#080A0F] px-3 py-2 text-slate-500 transition-all duration-200 hover:-translate-y-1 hover:border-[#00E5FF]/50 hover:text-white"
               >
-                <Mail size={16} />
+                <BiLogoGmail/>
 
                 <span className="text-[9px] uppercase tracking-[0.12em]">
                   Email
