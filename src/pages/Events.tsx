@@ -41,7 +41,9 @@ function Events() {
   const [enrolledEventIds, setEnrolledEventIds] = useState<Set<string>>(
     new Set()
   )
-
+   useEffect(() => {
+    document.title = 'YANTROTSAV | Events'
+  }, [])
   // Load user's registered event IDs to prevent duplicate registration
   useEffect(() => {
     if (!user) {

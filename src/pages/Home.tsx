@@ -6,6 +6,7 @@ import {
   FaQuestionCircle,
   FaLightbulb,
 } from 'react-icons/fa';
+import { useEffect } from 'react';
 const images = import.meta.glob(
   '../assets/images/*',
   {
@@ -137,7 +138,9 @@ function Home() {
     duration: shouldReduceMotion ? 0 : 0.85,
     ease: [0.22, 1, 0.36, 1] as const,
   }
-
+   useEffect(() => {
+    document.title = 'YANTROTSAV | Home'
+  }, [])
   return (
     <div className="min-h-screen overflow-hidden bg-[#050816] text-white">
 
