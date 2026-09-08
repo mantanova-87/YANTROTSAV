@@ -1,6 +1,11 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import logo from '../assets/images/logo.png'
-
+import {
+  FaCode,
+  FaGamepad,
+  FaQuestionCircle,
+  FaLightbulb,
+} from 'react-icons/fa';
 const images = import.meta.glob(
   '../assets/images/*',
   {
@@ -104,8 +109,20 @@ const featureCards = [
   {
     title: 'Dr. Gourav Kumar',
     text: 'Assistant Professor',
-    image: 'Gourav_Kumar.jpg',
+    image: 'Gourav_Kumar.jpeg',
     accent: 'orange',
+  },
+  {
+    title: 'Mr. Zakir Ahmad Sheikh',
+    text: 'Assistant Professor',
+    image: 'zakirsir.jpeg',
+    accent: 'cyan',
+  },
+  {
+    title: 'Dr. Suresh Vishnudas Limkar',
+    text: 'Assistant Professor',
+    image: 'Limkarsir.jpg',
+    accent: 'violet',
   },
 ]
 
@@ -141,9 +158,9 @@ function Home() {
               About The Event / Fest Overview
             </span>
           </div> */}
-          
 
-             
+
+
 
           {/* Two-Column Hero Showcase */}
           <div className="grid items-center gap-12 mb-6 lg:grid-cols-12 lg:gap-16">
@@ -188,21 +205,25 @@ function Home() {
 
               {/* Highlights Pill Badges */}
               <div className="mt-8 flex flex-wrap gap-2.5">
-                <span className="border border-[#00E5FF]/40 bg-[#00E5FF]/5 px-3 py-1 font-mono rounded-2xl text-[11px] font-bold uppercase tracking-wider text-[#00E5FF]">
-                  • Coding
+                <span className="border flex flex-col items-center justify-center border-[#00E5FF]/40 bg-[#00E5FF]/5 px-3 py-1 font-mono rounded-2xl text-[11px] font-bold uppercase tracking-wider text-[#00E5FF]">
+                  <p><FaCode size={32} /></p>
+                  <p>• Coding</p>
                 </span>
-                <span className="border border-[#00E5FF]/40 bg-[#00E5FF]/5 px-3 py-1 font-mono rounded-2xl text-[11px] font-bold uppercase tracking-wider text-[#00E5FF]">
-                  • Esports
+                <span className="border flex flex-col items-center justify-center border-[#00E5FF]/40 bg-[#00E5FF]/5 px-3 py-1 font-mono rounded-2xl text-[11px] font-bold uppercase tracking-wider text-[#00E5FF]">
+                  <FaGamepad size={32} />
+                  <p>• Esports</p>
                 </span>
-                <span className="border border-[#00E5FF]/40 bg-[#00E5FF]/5 px-3 py-1 font-mono rounded-2xl text-[11px] font-bold uppercase tracking-wider text-[#00E5FF]">
-                  • Quizzes
+                <span className="border flex flex-col items-center justify-center border-[#00E5FF]/40 bg-[#00E5FF]/5 px-3 py-1 font-mono rounded-2xl text-[11px] font-bold uppercase tracking-wider text-[#00E5FF]">
+                  <p><FaQuestionCircle size={32} /></p>
+                  <p>• Quizzes</p>
                 </span>
-                <span className="border border-[#00E5FF]/40 bg-[#00E5FF]/5 px-3 py-1 font-mono rounded-2xl text-[11px] font-bold uppercase tracking-wider text-[#00E5FF]">
+                <span className="border flex flex-col items-center justify-center border-[#00E5FF]/40 bg-[#00E5FF]/5 px-3 py-1 font-mono rounded-2xl text-[11px] font-bold uppercase tracking-wider text-[#00E5FF]">
+                  <p><FaLightbulb size={32} /></p>
                   • Ideathon & Presentation
                 </span>
               </div>
 
-              
+
             </motion.div>
 
             {/* Right Column: Interactive Cyber Emblem (5 cols) */}
@@ -709,7 +730,7 @@ function Home() {
         </section>
       </div>
       )
-  </div>)
+    </div>)
 }
 
 export default Home
