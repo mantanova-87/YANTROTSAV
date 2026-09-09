@@ -125,6 +125,12 @@ const featureCards = [
     image: 'Limkarsir.jpg',
     accent: 'violet',
   },
+  {
+    title: 'Mr. Arun Kumar Sharma',
+    text: 'Assistant Professor',
+    image: 'Arun_Kumar_Sharma.jpg',
+    accent: 'orange',
+  }
 ]
 
 // ============================================================
@@ -138,7 +144,7 @@ function Home() {
     duration: shouldReduceMotion ? 0 : 0.85,
     ease: [0.22, 1, 0.36, 1] as const,
   }
-   useEffect(() => {
+  useEffect(() => {
     document.title = 'YANTROTSAV | Home'
   }, [])
   return (
