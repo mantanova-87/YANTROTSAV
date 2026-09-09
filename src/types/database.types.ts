@@ -121,7 +121,7 @@ export const DEPARTMENT_OPTIONS = [
 ] as const
 
 /**
- * Semester Options (Semesters 1 through 8)
+ * Academic progress options for diploma, undergraduate, postgraduate, and non-semester courses.
  */
 export const SEMESTER_OPTIONS = [
   { value: '1', label: 'Semester 1' },
@@ -132,6 +132,17 @@ export const SEMESTER_OPTIONS = [
   { value: '6', label: 'Semester 6' },
   { value: '7', label: 'Semester 7' },
   { value: '8', label: 'Semester 8' },
+  { value: '9', label: 'Semester 9' },
+  { value: '10', label: 'Semester 10' },
+  { value: '11', label: 'Semester 11' },
+  { value: '12', label: 'Semester 12' },
+  { value: 'year-1', label: 'Year 1 (annual course)' },
+  { value: 'year-2', label: 'Year 2 (annual course)' },
+  { value: 'year-3', label: 'Year 3 (annual course)' },
+  { value: 'year-4', label: 'Year 4 (annual course)' },
+  { value: 'year-5', label: 'Year 5 (annual course)' },
+  { value: 'year-6', label: 'Year 6 (annual course)' },
+  { value: 'not-applicable', label: 'Not semester-based / certificate course' },
 ] as const
 
 /**

@@ -15,6 +15,8 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import { DEPARTMENT_OPTIONS, SEMESTER_OPTIONS } from '../../types/database.types'
 import { showToast } from '../../utils/toast'
+import { getUsernameError, normalizeUsername } from '../../utils/username'
+import { getContactError, normalizeEmail, normalizeMobile } from '../../utils/profileValidation'
 
 export default function AuthModal() {
   const { authModalOpen, authModalMode, closeAuthModal, openAuthModal, login, registerStudent } =
@@ -81,6 +83,13 @@ export default function AuthModal() {
           showToast.warning('Email address is required.')
           return
         }
+        const normalizedEmail = normalizeEmail(email)
+        const normalizedPhone = normalizeMobile(phone)
+        const contactError = getContactError(normalizedEmail, normalizedPhone)
+        if (contactError) {
+          showToast.warning(contactError)
+          return
+        }
         if (!password) {
           showToast.warning('Password is required.')
           return
@@ -93,6 +102,12 @@ export default function AuthModal() {
           showToast.error('Passwords do not match. Please verify your confirm password.')
           return
         }
+        const normalizedUsername = normalizeUsername(username)
+        const usernameError = getUsernameError(normalizedUsername)
+        if (usernameError) {
+          showToast.warning(usernameError)
+          return
+        }
         if (!rollNo.trim()) {
           showToast.warning('Student Roll Number is required.')
           return
@@ -101,20 +116,17 @@ export default function AuthModal() {
           showToast.warning('Please specify your custom department name.')
           return
         }
-        if (semester.trim()) {
-          const semNum = parseInt(semester, 10)
-          if (isNaN(semNum) || semNum < 1 || semNum > 8) {
-            showToast.warning('Semester must be between 1 and 8.')
-            return
-          }
+        if (!semester.trim()) {
+          showToast.warning('Please select your current academic stage.')
+          return
         }
         setIsSubmitting(true)
         await registerStudent({
           fullName: name.trim(),
-          username: username.trim() || undefined,
-          email: email.trim(),
+          username: normalizedUsername,
+          email: normalizedEmail,
           password,
-          phone: phone.trim(),
+          phone: normalizedPhone,
           rollNumber: rollNo.trim(),
           department: branch.trim(),
           customDepartment: branch === 'OTHER' ? customDepartment.trim() : undefined,
@@ -260,18 +272,23 @@ export default function AuthModal() {
 
                     <div>
                       <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                        Username
+                        Username *
                       </label>
                       <div className="relative mt-1">
                         <AtSign size={15} className="absolute left-3.5 top-3 text-slate-500" />
                         <input
                           type="text"
-                          placeholder="Choose a username"
+                          required
+                          maxLength={30}
+                          pattern="[a-zA-Z0-9._]+"
+                          autoCapitalize="none"
+                          placeholder="letters, numbers, . and _ only"
                           value={username}
-                          onChange={(e) => setUsername(e.target.value)}
+                          onChange={(e) => setUsername(normalizeUsername(e.target.value))}
                           className="w-full border border-white/10 bg-[#050816] py-2.5 pl-10 pr-3 text-xs text-white placeholder-slate-600 outline-none transition-colors focus:border-[#00E5FF]"
                         />
                       </div>
+                      <p className="mt-1 font-mono text-[9px] text-slate-500">1–30 characters: lowercase letters, numbers, periods, or underscores.</p>
                     </div>
                   </div>
                 </>
@@ -286,13 +303,16 @@ export default function AuthModal() {
                   <input
                     type={authModalMode === 'login' ? 'text' : 'email'}
                     required
+                    inputMode={authModalMode === 'login' ? 'text' : 'email'}
+                    autoCapitalize="none"
+                    autoComplete={authModalMode === 'login' ? 'username' : 'email'}
                     placeholder={
                       authModalMode === 'login'
                         ? 'Email, @username, or roll number'
-                        : 'enrno.dep@cujammu.ac.in'
+                        : 'name@example.com'
                     }
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(authModalMode === 'register' ? normalizeEmail(e.target.value) : e.target.value)}
                     className="w-full border border-white/10 bg-[#050816] py-2.5 pl-10 pr-3 text-xs text-white placeholder-slate-600 outline-none transition-colors focus:border-[#00E5FF]"
                   />
                 </div>
@@ -369,15 +389,20 @@ export default function AuthModal() {
 
                     <div>
                       <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                        Phone / WhatsApp
+                        Phone / WhatsApp *
                       </label>
                       <div className="relative mt-1">
                         <Phone size={14} className="absolute left-3 top-3 text-slate-500" />
                         <input
                           type="tel"
-                          placeholder="Enter contact number"
+                          required
+                          inputMode="numeric"
+                          autoComplete="tel-national"
+                          pattern="[6-9][0-9]{9}"
+                          maxLength={10}
+                          placeholder="10-digit Indian mobile number"
                           value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
+                          onChange={(e) => setPhone(normalizeMobile(e.target.value))}
                           className="w-full border border-white/10 bg-[#050816] py-2.5 pl-9 pr-3 text-xs text-white placeholder-slate-600 outline-none transition-colors focus:border-[#FF6B00]"
                         />
                       </div>
@@ -413,15 +438,16 @@ export default function AuthModal() {
 
                     <div>
                       <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                        Current Semester (Max 8)
+                        Current academic stage *
                       </label>
                       <select
+                        required
                         value={semester}
                         onChange={(e) => setSemester(e.target.value)}
                         className="mt-1 w-full border border-white/10 bg-[#050816] px-3 py-2.5 text-xs text-white outline-none transition-colors focus:border-[#FF6B00]"
                       >
                         <option value="" className="bg-[#080A0F] text-slate-500">
-                          Select Semester
+                          Select semester, year, or course stage
                         </option>
                         {SEMESTER_OPTIONS.map((opt) => (
                           <option key={opt.value} value={opt.value} className="bg-[#080A0F] text-white">

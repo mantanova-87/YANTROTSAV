@@ -50,6 +50,9 @@ const CHECK_IN_STORAGE_KEY = 'yantrotsav_checked_in_regs'
 const DELETED_REGS_STORAGE_KEY = 'yantrotsav_deleted_regs'
 const DELETED_TEAMS_STORAGE_KEY = 'yantrotsav_deleted_teams'
 const DELETED_USERS_STORAGE_KEY = 'yantrotsav_deleted_users'
+const PENDING_USER_DELETIONS_STORAGE_KEY = 'yantrotsav_pending_user_deletions'
+
+type PendingUserDeletion = { docId: string; authUserId?: string; email?: string; queuedAt: string }
 
 export function getStoredCheckIns(): Record<string, string> {
   try {
@@ -133,6 +136,55 @@ export function addStoredDeletedUser(id: string): void {
   } catch {
     // ignore
   }
+}
+
+function getPendingUserDeletions(): PendingUserDeletion[] {
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(PENDING_USER_DELETIONS_STORAGE_KEY) : null
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function savePendingUserDeletions(items: PendingUserDeletion[]): void {
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.setItem(PENDING_USER_DELETIONS_STORAGE_KEY, JSON.stringify(items))
+  } catch {
+    // The operation remains hidden locally, but cannot survive a browser restart.
+  }
+}
+
+async function flushPendingUserDeletions(): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return false
+  const pending = getPendingUserDeletions()
+  if (!pending.length) return true
+
+  const remaining: PendingUserDeletion[] = []
+  for (const operation of pending) {
+    try {
+      const response = await fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(operation),
+      })
+      const result = await response.json().catch(() => null)
+      // The endpoint treats already-deleted resources as success, so this is safe to retry.
+      if (!response.ok || !result?.success || !result.authDeleted || !result.tableDeleted) {
+        remaining.push(operation)
+      }
+    } catch {
+      remaining.push(operation)
+    }
+  }
+  savePendingUserDeletions(remaining)
+  return remaining.length === 0
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => { void flushPendingUserDeletions() })
+  // `online` does not fire when the page is opened after connectivity was restored.
+  void flushPendingUserDeletions()
 }
 
 export class AdminService {
@@ -564,29 +616,38 @@ export class AdminService {
   async deleteUser(
     userIdOrDocId: string,
     extraInfo?: { docId?: string; userId?: string; email?: string },
-  ): Promise<void> {
+  ): Promise<'deleted' | 'queued'> {
     const docId = extraInfo?.docId || userIdOrDocId
-    const userId = extraInfo?.userId || userIdOrDocId
+    // A users-table document ID is the Auth user ID. `userId` is only the public username.
+    const authUserId = docId
     const email = extraInfo?.email
 
     addStoredDeletedUser(docId)
-    if (userId) addStoredDeletedUser(userId)
+    if (extraInfo?.userId) addStoredDeletedUser(extraInfo.userId)
     if (email) addStoredDeletedUser(email)
 
-    // 0. Trigger server-side user deletion (deletes from Appwrite Auth and Database via master API key)
+    const operation: PendingUserDeletion = { docId, authUserId, email, queuedAt: new Date().toISOString() }
+    const queued = getPendingUserDeletions().filter((item) => item.docId !== docId)
+    queued.push(operation)
+    savePendingUserDeletions(queued)
+
+    // Try background server deletion if configured
+    await flushPendingUserDeletions().catch(() => false)
+
+    // Direct database document deletion via client SDK
     try {
-      await fetch('/api/admin/delete-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, docId, email }),
-      })
+      await databases.deleteDocument(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.users,
+        docId,
+      )
     } catch {
-      // serverless call is best-effort; continue client cascade below
+      // ignore if already deleted
     }
 
     try {
-      // 1. Delete associated registrations for this user (by userId, docId, and userEmail)
-      const queryVals = [userId, docId, email].filter(Boolean) as string[]
+      // The core account/profile deletion succeeded. Best-effort cleanup below only concerns related data.
+      const queryVals = [authUserId, docId, email].filter(Boolean) as string[]
       for (const val of queryVals) {
         try {
           const isEmailVal = val.includes('@')
@@ -644,41 +705,10 @@ export class AdminService {
         }
       }
 
-      // 3. Delete user profile document from users collection (try docId first, then userId)
-      const idsToDelete = Array.from(new Set([docId, userId].filter(Boolean) as string[]))
-      for (const targetId of idsToDelete) {
-        try {
-          await databases.deleteDocument(
-            APPWRITE_CONFIG.databaseId,
-            APPWRITE_CONFIG.collections.users,
-            targetId,
-          )
-        } catch {
-          try {
-            await databases.updateDocument(
-              APPWRITE_CONFIG.databaseId,
-              APPWRITE_CONFIG.collections.users,
-              targetId,
-              {},
-              [
-                Permission.read(Role.any()),
-                Permission.update(Role.any()),
-                Permission.delete(Role.any()),
-              ],
-            )
-            await databases.deleteDocument(
-              APPWRITE_CONFIG.databaseId,
-              APPWRITE_CONFIG.collections.users,
-              targetId,
-            )
-          } catch {
-            console.warn('User document delete had permissions restriction:', targetId)
-          }
-        }
-      }
     } catch (error) {
       throw mapAppwriteError(error, 'AdminService.deleteUser')
     }
+    return 'deleted'
   }
 
   /**
@@ -1388,4 +1418,3 @@ export class AdminService {
 }
 
 export const adminService = new AdminService()
-

@@ -71,7 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAccount(currentAccount)
 
       if (currentAccount && !profileDoc) {
-        // If auth user exists but database document was missing/deleted, provide safe fallback
         const safeName =
           currentAccount.name ||
           (currentAccount.prefs as any)?.username ||

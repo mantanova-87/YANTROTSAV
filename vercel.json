@@ -1,9 +1,16 @@
 {
   "rewrites": [
     {
+      "source": "/api/admin/delete-user",
+      "destination": "/api/delete-user"
+    },
+    {
+      "source": "/api/auth/register",
+      "destination": "/api/register-user"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]
 }
-

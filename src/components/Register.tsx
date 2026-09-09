@@ -21,6 +21,8 @@ import { authService } from '../services/appwrite/auth.service'
 import { useAuth } from '../context/AuthContext'
 import { DEPARTMENT_OPTIONS, SEMESTER_OPTIONS, type RegisterPayload } from '../types/database.types'
 import { showToast } from '../utils/toast'
+import { getUsernameError, normalizeUsername } from '../utils/username'
+import { getContactError, normalizeEmail, normalizeMobile } from '../utils/profileValidation'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -80,13 +82,23 @@ export default function Register() {
       return
     }
 
+    const username = normalizeUsername(formData.username || '')
+    const usernameError = getUsernameError(username)
+    if (usernameError) {
+      showToast.warning(usernameError)
+      return
+    }
+
     if (!formData.rollNumber.trim()) {
       showToast.warning('Student Roll Number is required.')
       return
     }
 
-    if (!formData.phone.trim() || formData.phone.trim().length < 10) {
-      showToast.warning('Please provide a valid contact number (at least 10 digits).')
+    const email = normalizeEmail(formData.email)
+    const phone = normalizeMobile(formData.phone)
+    const contactError = getContactError(email, phone)
+    if (contactError) {
+      showToast.warning(contactError)
       return
     }
 
@@ -105,18 +117,15 @@ export default function Register() {
       return
     }
 
-    const semVal = parseInt(formData.semester, 10)
-    if (isNaN(semVal) || semVal < 1 || semVal > 8) {
-      showToast.warning('Semester must be between 1 and 8.')
-      return
-    }
-
     setIsSubmitting(true)
 
     try {
       // Execute registration via auth service layer
       const payloadToSend: RegisterPayload = {
         ...formData,
+        email,
+        phone,
+        username,
         customDepartment: formData.department === 'OTHER' ? formData.customDepartment?.trim() : undefined,
       }
       await authService.registerStudent(payloadToSend)
@@ -236,18 +245,23 @@ export default function Register() {
 
                 <div>
                   <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                    Username
+                    Username *
                   </label>
                   <div className="relative mt-1">
                     <AtSign size={15} className="absolute left-3.5 top-3.5 text-slate-500" />
                     <input
                       type="text"
+                      required
+                      maxLength={30}
+                      pattern="[a-zA-Z0-9._]+"
+                      autoCapitalize="none"
                       value={formData.username || ''}
-                      onChange={(e) => updateField('username', e.target.value)}
-                      placeholder="Choose a username"
+                      onChange={(e) => updateField('username', normalizeUsername(e.target.value))}
+                      placeholder="letters, numbers, . and _ only"
                       className="w-full border border-white/10 bg-[#050816] py-3 pl-10 pr-3 text-xs text-white placeholder-slate-600 outline-none transition-colors focus:border-[#00E5FF]"
                     />
                   </div>
+                  <p className="mt-1 font-mono text-[9px] text-slate-500">1–30 characters: lowercase letters, numbers, periods, or underscores.</p>
                 </div>
               </div>
 
@@ -261,9 +275,12 @@ export default function Register() {
                   <input
                     type="email"
                     required
+                    inputMode="email"
+                    autoCapitalize="none"
+                    autoComplete="email"
                     value={formData.email}
-                    onChange={(e) => updateField('email', e.target.value)}
-                    placeholder="enrno.dep@cujammu.ac.in"
+                    onChange={(e) => updateField('email', normalizeEmail(e.target.value))}
+                    placeholder="name@example.com"
                     className="w-full border border-white/10 bg-[#050816] py-3 pl-10 pr-3 text-xs text-white placeholder-slate-600 outline-none transition-colors focus:border-[#00E5FF]"
                   />
                 </div>
@@ -345,15 +362,20 @@ export default function Register() {
 
                 <div>
                   <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                    Phone / WhatsApp Number
+                    Phone / WhatsApp Number *
                   </label>
                   <div className="relative mt-1">
                     <Phone size={15} className="absolute left-3.5 top-3.5 text-slate-500" />
                     <input
                       type="tel"
+                      required
+                      inputMode="numeric"
+                      autoComplete="tel-national"
+                      pattern="[6-9][0-9]{9}"
+                      maxLength={10}
                       value={formData.phone}
-                      onChange={(e) => updateField('phone', e.target.value)}
-                      placeholder="Enter contact number"
+                      onChange={(e) => updateField('phone', normalizeMobile(e.target.value))}
+                      placeholder="10-digit Indian mobile number"
                       className="w-full border border-white/10 bg-[#050816] py-3 pl-10 pr-3 text-xs text-white placeholder-slate-600 outline-none transition-colors focus:border-[#FF6B00]"
                     />
                   </div>
@@ -393,7 +415,7 @@ export default function Register() {
 
                 <div>
                   <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                    Current Semester * (Max 8)
+                    Current academic stage *
                   </label>
                   <div className="relative mt-1">
                     <BookOpen size={15} className="absolute left-3.5 top-3.5 text-slate-500 pointer-events-none" />
@@ -404,7 +426,7 @@ export default function Register() {
                       className="w-full border border-white/10 bg-[#050816] py-3 pl-10 pr-3 text-xs text-white outline-none transition-colors focus:border-[#00E5FF]"
                     >
                       <option value="" disabled className="bg-[#080A0F] text-slate-500">
-                        Select Semester (1 - 8)
+                        Select semester, year, or course stage
                       </option>
                       {SEMESTER_OPTIONS.map((opt) => (
                         <option key={opt.value} value={opt.value} className="bg-[#080A0F] text-white">
