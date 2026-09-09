@@ -76,15 +76,45 @@ export class AuthService {
     const username = normalizeUsername(payload.username || "");
 
     try {
-      // This improves the error message; the unique `userId` index remains the race-safe authority.
-      const existingUsername = await databases.listDocuments(
-        APPWRITE_CONFIG.databaseId,
-        APPWRITE_CONFIG.collections.users,
-        [Query.equal("userId", username), Query.limit(1)],
-      );
+      // 0. Pre-validate uniqueness in Database BEFORE touching Auth
+      // This guarantees no orphan Auth accounts or sessions are created if a field is already taken
+      const [existingUsername, existingRoll, existingEmail] = await Promise.all([
+        databases.listDocuments(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.users,
+          [Query.equal("userId", username), Query.limit(1)],
+        ),
+        databases.listDocuments(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.users,
+          [Query.equal("rollNumber", rollNumber), Query.limit(1)],
+        ),
+        databases.listDocuments(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.users,
+          [Query.equal("email", email), Query.limit(1)],
+        ),
+      ]);
+
       if (existingUsername.documents.length) {
         throw new AppError(
           "This username is already taken. Please choose another one.",
+          "ALREADY_REGISTERED",
+          409,
+        );
+      }
+
+      if (existingRoll.documents.length) {
+        throw new AppError(
+          "A student with this Roll Number is already registered.",
+          "ALREADY_REGISTERED",
+          409,
+        );
+      }
+
+      if (existingEmail.documents.length) {
+        throw new AppError(
+          "An account with this email address already exists. Try signing in.",
           "ALREADY_REGISTERED",
           409,
         );
@@ -229,6 +259,8 @@ export class AuthService {
         userProfile: profileDoc,
       };
     } catch (error) {
+      // If registration failed after session was established, wipe active session so no half-baked state remains
+      await account.deleteSession("current").catch(() => {});
       throw mapAppwriteError(error, "AuthService.registerStudent");
     }
   }
