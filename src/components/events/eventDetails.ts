@@ -13,4 +13,29 @@ export const eventDetails: Record<
        "Instruction 3",
    ],
   },
+  "6a9e49bc001a4ecd3542": {
+    about: "About the first event...",
+    instructions: [
+      "Instruction 1",
+      "Instruction 2",
+      "Instruction 3",
+    ],
+  },
+  "6a9e4a74000b89971a9f": {
+    about: "About the first event...",
+    instructions: [
+      "Instruction 1",
+      "Instruction 2",
+      "Instruction 3",
+    ],
+  },
+  "6a9e4b2d0000cc64ad18": {
+    about: "About the first event...",
+    instructions: [
+      "Instruction 1",
+      "Instruction 2",
+      "Instruction 3",
+    ],
+  },
+
 }
