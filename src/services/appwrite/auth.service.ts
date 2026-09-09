@@ -4,6 +4,8 @@ import { APPWRITE_CONFIG } from '../../config/appwrite.config'
 import { mapAppwriteError, AppError } from './errorMapper'
 import type { Models } from 'appwrite'
 import type { UserProfile, RegisterPayload } from '../../types/database.types'
+import { getUsernameError, normalizeUsername } from '../../utils/username'
+import { getContactError, normalizeEmail, normalizeMobile } from '../../utils/profileValidation'
 
 export class AuthService {
   /**
@@ -21,12 +23,13 @@ export class AuthService {
   }> {
     // 0. Strict validation: Sab kuch sahi hone ke baad hi account & DB row create karenge
     const fullName = payload.fullName?.trim() || ''
-    const email = payload.email?.trim() || ''
+    const email = normalizeEmail(payload.email || '')
     const password = payload.password || ''
     const rollNumber = payload.rollNumber?.trim() || ''
-    const phone = payload.phone?.trim() || ''
+    const phone = normalizeMobile(payload.phone || '')
     const department = payload.department?.trim() || ''
     const semester = payload.semester?.trim() || ''
+    const username = normalizeUsername(payload.username || '')
 
     if (!fullName) throw new AppError('Full Name is required.', 'UNKNOWN_ERROR', 400)
     if (!email) throw new AppError('Email is required.', 'UNKNOWN_ERROR', 400)
@@ -35,8 +38,51 @@ export class AuthService {
     }
     if (!rollNumber) throw new AppError('Roll Number is required.', 'UNKNOWN_ERROR', 400)
     if (!department) throw new AppError('Department is required.', 'UNKNOWN_ERROR', 400)
+    const contactError = getContactError(email, phone)
+    if (contactError) throw new AppError(contactError, 'UNKNOWN_ERROR', 400)
+    const usernameError = getUsernameError(username)
+    if (usernameError) throw new AppError(usernameError, 'UNKNOWN_ERROR', 400)
+
+    // Production registrations are created by the server, which owns the API key and creates
+    // Auth plus the profile document together. A 404 only occurs in local Vite development,
+    // where the legacy SDK path below remains available for local testing.
+    try {
+      const serverResponse = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, username, email, phone, fullName, rollNumber, department, semester }),
+      })
+      if (serverResponse.status !== 404) {
+        const result = await serverResponse.json().catch(() => null)
+        if (!serverResponse.ok || !result?.success) {
+          throw new AppError(result?.message || 'Registration could not be completed. Please try again.', 'UNKNOWN_ERROR', serverResponse.status)
+        }
+        await account.createEmailPasswordSession(email, password)
+        const authUser = await account.get()
+        const profile = await databases.getDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.users,
+          authUser.$id,
+        )
+        return { account: authUser, userProfile: profile as unknown as UserProfile }
+      }
+    } catch (error) {
+      if (error instanceof AppError) throw error
+      // A connection failure is handled by the SDK recovery path below, which can detect an
+      // account whose server response was lost after it was created.
+    }
 
     try {
+      // This improves the error message; the unique `userId` index remains the race-safe authority.
+      const existingUsername = await databases.listDocuments(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.users,
+        [Query.equal('userId', username), Query.limit(1)],
+      )
+      if (existingUsername.documents.length) {
+        throw new AppError('This username is already taken. Please choose another one.', 'ALREADY_REGISTERED', 409)
+      }
+
       // 1. Generate primary auth user or recover existing auth user if table profile was deleted
       let authUser: Models.User<Models.Preferences>
       let isExistingAuthUser = false
@@ -51,8 +97,9 @@ export class AuthService {
       } catch (authErr: any) {
         const errType = authErr?.type || ''
         const errMsg = authErr?.message?.toLowerCase() || ''
-        if (errType === 'user_already_exists' || errMsg.includes('already exists')) {
-          // Attempt to log in with provided password to verify if this user is recovering a deleted table profile
+        if (errType === 'user_already_exists' || errMsg.includes('already exists') || !navigator.onLine || !errType) {
+          // A slow connection can lose the response after Appwrite has already created the account.
+          // Signing in verifies that case and lets us finish the missing profile instead of creating a partial account.
           try {
             await account.createEmailPasswordSession(email, password)
             const currentAcc = await account.get()
@@ -87,9 +134,9 @@ export class AuthService {
       }
 
       // Save username in account preferences if provided
-      if (payload.username?.trim()) {
+      if (username) {
         try {
-          await account.updatePrefs({ username: payload.username.trim() })
+          await account.updatePrefs({ username })
         } catch (prefErr) {
           console.warn('Could not save username in prefs:', prefErr)
         }
@@ -97,7 +144,7 @@ export class AuthService {
 
       // 3. Write student profile document using authUser.$id as Document ID,
       // and put chosen username into the existing `userId` DB field
-      const chosenUserId = payload.username?.trim() || email.split('@')[0]
+      const chosenUserId = username
       const profileData: Record<string, any> = {
         userId: chosenUserId.slice(0, 128),
         fullName: fullName.slice(0, 128),
@@ -118,34 +165,41 @@ export class AuthService {
         Permission.delete(Role.any()),
       ]
 
+      const createProfileDocument = () => databases.createDocument(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.users,
+        authUser.$id,
+        profileData,
+        docPermissions,
+      )
+
       let profileDoc: UserProfile
       try {
-        const doc = await databases.createDocument(
-          APPWRITE_CONFIG.databaseId,
-          APPWRITE_CONFIG.collections.users,
-          authUser.$id,
-          profileData,
-          docPermissions,
-        )
+        const doc = await createProfileDocument()
         profileDoc = doc as unknown as UserProfile
       } catch (docError: any) {
+        // A request can time out after Appwrite commits the document. Read it before retrying,
+        // making profile provisioning idempotent instead of reporting a false failure.
+        if (docError?.code === 409 || docError?.type === 'document_already_exists') {
+          const existing = await databases.getDocument(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.users,
+            authUser.$id,
+          )
+          profileDoc = existing as unknown as UserProfile
+        } else {
         // Fallback in case customDepartment attribute is not in schema or required
         const errMsg = docError?.message?.toLowerCase() || ''
         if (errMsg.includes('customdepartment') || docError?.code === 400) {
           if ('customDepartment' in profileData) {
             delete profileData.customDepartment
           }
-          const doc = await databases.createDocument(
-            APPWRITE_CONFIG.databaseId,
-            APPWRITE_CONFIG.collections.users,
-            authUser.$id,
-            profileData,
-            docPermissions,
-          )
+          const doc = await createProfileDocument()
           profileDoc = doc as unknown as UserProfile
         } else {
           // Map database unique constraint errors (e.g. idx_rollNumber, idx_email, idx_userId)
           throw mapAppwriteError(docError, 'AuthService.registerStudent (createDocument)')
+        }
         }
       }
 
@@ -310,6 +364,24 @@ export class AuthService {
     try {
       // 1. Prepare clean payload containing only valid schema attributes
       const updateData: Record<string, any> = {}
+      const requestedUsername = data.username !== undefined
+        ? normalizeUsername(data.username)
+        : data.userId !== undefined
+          ? normalizeUsername(data.userId)
+          : undefined
+
+      if (requestedUsername !== undefined) {
+        const usernameError = getUsernameError(requestedUsername)
+        if (usernameError) throw new AppError(usernameError, 'UNKNOWN_ERROR', 400)
+        const matches = await databases.listDocuments(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.users,
+          [Query.equal('userId', requestedUsername), Query.limit(2)],
+        )
+        if (matches.documents.some((document) => document.$id !== userId)) {
+          throw new AppError('This username is already taken. Please choose another one.', 'ALREADY_REGISTERED', 409)
+        }
+      }
 
       if (data.fullName !== undefined) updateData.fullName = data.fullName.trim().slice(0, 128)
       if (data.phone !== undefined) updateData.phone = data.phone.trim().slice(0, 32)
@@ -317,10 +389,8 @@ export class AuthService {
       if (data.customDepartment !== undefined) updateData.customDepartment = data.customDepartment.trim().slice(0, 128)
       if (data.semester !== undefined) updateData.semester = data.semester.trim().slice(0, 32)
       if (data.rollNumber !== undefined) updateData.rollNumber = data.rollNumber.trim().slice(0, 128)
-      if (data.username !== undefined && data.username.trim()) {
-        updateData.userId = data.username.trim().slice(0, 128)
-      } else if (data.userId !== undefined && data.userId.trim()) {
-        updateData.userId = data.userId.trim().slice(0, 128)
+      if (requestedUsername !== undefined) {
+        updateData.userId = requestedUsername
       }
 
       // 2. Update database document in users collection
@@ -341,11 +411,11 @@ export class AuthService {
       }
 
       // 4. If username was provided, synchronize with Appwrite Auth User preferences
-      const chosenUserHandle = data.username || data.userId
+      const chosenUserHandle = requestedUsername
       if (chosenUserHandle !== undefined) {
         try {
           const authUser = await account.get()
-          await account.updatePrefs({ ...(authUser.prefs || {}), username: chosenUserHandle.trim() })
+          await account.updatePrefs({ ...(authUser.prefs || {}), username: chosenUserHandle })
         } catch (prefErr) {
           console.warn('Could not update username in prefs:', prefErr)
         }
@@ -353,8 +423,8 @@ export class AuthService {
 
       const userProfile = updatedDoc as unknown as UserProfile
       if (chosenUserHandle !== undefined) {
-        userProfile.username = chosenUserHandle.trim()
-        userProfile.userId = chosenUserHandle.trim()
+        userProfile.username = chosenUserHandle
+        userProfile.userId = chosenUserHandle
       }
       return userProfile
     } catch (error) {

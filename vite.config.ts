@@ -275,7 +275,7 @@ This message was submitted through the Yantrotsav website.
                 process.env.APPWRITE_API_KEY ||
                 env.VITE_APPWRITE_API_KEY;
 
-              const { userId, docId, email } = JSON.parse(body || "{}");
+              const { docId, authUserId, email } = JSON.parse(body || "{}");
 
               let authDeleted = false;
               let tableDeleted = false;
@@ -283,7 +283,7 @@ This message was submitted through the Yantrotsav website.
 
               if (apiKey) {
                 try {
-                  let targetAuthId = userId;
+                  let targetAuthId = authUserId || docId;
                   if (email) {
                     try {
                       const listRes = await fetch(
@@ -334,7 +334,7 @@ This message was submitted through the Yantrotsav website.
                     }
                   }
 
-                  const targetDocId = docId || userId;
+                  const targetDocId = docId || targetAuthId;
                   if (targetDocId) {
                     const delDocRes = await fetch(
                       `${endpoint}/databases/${databaseId}/collections/users/documents/${targetDocId}`,
@@ -364,11 +364,12 @@ This message was submitted through the Yantrotsav website.
                 );
               }
 
-              res.statusCode = 200;
+              const success = authDeleted && tableDeleted;
+              res.statusCode = success ? 200 : 503;
               res.setHeader("Content-Type", "application/json");
               res.end(
                 JSON.stringify({
-                  success: true,
+                  success,
                   authDeleted,
                   tableDeleted,
                   warnings: errors.length > 0 ? errors : undefined,
