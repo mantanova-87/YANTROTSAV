@@ -141,6 +141,13 @@ export function mapAppwriteError(error: unknown, context?: string): AppError {
             409,
             error,
           )
+        } else if (lowerMsg.includes('userid') || lowerMsg.includes('idx_userid')) {
+          mappedError = new AppError(
+            'This username is already taken. Please choose another one.',
+            'ALREADY_REGISTERED',
+            409,
+            error,
+          )
         } else if (
           lowerMsg.includes('email') ||
           lowerMsg.includes('user') ||
@@ -149,13 +156,6 @@ export function mapAppwriteError(error: unknown, context?: string): AppError {
           mappedError = new AppError(
             'An account with this email address already exists.',
             'AUTH_USER_ALREADY_EXISTS',
-            409,
-            error,
-          )
-        } else if (lowerMsg.includes('userid') || lowerMsg.includes('idx_userid')) {
-          mappedError = new AppError(
-            'A profile for this user account already exists.',
-            'ALREADY_REGISTERED',
             409,
             error,
           )
