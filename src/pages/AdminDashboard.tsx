@@ -52,6 +52,9 @@ import type {
 type AdminTab = 'events' | 'roster' | 'users' | 'teams'
 
 export default function AdminDashboard() {
+   useEffect(() => {
+    document.title = 'YANTROTSAV | Administrator'
+  }, [])
   const { user, isAdmin, loading: authLoading, openAuthModal } = useAuth()
   const dispatch = useAppDispatch()
 

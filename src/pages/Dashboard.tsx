@@ -35,6 +35,9 @@ import type {
 import { showToast } from '../utils/toast'
 
 export default function Dashboard() {
+   useEffect(() => {
+    document.title = 'YANTROTSAV | Dashboard'
+  }, [])
   const { user, profile, openAuthModal, loading: authLoading, updateProfile } = useAuth()
 
   const [invitations, setInvitations] = useState<TeamInvitationDocument[]>([])

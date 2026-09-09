@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import type { FormEvent } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { FaMapMarkerAlt, FaPaperPlane } from 'react-icons/fa';
@@ -61,6 +61,9 @@ const queryTypes = [
 ]
 
 export default function Contact() {
+   useEffect(() => {
+    document.title = 'YANTROTSAV | Contact'
+  }, [])
   const reducedMotion = useReducedMotion()
 
   const [form, setForm] = useState<FormData>(initialForm)

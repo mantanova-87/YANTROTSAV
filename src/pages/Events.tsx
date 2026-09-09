@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
+import EventDetailsModal from '../components/events/EventDetailsModal'
+import GeneralGuidelines from '../pages/GeneralGuidelines'
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -36,7 +38,9 @@ function Events() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [selectedEvent, setSelectedEvent] = useState<EventDocument | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
-
+  const [guidelinesOpen, setGuidelinesOpen] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [detailsEvent, setDetailsEvent] = useState<EventDocument | null>(null)
   const { user, profile } = useAuth()
   const [enrolledEventIds, setEnrolledEventIds] = useState<Set<string>>(
     new Set()
@@ -230,7 +234,7 @@ function Events() {
       {/* ========================================================= */}
 
       {dynamicSchedule.length > 0 && (
-        <section className="mx-auto max-w-[1240px] px-5 pb-24 md:px-8 md:pb-32">
+        <section className="mx-auto max-w-[1240px] px-5 pb-8 md:px-8 md:pb-16">
           <motion.div
             variants={reveal}
             initial="hidden"
@@ -264,11 +268,11 @@ function Events() {
               initial={
                 shouldReduceMotion
                   ? {
-                      opacity: 1,
-                    }
+                    opacity: 1,
+                  }
                   : {
-                      opacity: 0,
-                    }
+                    opacity: 0,
+                  }
               }
               whileInView={{
                 opacity: 1,
@@ -417,9 +421,8 @@ function Events() {
                             {Array.from({ length: 5 }).map(
                               (_, stripIndex) => {
                                 const top = `${stripIndex * 20}%`
-                                const bottom = `${
-                                  (4 - stripIndex) * 20
-                                }%`
+                                const bottom = `${(4 - stripIndex) * 20
+                                  }%`
 
                                 return (
                                   <motion.div
@@ -449,20 +452,18 @@ function Events() {
                                   >
                                     {/* Paper edge */}
                                     <span
-                                      className={`absolute left-0 right-0 top-0 h-px ${
-                                        stripIndex === 0
-                                          ? 'bg-[#00E5FF]/40'
-                                          : 'bg-white/[0.05]'
-                                      }`}
+                                      className={`absolute left-0 right-0 top-0 h-px ${stripIndex === 0
+                                        ? 'bg-[#00E5FF]/40'
+                                        : 'bg-white/[0.05]'
+                                        }`}
                                     />
 
                                     {/* Technical paper mark */}
                                     <span
-                                      className={`absolute top-1/2 h-px w-8 -translate-y-1/2 ${
-                                        fromLeft
-                                          ? 'right-5 bg-[#FF6B00]/50'
-                                          : 'left-5 bg-[#00E5FF]/50'
-                                      }`}
+                                      className={`absolute top-1/2 h-px w-8 -translate-y-1/2 ${fromLeft
+                                        ? 'right-5 bg-[#FF6B00]/50'
+                                        : 'left-5 bg-[#00E5FF]/50'
+                                        }`}
                                     />
                                   </motion.div>
                                 )
@@ -479,7 +480,19 @@ function Events() {
           </motion.div>
         </section>
       )}
-
+      <div className='flex flex-col-3 items-center justify-between'>
+        <span></span>
+        <button
+          onClick={() => setGuidelinesOpen(true)}
+          className="group relative flex w-[30vw] mb-8 items-center justify-center overflow-hidden border border-[#FF6B00]/60 bg-[#FF6B00] px-5 py-3.5 text-[#050816] transition-all duration-300 hover:border-[#00E5FF] hover:bg-[#00E5FF]"
+        >
+          <span className="flex flex-col text-[10px] font-black uppercase tracking-[0.18em]">
+            <span className="text-sm">GENERAL GUIDELINES</span>
+            <span>Click To Read More</span>
+          </span>
+        </button>
+        <span></span>
+      </div>
       {/* ========================================================= */}
       {/* FILTER BUTTONS & EVENT CARDS */}
       {/* ========================================================= */}
@@ -504,11 +517,10 @@ function Events() {
               <button
                 key={cat.value}
                 onClick={() => setSelectedCategory(cat.value)}
-                className={`border px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.15em] transition-all ${
-                  selectedCategory === cat.value
-                    ? 'border-[#00E5FF] bg-[#00E5FF] text-black shadow-[0_0_15px_rgba(0,229,255,0.3)]'
-                    : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/30 hover:text-white'
-                }`}
+                className={`border px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.15em] transition-all ${selectedCategory === cat.value
+                  ? 'border-[#00E5FF] bg-[#00E5FF] text-black shadow-[0_0_15px_rgba(0,229,255,0.3)]'
+                  : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/30 hover:text-white'
+                  }`}
               >
                 {cat.label}
               </button>
@@ -540,13 +552,13 @@ function Events() {
 
               const cardInitial = shouldReduceMotion
                 ? {
-                    opacity: 1,
-                    x: 0,
-                  }
+                  opacity: 1,
+                  x: 0,
+                }
                 : {
-                    opacity: 0,
-                    x: isReversed ? 120 : -120,
-                  }
+                  opacity: 0,
+                  x: isReversed ? 120 : -120,
+                }
 
               return (
                 <motion.article
@@ -565,18 +577,16 @@ function Events() {
                     delay: 0.05,
                     ease: [0.22, 1, 0.36, 1],
                   }}
-                  className={`group relative ${
-                    isReversed
-                      ? 'md:ml-auto md:max-w-[1080px]'
-                      : 'md:mr-auto md:max-w-[1080px]'
-                  }`}
+                  className={`group relative ${isReversed
+                    ? 'md:ml-auto md:max-w-[1080px]'
+                    : 'md:mr-auto md:max-w-[1080px]'
+                    }`}
                 >
                   <div className="relative border border-white/10 bg-[#080A0F] transition-all duration-500 group-hover:-translate-y-1 group-hover:border-white/20">
                     {/* Bookmark Notch */}
                     <div
-                      className={`absolute top-0 h-10 w-10 bg-[#050816] ${
-                        isReversed ? 'right-0' : 'left-0'
-                      }`}
+                      className={`absolute top-0 h-10 w-10 bg-[#050816] ${isReversed ? 'right-0' : 'left-0'
+                        }`}
                       style={{
                         clipPath:
                           'polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%)',
@@ -584,9 +594,8 @@ function Events() {
                     />
 
                     <div
-                      className={`absolute top-0 h-10 w-10 bg-[#FF6B00] opacity-80 ${
-                        isReversed ? 'right-0' : 'left-0'
-                      }`}
+                      className={`absolute top-0 h-10 w-10 bg-[#FF6B00] opacity-80 ${isReversed ? 'right-0' : 'left-0'
+                        }`}
                       style={{
                         clipPath:
                           'polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%)',
@@ -754,9 +763,9 @@ function Events() {
                         {(() => {
                           const isDeadlinePassed = Boolean(
                             event.registrationDeadline &&
-                              new Date(
-                                event.registrationDeadline
-                              ).getTime() < Date.now()
+                            new Date(
+                              event.registrationDeadline
+                            ).getTime() < Date.now()
                           )
 
                           const isRegistrationOpen =
@@ -767,23 +776,21 @@ function Events() {
                             <div className="mt-7 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                               <div className="flex items-center gap-3">
                                 <span
-                                  className={`h-1.5 w-1.5 ${
-                                    enrolledEventIds.has(event.$id)
-                                      ? 'bg-emerald-400'
-                                      : isRegistrationOpen
-                                        ? 'animate-pulse bg-emerald-400'
-                                        : 'bg-red-400'
-                                  }`}
+                                  className={`h-1.5 w-1.5 ${enrolledEventIds.has(event.$id)
+                                    ? 'bg-emerald-400'
+                                    : isRegistrationOpen
+                                      ? 'animate-pulse bg-emerald-400'
+                                      : 'bg-red-400'
+                                    }`}
                                 />
 
                                 <span
-                                  className={`font-mono text-[9px] uppercase tracking-[0.2em] ${
-                                    enrolledEventIds.has(event.$id)
+                                  className={`font-mono text-[9px] uppercase tracking-[0.2em] ${enrolledEventIds.has(event.$id)
+                                    ? 'text-emerald-400'
+                                    : isRegistrationOpen
                                       ? 'text-emerald-400'
-                                      : isRegistrationOpen
-                                        ? 'text-emerald-400'
-                                        : 'text-red-400'
-                                  }`}
+                                      : 'text-red-400'
+                                    }`}
                                 >
                                   {enrolledEventIds.has(event.$id)
                                     ? 'Registered'
@@ -794,39 +801,49 @@ function Events() {
                                         : 'Registration Closed'}
                                 </span>
                               </div>
-
-                              {enrolledEventIds.has(event.$id) ? (
-                                <Link
-                                  to="/dashboard"
-                                  className="flex cursor-pointer items-center justify-center gap-2 border border-emerald-500/60 bg-emerald-500/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all hover:bg-emerald-500 hover:text-black"
-                                >
-                                  <CheckCircle2 size={13} />
-
-                                  <span>Already Enrolled ✓</span>
-                                </Link>
-                              ) : isRegistrationOpen ? (
+                              <div className="flex flex-col gap-3 sm:flex-row">
                                 <button
                                   type="button"
-                                  onClick={() =>
-                                    handleOpenRegistration(event)
-                                  }
-                                  className="flex cursor-pointer items-center justify-center gap-3 border border-[#00E5FF] bg-[#00E5FF]/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-[#00E5FF] transition-all hover:bg-[#00E5FF] hover:text-black"
+                                  onClick={() => {
+                                    setDetailsEvent(event)
+                                    setDetailsOpen(true)
+                                  }}
+                                  className="flex cursor-pointer items-center justify-center gap-2 border border-[#FF6B00]/70 bg-[#FF6B00]/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-[#FF6B00] transition-all hover:bg-[#FF6B00] hover:text-black"
                                 >
-                                  <span>Register Now</span>
-
-                                  {isReversed ? (
-                                    <ArrowUpRight size={14} />
-                                  ) : (
-                                    <ArrowDownRight size={14} />
-                                  )}
+                                  <span>More Details</span>
                                 </button>
-                              ) : (
-                                <span className="border border-white/10 px-4 py-2 font-mono text-[9px] uppercase tracking-wider text-slate-500">
-                                  {isDeadlinePassed
-                                    ? 'Deadline Passed'
-                                    : 'Registrations Closed'}
-                                </span>
-                              )}
+                                {enrolledEventIds.has(event.$id) ? (
+                                  <Link
+                                    to="/dashboard"
+                                    className="flex cursor-pointer items-center justify-center gap-2 border border-emerald-500/60 bg-emerald-500/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all hover:bg-emerald-500 hover:text-black"
+                                  >
+                                    <CheckCircle2 size={13} />
+
+                                    <span>Already Enrolled ✓</span>
+                                  </Link>
+                                ) : isRegistrationOpen ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleOpenRegistration(event)
+                                    }
+                                    className="flex cursor-pointer items-center justify-center gap-3 border border-[#00E5FF] bg-[#00E5FF]/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-[#00E5FF] transition-all hover:bg-[#00E5FF] hover:text-black"
+                                  >
+                                    <span>Register Now</span>
+
+                                    {isReversed ? (
+                                      <ArrowUpRight size={14} />
+                                    ) : (
+                                      <ArrowDownRight size={14} />
+                                    )}
+                                  </button>
+                                ) : (
+                                  <span className="border border-white/10 px-4 py-2 font-mono text-[9px] uppercase tracking-wider text-slate-500">
+                                    {isDeadlinePassed
+                                      ? 'Deadline Passed'
+                                      : 'Registrations Closed'}
+                                  </span>
+                                )}</div>
                             </div>
                           )
                         })()}
@@ -840,9 +857,8 @@ function Events() {
 
                   {/* Bookmark tail */}
                   <div
-                    className={`absolute -bottom-3 h-7 w-9 bg-[#FF6B00] ${
-                      isReversed ? 'right-8' : 'left-8'
-                    }`}
+                    className={`absolute -bottom-3 h-7 w-9 bg-[#FF6B00] ${isReversed ? 'right-8' : 'left-8'
+                      }`}
                     style={{
                       clipPath:
                         'polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%)',
@@ -854,7 +870,11 @@ function Events() {
           </div>
         )}
       </section>
-
+      {guidelinesOpen && (
+        <GeneralGuidelines
+          onClose={() => setGuidelinesOpen(false)}
+        />
+      )}
       {/* ========================================================= */}
       {/* REGISTRATION MODAL */}
       {/* ========================================================= */}
@@ -863,6 +883,14 @@ function Events() {
         event={selectedEvent}
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
+      />
+      <EventDetailsModal
+        event={detailsEvent}
+        isOpen={detailsOpen}
+        onClose={() => {
+          setDetailsOpen(false)
+          setDetailsEvent(null)
+        }}
       />
     </main>
   )

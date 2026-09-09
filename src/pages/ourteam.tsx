@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion";
+import { useEffect } from "react";
 import { FaInstagram, FaWhatsapp, FaLinkedin } from "react-icons/fa6";
 import { BiLogoGmail } from "react-icons/bi";
 import mantavya from "../assets/images/mantavya.jpeg";
@@ -250,6 +251,9 @@ function TeamMemberCard({
 }
 
 export default function OurTeam() {
+   useEffect(() => {
+    document.title = 'YANTROTSAV | Team'
+  }, [])
   return (
     <main className="min-h-screen bg-[#050816] text-[#F8FAFC]">
       {/* Header */}
