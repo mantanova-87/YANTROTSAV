@@ -5,14 +5,12 @@ export const eventDetails: Record<
     instructions: string[]
   }
 > = {
-  // Event ID will go here
-  // Example:
-  // "67abc123": {
-  //   about: "About this event...",
-  //   instructions: [
-  //     "Instruction 1",
-  //     "Instruction 2",
-  //     "Instruction 3",
-  //   ],
-  // },
+  "6a9dabac000299f6032d": {
+     about: "About this event...",
+     instructions: [
+      "Instruction 1",
+      "Instruction 2",
+       "Instruction 3",
+   ],
+  },
 }
