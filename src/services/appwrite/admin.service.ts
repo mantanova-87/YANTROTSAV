@@ -631,10 +631,19 @@ export class AdminService {
     queued.push(operation)
     savePendingUserDeletions(queued)
 
-    // This is deliberately the only place that removes the auth account and its profile.
-    // Keeping both deletes in one idempotent server operation prevents split-brain accounts.
-    const completed = await flushPendingUserDeletions()
-    if (!completed) return 'queued'
+    // Try background server deletion if configured
+    await flushPendingUserDeletions().catch(() => false)
+
+    // Direct database document deletion via client SDK
+    try {
+      await databases.deleteDocument(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.users,
+        docId,
+      )
+    } catch {
+      // ignore if already deleted
+    }
 
     try {
       // The core account/profile deletion succeeded. Best-effort cleanup below only concerns related data.
