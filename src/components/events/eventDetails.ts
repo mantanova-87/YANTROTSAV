@@ -6,7 +6,7 @@ export const eventDetails: Record<
   }
 > = {
   "6a9dabac000299f6032d": {
-     about: "About this event...",
+     about: "THE IDEA WALL is the event in which participants are required to make a poster.The theme of the event will be released two days prior to the schedule of the event.Participants are advised to create digital posters only.Participants must showcase their creativity imagination and artistic skills.",
      instructions: [
       "Instruction 1",
       "Instruction 2",
