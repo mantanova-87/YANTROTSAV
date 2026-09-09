@@ -9,8 +9,8 @@ export const eventDetails: Record<
      about: "THE IDEA WALL is the event in which participants are required to make a poster.The theme of the event will be released two days prior to the schedule of the event.Participants are advised to create digital posters only.Participants must showcase their creativity imagination and artistic skills.",
      instructions: [
       "Poster size will be released alongwith the poster theme.",
-      "Participants are required to presenttheir poster in printed form 30 min prior to the start of event.",
-       "Participants will be disqualified if the poster is not as per the required theme.","Seats are limited so registration will be acceptedon first come firstserve basis and it will be closed automatically once all seats are filled. ",
+      "Participants are required to presenttheir poster in printed form 30 minutes prior to the start of event.",
+       "Participants will be disqualified if the poster is not as per the required theme.","Seats are limited so registration will be accepted on first come first serve basis and it will be closed automatically once all seats are filled. ",
    ],
   },
   "6a9e49bc001a4ecd3542": {
