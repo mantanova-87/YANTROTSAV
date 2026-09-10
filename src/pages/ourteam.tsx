@@ -71,7 +71,11 @@ const teamMembers = [
     instagram: "https://www.instagram.com/ankit_lalji",
     linkedin: "https://www.linkedin.com/in/ankit-kumar-ojha-04de13d12m/",
     whatsapp: "https://wa.me/919334569412",
+<<<<<<< HEAD
     image: ankit,
+=======
+    image: mehak,
+>>>>>>> fa534352797344dbe116a24c06c2d9a8bb951091
   },
 ];
 
