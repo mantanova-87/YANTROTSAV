@@ -47,22 +47,22 @@ const teamMembers = [
     whatsapp: "https://wa.me/919341803923",
     image: priyanshu,
   },
-  {
-    name: "KUMAR SACHIN",
-    designation: "",
-    email: "24BECSE22.cse@cujammu.ac.in",
-    instagram: "https://www.instagram.com/cyros_sachin",
-    linkedin: "https://www.linkedin.com/in/cyrossachin",
-    whatsapp: "https://wa.me/918602948023",
-    image: sachin,
-  },
+  // {
+  //   name: "KUMAR SACHIN",
+  //   designation: "",
+  //   email: "24BECSE22.cse@cujammu.ac.in",
+  //   instagram: "https://www.instagram.com/cyros_sachin",
+  //   linkedin: "https://www.linkedin.com/in/cyrossachin",
+  //   whatsapp: "https://wa.me/918602948023",
+  //   image: sachin,
+  // },
   {
     name: "MEHAK SHARMA",
     designation: "",
     email: "25BECCS46.cse@cujammu.ac.in",
     instagram: "https://www.instagram.com/9613mehak",
     linkedin: "https://www.linkedin.com/in/mehak-sharma-cyber",
-    // whatsapp: "",  //https://wa.me/919906814723
+    whatsapp: "", //https://wa.me/919906814723
     image: mehak,
   },
   {
@@ -74,15 +74,15 @@ const teamMembers = [
     whatsapp: "https://wa.me/919334569412",
     image: ankit,
   },
-  {
-    name: "LAVI SAINI",
-    designation: "",
-    email: "",
-    instagram: "",
-    linkedin: "https://www.linkedin.com/in/lavisainii",
-    whatsapp: "", //NULL
-    image: Lavi,
-  },
+  // {
+  //   name: "LAVI SAINI",
+  //   designation: "",
+  //   email: "",
+  //   instagram: "",
+  //   linkedin: "https://www.linkedin.com/in/lavisainii",
+  //   whatsapp: "", //NULL
+  //   image: Lavi,
+  // },
 ];
 
 const stripCount = 5;
