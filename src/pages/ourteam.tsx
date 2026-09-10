@@ -64,6 +64,15 @@ const teamMembers = [
     whatsapp: "https://wa.me/919906814723",
     image: mehak,
   },
+  {
+    name: "ANKIT KUMAR OJHA",
+    designation: "",
+    email: "25BECSE15.cse@cujammu.ac.in",
+    instagram: "https://www.instagram.com/ankit_lalji",
+    linkedin: "https://www.linkedin.com/in/ankit-kumar-ojha-04de13d12m/",
+    whatsapp: "https://wa.me/919334569412",
+    image: mehak,
+  },
 ];
 
 const stripCount = 5;
