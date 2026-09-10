@@ -207,9 +207,9 @@ function Home() {
 
               <p className="mt-4 text-sm leading-relaxed text-slate-400 sm:text-base">
                 Bringing together brightest minds, developers, creators, and
-                innovators from across the region to compete, collaborate, and
+                innovators from across the DEPARTMENTS to compete, collaborate, and
                 push the boundaries of technical prowess, algorithmic thinking,
-                robotics, and creative problem-solving.
+                and creative problem-solving.
               </p>
 
               {/* Highlights Pill Badges */}
