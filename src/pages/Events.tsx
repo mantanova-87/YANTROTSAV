@@ -641,7 +641,7 @@ function Events() {
                               e.currentTarget.src = fallbackBanner
                             }
                           }}
-                          className="absolute left-1/2 top-1/2 z-10 h-45 w-45 -translate-x-1/2 -translate-y-1/2 object-contain transition-all duration-700 group-hover:scale-105"
+                          className="absolute left-1/2 top-1/2 z-10 h-50 w-50 -translate-x-1/2 -translate-y-1/2 object-contain transition-all duration-700 group-hover:scale-105"
                         />
 
                         <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-br from-[#00E5FF]/15 via-transparent to-[#FF6B00]/15" />

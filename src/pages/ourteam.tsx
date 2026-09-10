@@ -8,6 +8,14 @@ import priyanshu from "../assets/images/priyanshu.jpeg";
 import abhinav from "../assets/images/abhinav.png";
 import Harsh from "../assets/images/Harsh.jpeg";
 import ankit from "../assets/images/ankitojha.jpeg";
+const images = import.meta.glob(
+  '../assets/images/*',
+  {
+    eager: true,
+    query: '?url',
+    import: 'default',
+  },
+) as Record<string, string>
 const teamMembers = [
   {
     name: "ABHINAV KUMAR",
@@ -45,15 +53,6 @@ const teamMembers = [
     whatsapp: "https://wa.me/919341803923",
     image: priyanshu,
   },
-  // {
-  //   name: "KUMAR SACHIN",
-  //   designation: "",
-  //   email: "24BECSE22.cse@cujammu.ac.in",
-  //   instagram: "https://www.instagram.com/cyros_sachin",
-  //   linkedin: "https://www.linkedin.com/in/cyrossachin",
-  //   whatsapp: "https://wa.me/918602948023",
-  //   image: sachin,
-  // },
   {
     name: "MEHAK SHARMA",
     designation: "",
@@ -72,16 +71,25 @@ const teamMembers = [
     whatsapp: "https://wa.me/919334569412",
     image: ankit,
   },
-  // {
-  //   name: "LAVI SAINI",
-  //   designation: "",
-  //   email: "",
-  //   instagram: "",
-  //   linkedin: "https://www.linkedin.com/in/lavisainii",
-  //   whatsapp: "", //NULL
-  //   image: Lavi,
-  // },
+  
 ];
+const clubMembers = [
+  {
+    title: "KUMAR SACHIN",
+    text: "GDG on Campus Lead",
+    image: 'sachin.jpg',
+    accent:"cyan"
+  },
+  {
+    title: "SUKHVINDER SINGH DHIMAN",
+    text: "Cyber-CUJ Lead",
+    image: 'sukhvinder.jpeg',
+    accent:"orange"
+  },
+
+
+];
+
 
 const stripCount = 5;
 
@@ -106,9 +114,8 @@ function TeamMemberCard({
         delay: reducedMotion ? 0 : index * 0.08,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className={`group relative mx-auto w-full max-w-[360px] ${
-        index % 2 === 1 ? "lg:translate-y-12" : ""
-      }`}
+      className={`group relative mx-auto w-full max-w-[360px] ${index % 2 === 1 ? "lg:translate-y-12" : ""
+        }`}
     >
       {/* Card frame */}
       <div className="relative overflow-hidden bg-[#080A0F]">
@@ -252,9 +259,8 @@ function TeamMemberCard({
                 }}
               >
                 <span
-                  className={`absolute top-1/2 h-px w-10 ${
-                    fromLeft ? "left-4 bg-[#00E5FF]" : "right-4 bg-[#FF6B00]"
-                  }`}
+                  className={`absolute top-1/2 h-px w-10 ${fromLeft ? "left-4 bg-[#00E5FF]" : "right-4 bg-[#FF6B00]"
+                    }`}
                 />
               </motion.div>
             );
@@ -271,6 +277,8 @@ export default function OurTeam() {
   useEffect(() => {
     document.title = "YANTROTSAV | Team";
   }, []);
+  const shouldReduceMotion = useReducedMotion()
+  
   return (
     <main className="min-h-screen bg-[#050816] text-[#F8FAFC]">
       {/* Header */}
@@ -310,6 +318,226 @@ export default function OurTeam() {
           ))}
         </div>
       </section>
+      <section className="mx-auto max-w-[1400px] px-5 pb-12 pt-28 md:px-8 md:pb-16 md:pt-32">
+        <motion.div
+          initial={{ opacity: 0, y: 25 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="relative border-b border-white/10 pb-8 text-center"
+        >
+          <div className="flex items-center justify-center gap-3">
+            <span className="h-px w-8 bg-[#00E5FF]" />
+
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#FF6B00]">
+              3.2 / Clubs of Department
+            </span>
+
+            <span className="h-px w-8 bg-[#FF6B00]" />
+          </div>
+
+          <h1 className="mt-4 text-4xl font-black uppercase tracking-tight text-white md:text-5xl">
+            CLUB REPRESENTATIVES
+          </h1>
+        </motion.div>
+      </section>
+      <section className="mx-auto max-w-[900px] px-5 pb-16 md:px-8 md:pb-10">
+      
+                <div className="grid gap-20 ml-4 mr-4 md:grid-cols-2 lg:grid-cols-2">
+      
+                  {clubMembers.map((card, index) => {
+      
+                    
+      
+                    const accent =
+                      card.accent === 'cyan'
+                        ? '#00E5FF'
+                        : card.accent === 'orange'
+                          ? '#FF6B00'
+                          : '#7C3AED'
+      
+                    return (
+                      <motion.article
+                        key={card.title}
+                        
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{
+                          once: true,
+                          amount: 0.12,
+                        }}
+                        transition={{
+                          duration: shouldReduceMotion ? 0 : 0.85,
+                          delay: shouldReduceMotion ? 0 : index * 0.18,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        style={{
+                          perspective: shouldReduceMotion ? 'none' : 1200,
+                        }}
+                        className="group relative"
+                      >
+      
+                        <div className="absolute inset-2 translate-x-4 translate-y-4 bg-black/70 blur-[1px]" />
+      
+                        <span
+                          style={{
+                            borderRightColor: `${accent}66`,
+                          }}
+                          className="absolute -left-2 -top-2 z-0 h-0 w-0 border-b-[22px] border-r-[22px] border-b-transparent"
+                        />
+      
+                        <span
+                          style={{
+                            borderLeftColor: `${accent}44`,
+                          }}
+                          className="absolute -bottom-2 -right-2 z-0 h-0 w-0 border-t-[22px] border-l-[22px] border-t-transparent"
+                        />
+      
+                        <div className="relative z-10 overflow-hidden bg-[#080A0F] shadow-[0_15px_35px_rgba(0,0,0,0.35)] transition-all duration-500 group-hover:-translate-y-3 group-hover:shadow-[0_30px_70px_rgba(0,0,0,0.55)]">
+      
+                          <div className="pointer-events-none absolute inset-0 z-40 border border-white/20" />
+      
+                          <div className="pointer-events-none absolute inset-[4px] z-40 border border-white/5" />
+      
+                          <span
+                            style={{
+                              backgroundColor: accent,
+                            }}
+                            className="absolute left-0 top-0 z-50 h-px w-28"
+                          />
+      
+                          <span
+                            style={{
+                              borderColor: accent,
+                            }}
+                            className="absolute left-0 top-0 z-50 h-8 w-8 border-l-2 border-t-2"
+                          />
+      
+                          <span
+                            style={{
+                              borderColor: accent,
+                            }}
+                            className="absolute bottom-0 right-0 z-50 h-8 w-8 border-b-2 border-r-2"
+                          />
+      
+                          <div className="pointer-events-none absolute inset-0 z-30 bg-gradient-to-br from-white/[0.04] via-transparent to-white/[0.01]" />
+      
+                          {/* Image */}
+      
+                          <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-[#080A0F] p-5">
+      
+                            {card.image ? (
+                              <motion.img
+                                src={images[`../assets/images/${card.image}`]}
+                                alt={card.title}
+                                initial={{
+                                  opacity: 0,
+                                  scale: 0.82,
+                                  y: 45,
+                                }}
+                                whileInView={{
+                                  opacity: 1,
+                                  scale: 1,
+                                  y: 0,
+                                }}
+                                viewport={{
+                                  once: true,
+                                  amount: 0.2,
+                                }}
+                                transition={{
+                                  duration: shouldReduceMotion ? 0 : 0.8,
+                                  delay: shouldReduceMotion
+                                    ? 0
+                                    : index * 0.15 + 0.1,
+                                  ease: [0.22, 1, 0.36, 1],
+                                }}
+                                className="relative z-10 h-64 w-64  object-contain object-center transition-transform duration-700 ease-out group-hover:scale-105"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center border border-white/5">
+                                <div className="text-center">
+      
+                                  <span
+                                    style={{
+                                      color: accent,
+                                    }}
+                                    className="font-mono text-[9px] uppercase tracking-[0.2em]"
+                                  >
+                                    Feature 0{index + 1}
+                                  </span>
+      
+                                  <p className="mt-2 text-[8px] uppercase tracking-[0.15em] text-slate-700">
+                                    Add image filename
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+      
+                            <div
+                              style={{
+                                background: `linear-gradient(135deg, ${accent}18, transparent 50%, ${accent}12)`,
+                              }}
+                              className="pointer-events-none absolute "
+                            />
+      
+                            <div className="pointer-events-none absolute  bg-gradient-to-t from-[#050816]/80 via-transparent to-transparent" />
+      
+      
+                          </div>
+      
+                          {/* Content */}
+      
+                          <div className="relative z-20 p-6 md:p-7">
+      
+                            <div className="flex items-center justify-between">
+      
+                              <span
+                                style={{
+                                  color: accent,
+                                }}
+                                className="font-mono text-[9px]"
+                              >
+                                0{index + 1}
+                              </span>
+      
+                              <span
+                                style={{
+                                  color: accent,
+                                }}
+                                className="text-xs opacity-40 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100"
+                              >
+                                ↗
+                              </span>
+                            </div>
+      
+                            <h3 className="mt-5 text-xl font-black uppercase tracking-tight">
+                              {card.title}
+                            </h3>
+      
+                            <p className="mt-3 text-sm leading-6 text-slate-500">
+                              {card.text}
+                            </p>
+      
+                            <div className="mt-6 flex items-center gap-2">
+      
+                              <span
+                                style={{
+                                  backgroundColor: accent,
+                                }}
+                                className="h-px w-8 transition-all duration-500 group-hover:w-16"
+                              />
+      
+                              <span className="font-mono text-[8px] uppercase tracking-[0.18em] text-slate-700">
+                                Dept. of Computer Science and Engineering
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.article>
+                    )
+                  })}
+                </div>
+              </section>
+      
     </main>
   );
 }
