@@ -618,7 +618,7 @@ function Events() {
                           className="absolute inset-0 h-full w-full object-cover object-center opacity-[0.22] grayscale transition-all duration-700 group-hover:scale-105 group-hover:opacity-[0.4] group-hover:grayscale-0"
                         />
 
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/15 via-transparent to-[#FF6B00]/15" />
+                        {/*<div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/15 via-transparent to-[#FF6B00]/15" />*/}
 
                         <div className="absolute inset-0 p-6">
                           <div className="flex items-start justify-between">
