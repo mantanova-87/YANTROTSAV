@@ -65,7 +65,7 @@ export const eventDetails: Record<
     ],
   },
   "6a9e4bd800213b95bda6": {
-    about: "DOMINION 2026 is the esports event of Engineering Day 2026, organised by the E-Sports Club, Central University of Jammu. Departments field teams across two mobile titles, BGMI and Free Fire, each decided over three matches played live at the venue and screened for spectators. The event is open to every department and free to enter, and aims to bring students across departments together through structured competitive play, building on the club's previous tournaments including Scholars – Survival and Headshot Havoc.",
+    about: "SURVIVOR is the esports event of Engineering Day 2026, organised by the E-Sports Club, Central University of Jammu. Departments field teams across two mobile titles, BGMI and Free Fire, each decided over three matches played live at the venue and screened for spectators. The event is open to every department and free to enter, and aims to bring students across departments together through structured competitive play, building on the club's previous tournaments including Scholars – Survival and Headshot Havoc.",
     instructions: [
       "Open to all currently enrolled students of Central University of Jammu",
       "Maximum 2 teams per department, per game",
