@@ -606,7 +606,7 @@ function Events() {
 
                     <div className="grid md:grid-cols-[280px_1fr]">
                       {/* VISUAL BLOCK */}
-                      <div className="relative min-h-[240px] overflow-hidden border-b border-white/10 bg-[#050816] md:border-b-0 md:border-r">
+                      <div className="relative min-h-[240px] object-enter object-contain overflow-hidden border-b border-white/10 bg-[#050816] md:border-b-0 md:border-r">
                         <img
                           src={event.bannerUrl || fallbackBanner}
                           alt={event.title}
