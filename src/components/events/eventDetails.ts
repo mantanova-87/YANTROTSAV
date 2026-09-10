@@ -1,20 +1,23 @@
 export const eventDetails: Record<
   string,
   {
-    about: string
-    instructions: string[]
+    about: string;
+    instructions: string[];
   }
 > = {
   "6a9dabac000299f6032d": {
-    about: "THE IDEA WALL is the event in which participants are required to make a poster.The theme of the event will be released two days prior to the schedule of the event.Participants are advised to create digital posters only.Participants must showcase their creativity imagination and artistic skills.",
+    about:
+      "THE IDEA WALL is the event in which participants are required to make a poster.The theme of the event will be released two days prior to the schedule of the event.Participants are advised to create digital posters only.Participants must showcase their creativity imagination and artistic skills.",
     instructions: [
       "Poster size will be released alongwith the poster theme.",
       "Participants are required to be  present with their poster in printed form 30 minutes prior to the start of event.",
-      "Participants will be disqualified if the poster is not as per the required theme.", "Seats are limited so registration will be accepted on first come first serve basis and it will be closed automatically once all seats are filled. ",
+      "Participants will be disqualified if the poster is not as per the required theme.",
+      "Seats are limited so registration will be accepted on first come first serve basis and it will be closed automatically once all seats are filled. ",
     ],
   },
   "6a9e49bc001a4ecd3542": {
-    about: "Stack Scramble 2.0 is a 7-day web development workshop by GDGoC, Central University of Jammu.Participants learn HTML, CSS, JavaScript, responsive design, UI/UX, and deployment through hands-on sessions.The final day features the Stack Scramble Challenge with a surprise problem statement.Participants must build a complete, functional, and responsive website showcasing creativity and skills under time constraints.",
+    about:
+      "Stack Scramble 2.0 is a 7-day web development workshop by GDGoC, Central University of Jammu.Participants learn HTML, CSS, JavaScript, responsive design, UI/UX, and deployment through hands-on sessions.The final day features the Stack Scramble Challenge with a surprise problem statement.Participants must build a complete, functional, and responsive website showcasing creativity and skills under time constraints.",
     instructions: [
       "Each participant must submit their own original work; collaboration is not allowed.",
       "Open to 1st-semester students attending the Stack Scramble Workshop, with mandatory registration.",
@@ -24,7 +27,8 @@ export const eventDetails: Record<
     ],
   },
   "6a9e4a74000b89971a9f": {
-    about: "THE DETECTIVE is a crime investigation event in which a FBI related case which include forensic,digital forensic,etc.Story will be released in 4 parts.Clues may be released time to time.Participants need to have their analytical thinking.Winner will be declared based on correctness of solution and time taken.Participants are required to submit a writeup of how they reached to the solution and be reasonable.",
+    about:
+      "THE DETECTIVE is a crime investigation event in which a FBI related case which include forensic,digital forensic,etc.Story will be released in 4 parts.Clues may be released time to time.Participants need to have their analytical thinking.Winner will be declared based on correctness of solution and time taken.Participants are required to submit a writeup of how they reached to the solution and be reasonable.",
     instructions: [
       "Seats are limited so registration will be confirmed on first come first serve basis and registration will be stopped once seats are filled .No further request will be entertained.",
       "No electronic device is allowed.",
@@ -32,7 +36,8 @@ export const eventDetails: Record<
     ],
   },
   "6a9e4b2d0000cc64ad18": {
-    about: "THE FOUNDER'S PITCH is a startup simulation in which participants are required to solve the problem statements abiding by the constraints released alongwith the problem statements.The participants have to present theirpitch decks.Shortlisting of participants will be done on the basis of the impact their solution has on real world and how many constraints are handled in their solution.",
+    about:
+      "THE FOUNDER'S PITCH is a startup simulation in which participants are required to solve the problem statements abiding by the constraints released alongwith the problem statements.The participants have to present theirpitch decks.Shortlisting of participants will be done on the basis of the impact their solution has on real world and how many constraints are handled in their solution.",
     instructions: [
       "Problem statement will be released 24 hours before the event day i.e on 14th September 2026 by 10:00 AM.",
       "Participants are required to submit their pitch deck before 10:00 AM on 15th September 2026",
@@ -43,7 +48,8 @@ export const eventDetails: Record<
     ],
   },
   "6a9e4d60000cbccdb36f": {
-    about: "Clash of Code 2.0 is a competitive coding event organized by Google Developer Groups on Campus (GDGoC) - Central University of Jammu* to test participants' problem-solving, logical thinking, and programming skills.The competition consists of *two elimination rounds*, designed to evaluate participants on concepts ranging from computer science fundamentals to advanced Data Structures and Algorithms (DSA).In the first round, participants will solve carefully selected **GATE Computer Science Previous Year Questions (PYQs) to assess their aptitude, analytical thinking, and core CS knowledge.Based on their performance, the 'Top 15 participants' will qualify for the *Final Round, where they will solve two DSA programming problems within the allotted time.The event aims to encourage algorithmic thinking, improve coding proficiency, and provide participants with a competitive programming experience similar to technical interviews and coding contests.",
+    about:
+      "Clash of Code 2.0 is a competitive coding event organized by Coding Club - Central University of Jammu* to test participants' problem-solving, logical thinking, and programming skills.The competition consists of *two elimination rounds*, designed to evaluate participants on concepts ranging from computer science fundamentals to advanced Data Structures and Algorithms (DSA).In the first round, participants will solve carefully selected **GATE Computer Science Previous Year Questions (PYQs) to assess their aptitude, analytical thinking, and core CS knowledge.Based on their performance, the 'Top 15 participants' will qualify for the *Final Round, where they will solve two DSA programming problems within the allotted time.The event aims to encourage algorithmic thinking, improve coding proficiency, and provide participants with a competitive programming experience similar to technical interviews and coding contests.",
     instructions: [
       "The use of unfair means is strictly prohibited.",
       "Plagiarism or code sharing will result in immediate disqualification.",
@@ -55,7 +61,8 @@ export const eventDetails: Record<
     ],
   },
   "6a9e4c730027321e366d": {
-    about: "FASTEST FINGER FIRST is a dynamic quiz based oon basic python and computer knowledge.It is mainly for freshers.The scoring will be done based on quickness to answer corectly",
+    about:
+      "FASTEST FINGER FIRST is a dynamic quiz based oon basic python and computer knowledge.It is mainly for freshers.The scoring will be done based on quickness to answer corectly",
     instructions: [
       "Organising team will not be responsible for any technical shortcomings that may occur during the event.",
       "Any participant found to be malpracticing will be disqualified.",
@@ -65,7 +72,8 @@ export const eventDetails: Record<
     ],
   },
   "6a9e4bd800213b95bda6": {
-    about: "SURVIVOR is the esports event of Engineering Day 2026, organised by the E-Sports Club, Central University of Jammu. Departments field teams across two mobile titles, BGMI and Free Fire, each decided over three matches played live at the venue and screened for spectators. The event is open to every department and free to enter, and aims to bring students across departments together through structured competitive play, building on the club's previous tournaments including Scholars – Survival and Headshot Havoc.",
+    about:
+      "SURVIVOR is the esports event of Engineering Day 2026, organised by the E-Sports Club, Central University of Jammu. Departments field teams across two mobile titles, BGMI and Free Fire, each decided over three matches played live at the venue and screened for spectators. The event is open to every department and free to enter, and aims to bring students across departments together through structured competitive play, building on the club's previous tournaments including Scholars – Survival and Headshot Havoc.",
     instructions: [
       "Open to all currently enrolled students of Central University of Jammu",
       "Maximum 2 teams per department, per game",
@@ -76,5 +84,4 @@ export const eventDetails: Record<
       "Each title is decided over 3 matches. Teams are ranked on cumulative points.",
     ],
   },
-
-}
+};
