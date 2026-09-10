@@ -8,7 +8,8 @@ import priyanshu from "../assets/images/priyanshu.jpeg";
 import sachin from "../assets/images/sachin.jpg";
 import abhinav from "../assets/images/abhinav.png";
 import Harsh from "../assets/images/Harsh.jpeg";
-import ankit from "../assets/images/ankitojha.jpeg"
+import ankit from "../assets/images/ankitojha.jpeg";
+import Lavi from "../assets/images/lavi.jpeg";
 const teamMembers = [
   {
     name: "ABHINAV KUMAR",
@@ -61,7 +62,7 @@ const teamMembers = [
     email: "25BECCS46.cse@cujammu.ac.in",
     instagram: "https://www.instagram.com/9613mehak",
     linkedin: "https://www.linkedin.com/in/mehak-sharma-cyber",
-    whatsapp: "https://wa.me/919906814723",
+    // whatsapp: "",  //https://wa.me/919906814723
     image: mehak,
   },
   {
@@ -72,6 +73,15 @@ const teamMembers = [
     linkedin: "https://www.linkedin.com/in/ankit-kumar-ojha-04de13d12m/",
     whatsapp: "https://wa.me/919334569412",
     image: ankit,
+  },
+  {
+    name: "LAVI SAINI",
+    designation: "",
+    email: "",
+    instagram: "",
+    linkedin: "https://www.linkedin.com/in/lavisainii",
+    whatsapp: "", //NULL
+    image: Lavi,
   },
 ];
 
@@ -260,9 +270,9 @@ function TeamMemberCard({
 }
 
 export default function OurTeam() {
-   useEffect(() => {
-    document.title = 'YANTROTSAV | Team'
-  }, [])
+  useEffect(() => {
+    document.title = "YANTROTSAV | Team";
+  }, []);
   return (
     <main className="min-h-screen bg-[#050816] text-[#F8FAFC]">
       {/* Header */}
