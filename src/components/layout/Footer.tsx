@@ -13,14 +13,14 @@ const footerLinks = [
 const socialLinks = [
   {
     name: 'Instagram',
-    href: '#',
+    href: 'https://www.instagram.com/yantrotsav_2026',
     icon: (
       <FaInstagram/>
     ),
   },
   {
     name: 'WhatsApp',
-    href: '#',
+    href: 'https://chat.whatsapp.com/D9qI7lPQgBGHQg2v07Cdxb',
     icon: (
       <FaWhatsapp/>
     ),
