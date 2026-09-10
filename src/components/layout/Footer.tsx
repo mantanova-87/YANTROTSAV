@@ -1,5 +1,5 @@
 import { ArrowUpRight } from 'lucide-react'
-import { FaInstagram, FaWhatsapp} from 'react-icons/fa6';
+import { FaInstagram, FaWhatsapp } from 'react-icons/fa6';
 import { BiLogoGmail } from 'react-icons/bi';
 import { Link } from 'react-router-dom'
 import logo from "../../assets/images/logo.png";
@@ -13,19 +13,19 @@ const footerLinks = [
 const socialLinks = [
   {
     name: 'Instagram',
-    href: '#',
+    href: 'https://www.instagram.com/yantrotsav_2026',
     icon: (
-      <FaInstagram/>
+      <FaInstagram />
     ),
   },
   {
     name: 'WhatsApp',
-    href: '#',
+    href: 'https://chat.whatsapp.com/D9qI7lPQgBGHQg2v07Cdxb',
     icon: (
-      <FaWhatsapp/>
+      <FaWhatsapp />
     ),
   },
-  
+
 
 ]
 
@@ -167,7 +167,7 @@ function Footer() {
                 aria-label="Email"
                 className="flex items-center gap-2 border border-white/10 bg-[#080A0F] px-3 py-2 text-slate-500 transition-all duration-200 hover:-translate-y-1 hover:border-[#00E5FF]/50 hover:text-white"
               >
-                <BiLogoGmail/>
+                <BiLogoGmail />
 
                 <span className="text-[9px] uppercase tracking-[0.12em]">
                   Email
@@ -183,15 +183,18 @@ function Footer() {
             BOTTOM BAR
         ======================================================= */}
 
-        <div className="relative flex flex-col gap-4 py-5 text-[9px] uppercase tracking-[0.15em] text-slate-700 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 YANTROTSAV</p>
-          <p>Designed and Developed by Mantavya and Priyanshu</p>
+        <div className="relative flex flex-col items-center justify-center gap-4 py-5 text-[12px]  tracking-[0.15em] text-slate-700 sm:flex-row sm:items-center sm:justify-between">
+          
+          <div className='flex flex-col items-center justify-center'>
+            <p>An initiative by Department of Computer Science and Engineering</p>
+            <p>under aegis of Central University of Jammu</p>
+          </div>
           <div className="flex items-center gap-3">
-            <span>Built for builders</span>
-
+            <span className='text-white'>Developed by Mantavya & Priyanshu</span>
+          
             <span className="h-1 w-1 bg-[#FF6B00]" />
 
-            <span>Yantrotsav / 2026</span>
+            <span>© 2026 YANTROTSAV</span>
           </div>
         </div>
       </div>
