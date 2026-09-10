@@ -615,24 +615,17 @@ function Events() {
                               e.currentTarget.src = fallbackBanner
                             }
                           }}
-                          className="absolute inset-0 h-full w-full object-cover object-center opacity-[0.22] grayscale transition-all duration-700 group-hover:scale-105 group-hover:opacity-[0.4] group-hover:grayscale-0"
+                          className="absolute inset-0 h-64 w-64 object-contain object-center  transition-all duration-700 group-hover:scale-105"
                         />
 
-                        {/*<div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/15 via-transparent to-[#FF6B00]/15" />*/}
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#00E5FF]/15 via-transparent to-[#FF6B00]/15" />
 
                         <div className="absolute inset-0 p-6">
                           <div className="flex items-start justify-between">
                             <span className="font-mono text-[10px] text-[#FF6B00]">
                               EVENT / {eventNumber}
-                            </span>
-
-                            <Sparkles
-                              size={15}
-                              strokeWidth={1.5}
-                              className="text-slate-600 transition-colors duration-300 group-hover:text-[#00E5FF]"
-                            />
+                            </span>                    
                           </div>
-
                           <div className="absolute bottom-6 left-6">
                             <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-500">
                               YANTROTSAV 2026
