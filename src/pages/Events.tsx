@@ -6,7 +6,7 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   CalendarDays,
-  Sparkles,
+  
   Filter,
   CheckCircle2,
 } from 'lucide-react'
