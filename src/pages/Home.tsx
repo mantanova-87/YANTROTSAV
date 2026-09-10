@@ -83,7 +83,7 @@ const messageCards = [
   },
   {
     title: 'Message from the HOD',
-    text: 'It gives me immense pleasure to extend my warm wishes on the occasion of Yantrotsav at Central University of Jammu. This event provides a wonderful platform for our students to showcase their creativity, technical skills, and innovative ideas. I hope Yantrotsav inspires our students to learn, explore, and contribute to the ever-evolving world of technology. I congratulate the organizing team and wish the event great success.',
+    text: 'Yantrotsav is a celebration of the curiosity, creativity, and technical spirit of our students. It is an opportunity to step beyond the classroom, experiment with ideas, and turn knowledge into practical solutions. I encourage every participant to embrace the challenges, learn through collaboration, and enjoy the process of innovation. My best wishes to all the students and the organizing team for a memorable and successful Yantrotsav.',
     text1: 'Dr. Dinesh Kumar',
     text2: 'Head of Department(CSE)',
     image: 'DRDINESHCSE.jpeg',
