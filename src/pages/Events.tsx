@@ -19,6 +19,7 @@ import { fetchEventsThunk } from '../store/slices/eventsSlice'
 import { useAuth } from '../context/AuthContext'
 import { teamsService } from '../services/appwrite/teams.service'
 import type { EventDocument } from '../types/database.types'
+import { isEventFullyBooked } from '../utils/eventCapacity'
 
 const CATEGORIES: { label: string; value: string }[] = [
   { label: 'ALL EVENTS', value: 'all' },
@@ -144,6 +145,7 @@ function Events() {
   }, [events])
 
   const handleOpenRegistration = (event: EventDocument) => {
+    if (isEventFullyBooked(event)) return
     setSelectedEvent(event)
     setModalOpen(true)
   }
@@ -768,9 +770,11 @@ function Events() {
                             ).getTime() < Date.now()
                           )
 
+                          const isFullyBooked = isEventFullyBooked(event)
                           const isRegistrationOpen =
                             event.status === 'published' &&
-                            !isDeadlinePassed
+                            !isDeadlinePassed &&
+                            !isFullyBooked
 
                           return (
                             <div className="mt-7 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -796,7 +800,9 @@ function Events() {
                                     ? 'Registered'
                                     : isRegistrationOpen
                                       ? 'Registration Active'
-                                      : isDeadlinePassed
+                                      : isFullyBooked
+                                        ? 'Completely Booked'
+                                        : isDeadlinePassed
                                         ? 'Deadline Passed'
                                         : 'Registration Closed'}
                                 </span>
@@ -841,7 +847,9 @@ function Events() {
                                   <span className="border border-white/10 px-4 py-2 font-mono text-[9px] uppercase tracking-wider text-slate-500">
                                     {isDeadlinePassed
                                       ? 'Deadline Passed'
-                                      : 'Registrations Closed'}
+                                      : isFullyBooked
+                                        ? 'Completely Booked'
+                                        : 'Registrations Closed'}
                                   </span>
                                 )}</div>
                             </div>

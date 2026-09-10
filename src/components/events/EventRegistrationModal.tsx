@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 import { teamsService } from '../../services/appwrite/teams.service'
 import type { EventDocument } from '../../types/database.types'
 import { showToast } from '../../utils/toast'
+import { isEventFullyBooked } from '../../utils/eventCapacity'
 
 export interface EventRegistrationModalProps {
   event: EventDocument | null
@@ -93,7 +94,8 @@ export default function EventRegistrationModal({
   const isDeadlinePassed = Boolean(
     event.registrationDeadline && new Date(event.registrationDeadline).getTime() < Date.now()
   )
-  const isRegistrationClosed = event.status !== 'published' || isDeadlinePassed
+  const isFullyBooked = isEventFullyBooked(event)
+  const isRegistrationClosed = event.status !== 'published' || isDeadlinePassed || isFullyBooked
   const requiredAdditionalMembers = Math.max(1, (event.minTeamSize || 2) - 1)
   const maxAdditionalMembers = Math.max(1, (event.maxTeamSize || 4) - 1)
 
@@ -127,6 +129,11 @@ export default function EventRegistrationModal({
       showToast.info(
         `You are already enrolled in this event (${existingEnrollment.reason}). Duplicate registrations are not permitted.`,
       )
+      return
+    }
+
+    if (isEventFullyBooked(event)) {
+      showToast.error('This event is completely booked. Registration is closed.')
       return
     }
 
@@ -378,7 +385,9 @@ export default function EventRegistrationModal({
                     <span>
                       {isDeadlinePassed
                         ? 'Registration deadline has passed for this event. New registrations cannot be submitted.'
-                        : 'Registration is currently closed for this event.'}
+                        : isFullyBooked
+                          ? 'This event is completely booked. New registrations cannot be submitted.'
+                          : 'Registration is currently closed for this event.'}
                     </span>
                   </div>
                 )}

@@ -5,6 +5,7 @@ import { mapAppwriteError, AppError } from './errorMapper'
 import { storageService } from './storage.service'
 import { addStoredDeletedReg, addStoredDeletedTeam } from './admin.service'
 import type { EventDocument, CreateEventDTO, UpdateEventDTO, EventStatus } from '../../types/database.types'
+import { getEventSlotLimit, isTeamEvent } from '../../utils/eventCapacity'
 
 // Only valid attributes in the Appwrite `events` collection schema:
 // title, category, description, eventType, minTeamSize, maxTeamSize,
@@ -37,7 +38,7 @@ export class EventsService {
       docs = docs.filter((e) => e.status === options.status)
     }
 
-    return docs
+    return this.hydrateOccupancy(docs)
   }
 
   /** Fetch a single event by its Appwrite document ID */
@@ -47,7 +48,9 @@ export class EventsService {
       APPWRITE_CONFIG.collections.events,
       eventId,
     )
-    return doc as unknown as EventDocument
+    const event = doc as unknown as EventDocument
+    event.currentRegistrations = await this.countEventOccupancy(event)
+    return event
   }
 
   /**
@@ -426,36 +429,163 @@ export class EventsService {
     return this.updateEvent(eventId, { status: isOpen ? 'published' : 'closed' })
   }
 
-  /** Soft capacity check and count incrementer — called before and after registration. */
-  async incrementRegistrations(eventId: string): Promise<void> {
-    try {
-      const event = await this.getEventById(eventId)
-      if (event.status !== 'published') {
-        throw new AppError('Registration is closed for this event.', 'EVENT_REGISTRATION_CLOSED', 400)
-      }
-      const maxAllowed = event.maxTeamsAllowed
-      const current = (event as any).currentRegistrations ?? 0
-      if (maxAllowed && current >= maxAllowed) {
-        throw new AppError('Event capacity has been reached.', 'EVENT_CAPACITY_REACHED', 400)
-      }
+  /**
+   * Block new enrollments when the event is closed, past deadline, or at max slots.
+   * Must run before creating a registration or team.
+   */
+  async assertHasCapacity(event: EventDocument): Promise<void> {
+    if (event.registrationDeadline && new Date(event.registrationDeadline).getTime() < Date.now()) {
+      throw new AppError(
+        'Registration deadline for this event has passed.',
+        'EVENT_REGISTRATION_CLOSED',
+        400,
+      )
+    }
+    if (event.status !== 'published') {
+      throw new AppError('Registration is closed for this event.', 'EVENT_REGISTRATION_CLOSED', 400)
+    }
 
-      await databases
-        .updateDocument(
-          APPWRITE_CONFIG.databaseId,
-          APPWRITE_CONFIG.collections.events,
-          eventId,
-          { currentRegistrations: current + 1 },
-        )
-        .catch(() => {})
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      // Non-critical — don't block registration if check fails
+    const occupancy = await this.countEventOccupancy(event)
+    event.currentRegistrations = occupancy
+    const maxAllowed = getEventSlotLimit(event)
+    if (maxAllowed && occupancy >= maxAllowed) {
+      await this.markEventFullyBooked(event.$id, occupancy)
+      throw new AppError(
+        'This event is completely booked. Registration is closed.',
+        'EVENT_CAPACITY_REACHED',
+        400,
+      )
     }
   }
 
-  /** Check capacity before registering — alias of incrementRegistrations */
+  /** Recount live occupancy after a successful enroll/cancel and auto-close when full. */
+  async syncOccupancy(eventId: string): Promise<void> {
+    const event = await databases.getDocument(
+      APPWRITE_CONFIG.databaseId,
+      APPWRITE_CONFIG.collections.events,
+      eventId,
+    ) as unknown as EventDocument
+    const occupancy = await this.countEventOccupancy(event)
+    const maxAllowed = getEventSlotLimit(event)
+    await this.persistOccupancy(eventId, occupancy, maxAllowed, event.status === 'published')
+  }
+
+  async incrementRegistrations(eventId: string): Promise<void> {
+    await this.syncOccupancy(eventId)
+  }
+
   async checkCapacity(eventId: string): Promise<void> {
-    return this.incrementRegistrations(eventId)
+    const event = await this.getEventById(eventId)
+    await this.assertHasCapacity(event)
+  }
+
+  private async hydrateOccupancy(events: EventDocument[]): Promise<EventDocument[]> {
+    if (!events.length) return events
+
+    const [teamsRes, regsRes] = await Promise.all([
+      databases.listDocuments(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.teams,
+        [Query.limit(500)],
+      ).catch(() => ({ documents: [] as any[] })),
+      databases.listDocuments(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.eventRegistrations,
+        [Query.limit(500)],
+      ).catch(() => ({ documents: [] as any[] })),
+    ])
+
+    const activeTeamsByEvent = new Map<string, number>()
+    for (const team of teamsRes.documents as any[]) {
+      const status = String(team.status || '')
+      if (status === 'cancelled' || status === 'disbanded') continue
+      const eventId = String(team.eventId || '')
+      if (!eventId) continue
+      activeTeamsByEvent.set(eventId, (activeTeamsByEvent.get(eventId) || 0) + 1)
+    }
+
+    const regsByEvent = new Map<string, number>()
+    for (const reg of regsRes.documents as any[]) {
+      const eventId = String(reg.eventId || '')
+      if (!eventId) continue
+      regsByEvent.set(eventId, (regsByEvent.get(eventId) || 0) + 1)
+    }
+
+    for (const event of events) {
+      const occupancy = isTeamEvent(event)
+        ? (activeTeamsByEvent.get(event.$id) || 0)
+        : (regsByEvent.get(event.$id) || 0)
+      event.currentRegistrations = occupancy
+      const maxAllowed = getEventSlotLimit(event)
+      if (maxAllowed && occupancy >= maxAllowed && event.status === 'published') {
+        event.status = 'closed'
+        this.markEventFullyBooked(event.$id, occupancy).catch(() => {})
+      }
+    }
+
+    return events
+  }
+
+  private async countEventOccupancy(event: EventDocument): Promise<number> {
+    if (isTeamEvent(event)) {
+      const teams = await databases.listDocuments(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.teams,
+        [Query.equal('eventId', event.$id), Query.limit(500)],
+      )
+      return teams.documents.filter((team: any) => {
+        const status = String(team.status || '')
+        return status !== 'cancelled' && status !== 'disbanded'
+      }).length
+    }
+
+    const regs = await databases.listDocuments(
+      APPWRITE_CONFIG.databaseId,
+      APPWRITE_CONFIG.collections.eventRegistrations,
+      [Query.equal('eventId', event.$id), Query.limit(1)],
+    )
+    return regs.total ?? regs.documents.length
+  }
+
+  private async persistOccupancy(
+    eventId: string,
+    occupancy: number,
+    maxAllowed: number,
+    currentlyPublished: boolean,
+  ): Promise<void> {
+    const shouldClose = Boolean(maxAllowed && occupancy >= maxAllowed && currentlyPublished)
+    if (shouldClose) {
+      await this.markEventFullyBooked(eventId, occupancy)
+      return
+    }
+    try {
+      await databases.updateDocument(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.events,
+        eventId,
+        { currentRegistrations: occupancy },
+      )
+    } catch {
+      // currentRegistrations may be absent from the Appwrite schema
+    }
+  }
+
+  private async markEventFullyBooked(eventId: string, occupancy: number): Promise<void> {
+    try {
+      await databases.updateDocument(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.events,
+        eventId,
+        { status: 'closed', currentRegistrations: occupancy },
+      )
+    } catch {
+      await databases.updateDocument(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.events,
+        eventId,
+        { status: 'closed' },
+      ).catch(() => {})
+    }
   }
 }
 
