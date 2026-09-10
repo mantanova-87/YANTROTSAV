@@ -216,9 +216,7 @@ export class TeamsService {
     try {
       // 1. Fetch and validate event
       const event = await eventsService.getEventById(data.eventId)
-      if (event.status !== 'published') {
-        throw new AppError('Registration is closed for this event.', 'EVENT_REGISTRATION_CLOSED', 400)
-      }
+      await eventsService.assertHasCapacity(event)
 
       // Strict validation: studentEmail must be a valid email
       if (!data.userId || !data.userId.trim()) {
@@ -320,8 +318,7 @@ export class TeamsService {
         docPermissions,
       )
 
-      // 5. Increment event counter
-      await eventsService.incrementRegistrations(data.eventId).catch(() => {})
+      await eventsService.syncOccupancy(data.eventId).catch(() => {})
 
       return {
         ...regDoc,
@@ -341,10 +338,7 @@ export class TeamsService {
   async createTeam(data: CreateTeamDTO): Promise<TeamDocument> {
     try {
       const event = await eventsService.getEventById(data.eventId)
-
-      if (event.status !== 'published') {
-        throw new AppError('Registration is closed for this event.', 'EVENT_REGISTRATION_CLOSED', 400)
-      }
+      await eventsService.assertHasCapacity(event)
 
       // Validate leader credentials
       if (!data.leaderEmail || !data.leaderEmail.includes('@')) {
@@ -606,6 +600,8 @@ export class TeamsService {
         }
       }
 
+      await eventsService.syncOccupancy(data.eventId).catch(() => {})
+
       return teamDoc as unknown as TeamDocument
     } catch (error) {
       throw mapAppwriteError(error, 'TeamsService.createTeam')
@@ -822,8 +818,7 @@ export class TeamsService {
           },
         )
 
-        // Increment event registrations
-        await eventsService.incrementRegistrations(team.eventId).catch(() => {})
+        await eventsService.syncOccupancy(team.eventId).catch(() => {})
       }
     } catch (error) {
       throw mapAppwriteError(error, 'TeamsService.respondToInvitation')

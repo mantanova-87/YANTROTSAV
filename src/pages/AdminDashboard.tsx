@@ -37,6 +37,8 @@ import CyberLoader from '../components/common/CyberLoader'
 import fallbackBanner from '../assets/images/event-fallback.jpg'
 import { DEPARTMENT_OPTIONS } from '../types/database.types'
 import { showToast } from '../utils/toast'
+import { toDatetimeLocalValue } from '../utils/datetime'
+import { isEventFullyBooked } from '../utils/eventCapacity'
 import type {
   AdminAnalyticsKPI,
   EventDocument,
@@ -50,6 +52,9 @@ import type {
 } from '../types/database.types'
 
 type AdminTab = 'events' | 'roster' | 'users' | 'teams'
+
+const datetimeLocalInputClass =
+  'mt-1 w-full border border-white/10 bg-[#050816] px-3 py-2 text-xs text-white outline-none focus:border-[#00E5FF] [color-scheme:dark]'
 
 export default function AdminDashboard() {
    useEffect(() => {
@@ -316,9 +321,9 @@ export default function AdminDashboard() {
       maxTeamSize: event.maxTeamSize,
       maxTeams: event.maxTeamsAllowed || event.maxTeams || 50,
       venue: event.venue || '',
-      eventDate: event.eventTiming || event.eventDate || '',
-      eventTiming: event.eventTiming || event.eventDate || '',
-      registrationDeadline: event.registrationDeadline || '',
+      eventDate: toDatetimeLocalValue(event.eventTiming || event.eventDate),
+      eventTiming: toDatetimeLocalValue(event.eventTiming || event.eventDate),
+      registrationDeadline: toDatetimeLocalValue(event.registrationDeadline),
       bannerUrl: event.bannerUrl || '',
     })
     setEditBannerPreview(event.bannerUrl || null)
@@ -1043,7 +1048,11 @@ export default function AdminDashboard() {
                           <span className="font-mono text-[8px] uppercase text-[#00E5FF]">
                             {ev.format || ev.eventType} ({ev.minTeamSize}-{ev.maxTeamSize})
                           </span>
-                          {ev.status === 'published' ? (
+                          {isEventFullyBooked(ev) ? (
+                            <span className="border border-[#FF6B00]/50 bg-[#FF6B00]/10 px-1.5 py-0.5 font-mono text-[8px] uppercase text-[#FF6B00]">
+                              Completely Booked
+                            </span>
+                          ) : ev.status === 'published' ? (
                             <span className="border border-emerald-500/40 bg-emerald-950/30 px-1.5 py-0.5 font-mono text-[8px] uppercase text-emerald-400">
                               LIVE
                             </span>
@@ -2292,12 +2301,13 @@ export default function AdminDashboard() {
                   <input
                     type="datetime-local"
                     required
-                    value={newEvent.eventTiming || (newEvent.eventDate && !isNaN(new Date(newEvent.eventDate).getTime()) ? new Date(newEvent.eventDate).toISOString().slice(0, 16) : '')}
+                    step={60}
+                    value={toDatetimeLocalValue(newEvent.eventTiming || newEvent.eventDate)}
                     onChange={(e) => {
                       const val = e.target.value
                       setNewEvent({ ...newEvent, eventTiming: val, eventDate: val })
                     }}
-                    className="mt-1 w-full border border-white/10 bg-[#050816] px-3 py-2 text-xs text-white outline-none focus:border-[#00E5FF]"
+                    className={datetimeLocalInputClass}
                   />
                 </div>
               </div>
@@ -2309,11 +2319,12 @@ export default function AdminDashboard() {
                 </label>
                 <input
                   type="datetime-local"
-                  value={newEvent.registrationDeadline || ''}
+                  step={60}
+                  value={toDatetimeLocalValue(newEvent.registrationDeadline)}
                   onChange={(e) =>
                     setNewEvent({ ...newEvent, registrationDeadline: e.target.value })
                   }
-                  className="mt-1 w-full border border-white/10 bg-[#050816] px-3 py-2 text-xs text-white outline-none focus:border-[#00E5FF]"
+                  className={datetimeLocalInputClass}
                 />
               </div>
 
@@ -2541,25 +2552,13 @@ export default function AdminDashboard() {
                   <input
                     type="datetime-local"
                     required
-                    value={
-                      editFormData.eventTiming
-                        ? (() => {
-                            try {
-                              const d = new Date(editFormData.eventTiming)
-                              return !isNaN(d.getTime()) ? d.toISOString().slice(0, 16) : ''
-                            } catch {
-                              return ''
-                            }
-                          })()
-                        : editFormData.eventDate && !isNaN(new Date(editFormData.eventDate).getTime())
-                        ? new Date(editFormData.eventDate).toISOString().slice(0, 16)
-                        : ''
-                    }
+                    step={60}
+                    value={toDatetimeLocalValue(editFormData.eventTiming || editFormData.eventDate)}
                     onChange={(e) => {
                       const val = e.target.value
                       setEditFormData({ ...editFormData, eventTiming: val, eventDate: val })
                     }}
-                    className="mt-1 w-full border border-white/10 bg-[#050816] px-3 py-2 text-xs text-white outline-none focus:border-[#00E5FF]"
+                    className={datetimeLocalInputClass}
                   />
                 </div>
               </div>
@@ -2571,22 +2570,12 @@ export default function AdminDashboard() {
                 </label>
                 <input
                   type="datetime-local"
-                  value={
-                    editFormData.registrationDeadline
-                      ? (() => {
-                          try {
-                            const d = new Date(editFormData.registrationDeadline)
-                            return !isNaN(d.getTime()) ? d.toISOString().slice(0, 16) : ''
-                          } catch {
-                            return ''
-                          }
-                        })()
-                      : ''
-                  }
+                  step={60}
+                  value={toDatetimeLocalValue(editFormData.registrationDeadline)}
                   onChange={(e) =>
                     setEditFormData({ ...editFormData, registrationDeadline: e.target.value })
                   }
-                  className="mt-1 w-full border border-white/10 bg-[#050816] px-3 py-2 text-xs text-white outline-none focus:border-[#00E5FF]"
+                  className={datetimeLocalInputClass}
                 />
               </div>
 
