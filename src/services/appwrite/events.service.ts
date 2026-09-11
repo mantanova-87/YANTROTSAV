@@ -603,16 +603,25 @@ export class EventsService {
       );
     }
 
+    const teamsByEventFromRegs = new Map<string, Set<string>>();
     const regsByEvent = new Map<string, number>();
     for (const reg of regsRes.documents as any[]) {
       const eventId = String(reg.eventId || "");
       if (!eventId) continue;
       regsByEvent.set(eventId, (regsByEvent.get(eventId) || 0) + 1);
+      if (reg.teamId) {
+        if (!teamsByEventFromRegs.has(eventId)) {
+          teamsByEventFromRegs.set(eventId, new Set());
+        }
+        teamsByEventFromRegs.get(eventId)!.add(String(reg.teamId));
+      }
     }
 
     for (const event of events) {
+      const teamsCountFromTeams = activeTeamsByEvent.get(event.$id) || 0;
+      const teamsCountFromRegs = teamsByEventFromRegs.get(event.$id)?.size || 0;
       const occupancy = isTeamEvent(event)
-        ? activeTeamsByEvent.get(event.$id) || 0
+        ? Math.max(teamsCountFromTeams, teamsCountFromRegs)
         : regsByEvent.get(event.$id) || 0;
       event.currentRegistrations = occupancy;
       this.closeEventIfWindowEnded(event, false).catch(() => {});
@@ -623,19 +632,41 @@ export class EventsService {
 
   private async countEventOccupancy(event: EventDocument): Promise<number> {
     if (isTeamEvent(event)) {
-      const teams = await databases.listDocuments(
-        APPWRITE_CONFIG.databaseId,
-        APPWRITE_CONFIG.collections.teams,
-        [Query.equal("eventId", event.$id), Query.limit(500)],
-      );
-      return teams.documents.filter((team: any) => {
-        const status = String(team.status || "");
-        return (
-          status !== "cancelled" &&
-          status !== "disbanded" &&
-          status !== "disqualified"
+      try {
+        const teams = await databases.listDocuments(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.teams,
+          [Query.equal("eventId", event.$id), Query.limit(500)],
         );
-      }).length;
+        const count = teams.documents.filter((team: any) => {
+          const status = String(team.status || "");
+          return (
+            status !== "cancelled" &&
+            status !== "disbanded" &&
+            status !== "disqualified"
+          );
+        }).length;
+        if (count > 0) return count;
+      } catch {
+        // Fall back to distinct teamId in event_registrations
+      }
+
+      // Robust fallback: count distinct teams from event_registrations (which has public read permission)
+      try {
+        const regs = await databases.listDocuments(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.eventRegistrations,
+          [Query.equal("eventId", event.$id), Query.limit(500)],
+        );
+        const distinctTeams = new Set(
+          regs.documents
+            .map((r: any) => r.teamId)
+            .filter((tid: any): tid is string => Boolean(tid)),
+        );
+        return distinctTeams.size;
+      } catch {
+        return 0;
+      }
     }
 
     const regs = await databases.listDocuments(
