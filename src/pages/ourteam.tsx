@@ -459,7 +459,7 @@ export default function OurTeam() {
                                     : index * 0.15 + 0.1,
                                   ease: [0.22, 1, 0.36, 1],
                                 }}
-                                className="relative z-10 h-45 w-45  object-contain object-center transition-transform duration-700 ease-out group-hover:scale-105"
+                                className="relative z-10 h-40 w-40  object-contain object-center transition-transform duration-700 ease-out group-hover:scale-105"
                               />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center border border-white/5">
