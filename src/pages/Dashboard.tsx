@@ -90,9 +90,9 @@ export default function Dashboard() {
         teamsService.getUserTeams(user.$id, userIdentifiers),
       ])
 
-      // Sanitize: ensure no orphaned registrations (e.g. where eventTitle is a raw hex ID matching eventId) or cancelled teams leak in
-      const validRegs = regs.filter((r) => r.eventTitle && r.eventTitle !== r.eventId)
-      const validTeams = teams.filter((t) => t.status !== 'cancelled' && (t.status as any) !== 'disbanded' && t.eventTitle && t.eventTitle !== t.eventId)
+      // Sanitize: ensure no cancelled teams leak in
+      const validRegs = regs.filter((r) => Boolean(r.eventId))
+      const validTeams = teams.filter((t) => t.status !== 'cancelled' && (t.status as any) !== 'disbanded' && Boolean(t.eventId))
 
       setInvitations(invites)
       setRegistrations(validRegs)
