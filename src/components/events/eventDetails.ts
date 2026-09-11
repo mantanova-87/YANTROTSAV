@@ -70,17 +70,30 @@ export const eventDetails: Record<
       "Seats are limited so registration will be accepted on first come first serve basis and it will be closed automatically once all seats are filled. ",
     ],
   },
-  "6a9e4bd800213b95bda6": {
+  "6aa42001001ebf694378": {
     about:
-      "SURVIVOR is the esports event of Engineering Day 2026, organised by the E-Sports Club, Central University of Jammu. Departments field teams across two mobile titles, BGMI and Free Fire, each decided over three matches played live at the venue and screened for spectators. The event is open to every department and free to enter, and aims to bring students across departments together through structured competitive play, building on the club's previous tournaments including Scholars – Survival and Headshot Havoc.",
+      "SURVIVOR(FREE-FIRE) is the E-sports event of Engineering Day 2026, organised by the E-Sports Club, Central University of Jammu.It  is a competitive esports tournament being organised for university students, providing participants with an opportunity to compete in Free-Fire in a structured and fair competitive environment.",
     instructions: [
-      "Open to all currently enrolled students of Central University of Jammu",
-      "Maximum 2 teams per department, per game",
-      "Maximum 10 teams per game; slots will be alloted on first come, first served basis",
-      "All team members must be from the same department — no inter-department teams",
-      "Players must bring their own devices; no phones are provided",
-      "Decisions of the match officials are final",
-      "Each title is decided over 3 matches. Teams are ranked on cumulative points.",
+      "Only registered university students are eligible to participate.",
+      "Valid University ID cards are mandatory for verification.",
+      "Only registered players are permitted to participate in the matches.",
+      "Tablets and unauthorised devices are not permitted.",
+      "Use of hacks, cheats, scripts, exploits, or any unauthorised third-party software is strictly prohibited.",
+      "Detailed game-specific rules and regulations will be provided in the official rulebook.",
+      "Evaluation Criteria:Teams will be evaluated based on their cumulative performance across the matches. Points will be awarded according to finishing position and number of kills. The team with the highest cumulative score will be declared the winner."
+    ],
+  },
+  "6aa41f8900259aaffeeb": {
+    about:
+      "SURVIVOR(BGMI) is the E-sports event of Engineer's Day 2026, organised by the E-Sports Club, Central University of Jammu.It  is a competitive esports tournament being organised for university students, providing participants with an opportunity to compete in BGMI in a structured and fair competitive environment.",
+    instructions: [
+      "Only registered university students are eligible to participate.",
+      "Valid University ID cards are mandatory for verification.",
+      "Only registered players are permitted to participate in the matches.",
+      "Tablets and unauthorised devices are not permitted.",
+      "Use of hacks, cheats, scripts, exploits, or any unauthorised third-party software is strictly prohibited.",
+      "Detailed game-specific rules and regulations will be provided in the official rulebook.",
+      "Evaluation Criteria:Teams will be evaluated based on their cumulative performance across the matches. Points will be awarded according to finishing position and number of kills. The team with the highest cumulative score will be declared the winner."
     ],
   },
   "6aa40aeb001617df3f25": {
