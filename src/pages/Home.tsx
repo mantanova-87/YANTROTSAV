@@ -128,7 +128,7 @@ const featureCards = [
   {
     title: 'Mr. Arun Kumar Sharma',
     text: 'Assistant Professor',
-    image: 'Arun_Kumar_Sharma.jpg',
+    image: 'Arun_Kumar_Sharma.png',
     accent: 'orange',
   }
 ]
