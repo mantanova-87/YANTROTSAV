@@ -7,6 +7,7 @@ import mehak from "../assets/images/mehak.png";
 import priyanshu from "../assets/images/priyanshu.jpeg";
 import abhinav from "../assets/images/abhinav.png";
 import Harsh from "../assets/images/Harsh.jpeg";
+import ankit from "../assets/images/ankitojha.jpeg"
 const images = import.meta.glob(
   '../assets/images/*',
   {
@@ -60,6 +61,15 @@ const teamMembers = [
     linkedin: "https://www.linkedin.com/in/mehak-sharma-cyber",
     whatsapp: "", //https://wa.me/919906814723
     image: mehak,
+  },
+  {
+    name: "ANKIT KUMAR OJHA",
+    designation: "",
+    email: "25BECSE15.cse@cujammu.ac.in",
+    instagram: "https://www.instagram.com/ankit_lalji",
+    linkedin: "https://www.linkedin.com/in/ankit-kumar-ojha-04de13d12m",
+    whatsapp: "", //https://wa.me/919334569412"
+    image: ankit,
   }, 
 ];
 const clubMembers = [
@@ -75,8 +85,18 @@ const clubMembers = [
     image: 'sukhvinder.jpeg',
     accent:"orange"
   },
-
-
+  {
+    title: "DHIRENDRA KUMAR SINGH",
+    text: "Coding-Club Lead",
+    image: 'DhirendraKumarSingh.jpeg',
+    accent:"violet",
+  },
+  {
+    title: "DHIRENDRA KUMAR SINGH",
+    text: "Esports-Club Lead",
+    image: 'naman.PNG',
+    accent:"orange"
+  },
 ];
 
 
