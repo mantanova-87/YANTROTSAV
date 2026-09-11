@@ -49,7 +49,7 @@ export const eventDetails: Record<
   },
   "6a9e4d60000cbccdb36f": {
     about:
-      "Clash of Code 2.0 is a premier two-round competitive programming and Data Structures & Algorithms (DSA) challenge organized by Code.connect CUJ. Designed to sharpen algorithmic thinking and problem-solving, participants first face a GATE CS Aptitude Round (90 mins), with the Top 15 qualifiers battling in an advanced DSA Coding Round (120 mins, 3 problems). It is the perfect arena for GATE, interview, and placement prep, offering certificates, official club recognition, and exciting prizes to the top performers.",
+      "Clash of Code 2.0 is a premier two-round competitive programming and Data Structures & Algorithms (DSA) challenge organized by Code.connect CUJ. Designed to sharpen algorithmic thinking and problem-solving, participants first face a DSA Aptitude Round (90 mins), with the Top 15 qualifiers battling in an advanced Coding Round (120 mins, 3 problems). It is the perfect arena for GATE, interview, and placement prep, offering certificates, official club recognition, and exciting prizes to the top performers.",
     instructions: [
       "Eligibility & Platform: Individual participation only. Open to all 1st Semester students of Central University of Jammu. Registration and submissions on Unstop are mandatory.",
       "Round 1 – GATE CS Challenge (Online • 90 Mins): MCQs, MSQs, and NAT questions testing core CS fundamentals & logical reasoning. Marking Scheme: +4 for correct answers, -1 for wrong answers. Top 15 rankers qualify for Round 2.",
