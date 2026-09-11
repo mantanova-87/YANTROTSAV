@@ -8,6 +8,8 @@ import {
   CalendarDays,
   Filter,
   CheckCircle2,
+  Zap,
+  ShieldAlert,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import fallbackBanner from '../assets/images/event-fallback.jpg'
@@ -16,7 +18,7 @@ import CyberLoader from '../components/common/CyberLoader'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { fetchEventsThunk } from '../store/slices/eventsSlice'
 import { useAuth } from '../context/AuthContext'
-import { teamsService } from '../services/appwrite/teams.service'
+import { teamsService, MAX_EVENT_REGISTRATIONS_PER_USER } from '../services/appwrite/teams.service'
 import type { EventDocument } from '../types/database.types'
 import { isEventFullyBooked, isEventDeadlinePassed, getEventSeatsSummary } from '../utils/eventCapacity'
 
@@ -179,6 +181,70 @@ function Events() {
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#050816] text-[#F8FAFC]">
+      {/* ========================================================= */}
+      {/* FLOATING CYBERPUNK POLICY MARQUEE (3 EVENTS PER STUDENT) */}
+      {/* ========================================================= */}
+      <div className="sticky top-20 z-30 w-full border-y border-[#00E5FF]/20 bg-[#080A0F]/90 shadow-[0_10px_30px_rgba(0,0,0,0.8)] backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1400px] items-center overflow-hidden py-2.5 px-4 sm:px-6">
+          {/* Badge indicator */}
+          <div className="mr-3 sm:mr-4 flex shrink-0 items-center gap-2 border border-[#00E5FF]/40 bg-[#00E5FF]/10 px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-[#00E5FF]">
+            <Zap size={12} className="text-[#FF6B00] animate-pulse" />
+            <span className="hidden sm:inline">POLICY NOTICE</span>
+            <span className="text-white/60">::</span>
+            <span className="text-[#FF6B00]">MAX 3 EVENTS</span>
+          </div>
+
+          {/* Marquee Ticker */}
+          <div className="relative flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]">
+            <div className="animate-cyber-marquee whitespace-nowrap py-0.5">
+              {[...Array(2)].map((_, idx) => (
+                <div key={idx} className="flex items-center gap-6 pr-6 font-mono text-[10px] tracking-[0.14em] text-slate-300">
+                  <span className="text-[#00E5FF] font-semibold">
+                    REGISTRATION LIMIT: Maximum 3 event registrations permitted per student across YANTROTSAV 2026 (Solo & Squad entries combined).
+                  </span>
+                  <span className="text-white/30">•</span>
+                  <span className="text-slate-300">
+                    Plan your challenges strategically across tech, coding, gaming & design arenas.
+                  </span>
+                  <span className="text-white/30">•</span>
+                  <span className="text-[#FF6B00]">
+                    Live quota enforcement active on all registrations.
+                  </span>
+                  <span className="text-white/30">•</span>
+                  <span className="text-slate-400">
+                    Review and manage your registered event passes in your Student Dashboard.
+                  </span>
+                  <span className="text-white/30">•</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* User Quota Quick Status Badge */}
+          {user ? (
+            <Link
+              to="/dashboard"
+              className="ml-3 sm:ml-4 flex shrink-0 items-center gap-2 border px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] transition-all hover:scale-105"
+              style={{
+                borderColor: enrolledEventIds.size >= MAX_EVENT_REGISTRATIONS_PER_USER ? 'rgba(245, 158, 11, 0.6)' : 'rgba(0, 229, 255, 0.4)',
+                backgroundColor: enrolledEventIds.size >= MAX_EVENT_REGISTRATIONS_PER_USER ? 'rgba(245, 158, 11, 0.12)' : 'rgba(0, 229, 255, 0.08)',
+                color: enrolledEventIds.size >= MAX_EVENT_REGISTRATIONS_PER_USER ? '#F59E0B' : '#00E5FF',
+              }}
+              title="Click to view and manage registered events on Dashboard"
+            >
+              <ShieldAlert size={12} />
+              <span>
+                QUOTA: {enrolledEventIds.size}/{MAX_EVENT_REGISTRATIONS_PER_USER}
+              </span>
+            </Link>
+          ) : (
+            <div className="ml-3 sm:ml-4 hidden md:flex shrink-0 items-center gap-1.5 border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[9px] uppercase tracking-wider text-slate-400">
+              <span>3 PASSES / STUDENT</span>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* ========================================================= */}
       {/* HERO SECTION */}
       {/* ========================================================= */}
@@ -898,21 +964,34 @@ function Events() {
                                     <span>Already Enrolled ✓</span>
                                   </Link>
                                 ) : isRegistrationOpen ? (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleOpenRegistration(event)
-                                    }
-                                    className="flex cursor-pointer items-center justify-center gap-3 border border-[#00E5FF] bg-[#00E5FF]/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-[#00E5FF] transition-all hover:bg-[#00E5FF] hover:text-black"
-                                  >
-                                    <span>Register Now</span>
+                                  enrolledEventIds.size >= MAX_EVENT_REGISTRATIONS_PER_USER ? (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleOpenRegistration(event)
+                                      }
+                                      className="flex cursor-pointer items-center justify-center gap-2 border border-amber-500/70 bg-amber-500/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-amber-400 transition-all hover:bg-amber-500 hover:text-black"
+                                    >
+                                      <ShieldAlert size={13} />
+                                      <span>Quota Limit (3/3)</span>
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleOpenRegistration(event)
+                                      }
+                                      className="flex cursor-pointer items-center justify-center gap-3 border border-[#00E5FF] bg-[#00E5FF]/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-[#00E5FF] transition-all hover:bg-[#00E5FF] hover:text-black"
+                                    >
+                                      <span>Register Now</span>
 
-                                    {isReversed ? (
-                                      <ArrowUpRight size={14} />
-                                    ) : (
-                                      <ArrowDownRight size={14} />
-                                    )}
-                                  </button>
+                                      {isReversed ? (
+                                        <ArrowUpRight size={14} />
+                                      ) : (
+                                        <ArrowDownRight size={14} />
+                                      )}
+                                    </button>
+                                  )
                                 ) : (
                                   <span className="border border-white/10 px-4 py-2 font-mono text-[9px] uppercase tracking-wider text-slate-500">
                                     {isDeadlinePassed

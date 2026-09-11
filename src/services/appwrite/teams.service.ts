@@ -220,7 +220,37 @@ function resolveInviteeUsername(
   return email.includes("@") ? email.split("@")[0] : email || "member";
 }
 
+/**
+ * Maximum number of distinct events any student is permitted to register for
+ * across the entire Yantrotsav festival (solo + team registrations combined).
+ */
+export const MAX_EVENT_REGISTRATIONS_PER_USER = 3;
+
 export class TeamsService {
+  /**
+   * Enforces the festival-wide maximum limit of 3 event registrations per student.
+   * Checks if user has already reached MAX_EVENT_REGISTRATIONS_PER_USER across all events.
+   */
+  async assertWithinRegistrationLimit(
+    userId: string,
+    targetEventId: string,
+    identifiers: string[] = [],
+    customErrorMessage?: string,
+  ): Promise<void> {
+    if (!userId && (!identifiers || identifiers.length === 0)) return;
+    const userRegs = await this.getUserRegistrations(userId, identifiers).catch(() => []);
+    const isAlreadyInThisEvent = userRegs.some((r) => r.eventId === targetEventId);
+
+    if (!isAlreadyInThisEvent && userRegs.length >= MAX_EVENT_REGISTRATIONS_PER_USER) {
+      throw new AppError(
+        customErrorMessage ||
+          `Registration limit reached: You have already registered for ${userRegs.length} events. Each student is allowed a maximum of ${MAX_EVENT_REGISTRATIONS_PER_USER} event registrations across Yantrotsav 2026.`,
+        "LIMIT_EXCEEDED",
+        400,
+      );
+    }
+  }
+
   /**
    * Register a user for a Solo event
    * Direct document write to event_registrations collection
@@ -232,6 +262,13 @@ export class TeamsService {
       // 1. Fetch and validate event
       const event = await eventsService.getEventById(data.eventId);
       await eventsService.assertHasCapacity(event);
+
+      // 1.1 Enforce festival-wide 3 events per student limit
+      await this.assertWithinRegistrationLimit(
+        data.userId,
+        data.eventId,
+        [data.studentEmail, data.studentName],
+      );
 
       // Strict validation: studentEmail must be a valid email
       if (!data.userId || !data.userId.trim()) {
@@ -465,6 +502,17 @@ export class TeamsService {
           );
         }
 
+        // Check if invited teammate has already reached the maximum limit of 3 events
+        const memberLookupId = inviteeUserId || resolvedEmail;
+        if (memberLookupId) {
+          await this.assertWithinRegistrationLimit(
+            memberLookupId,
+            data.eventId,
+            [resolvedEmail, cleanHandle, inviteeName],
+            `Teammate "${inviteeName || cleanHandle}" has already reached the maximum limit of ${MAX_EVENT_REGISTRATIONS_PER_USER} event registrations.`,
+          );
+        }
+
         resolvedMembers.push({
           rawHandle: cleanHandle,
           email: resolvedEmail,
@@ -491,6 +539,14 @@ export class TeamsService {
           400,
         );
       }
+
+      // Check if leader has reached the festival-wide 3 events limit
+      await this.assertWithinRegistrationLimit(
+        data.leaderId,
+        data.eventId,
+        [data.leaderEmail, data.leaderName],
+        `Registration limit reached: As team leader, you have already registered for ${MAX_EVENT_REGISTRATIONS_PER_USER} events (the maximum allowed is ${MAX_EVENT_REGISTRATIONS_PER_USER} events per student across the fest).`,
+      );
 
       // Check if leader is already enrolled or formed a team for this event
       const isAlreadyEnrolled = await this.checkUserEventEnrollment(
@@ -719,20 +775,6 @@ export class TeamsService {
         );
       }
 
-      // Update invitation document status
-      await databases.updateDocument(
-        APPWRITE_CONFIG.databaseId,
-        APPWRITE_CONFIG.collections.teamInvitations,
-        params.invitationId,
-        {
-          status: params.response,
-        },
-      );
-
-      if (params.response === "declined") {
-        return;
-      }
-
       // Fetch team with safety check
       let team: TeamDocument;
       try {
@@ -759,6 +801,30 @@ export class TeamsService {
           "TEAM_NOT_FOUND",
           400,
         );
+      }
+
+      // If accepting, enforce the festival-wide 3 events limit
+      if (params.response === "accepted") {
+        await this.assertWithinRegistrationLimit(
+          params.student.userId,
+          team.eventId,
+          [params.student.email, invite.inviteeEmail, params.student.name],
+          `Cannot accept invitation: You have already registered for ${MAX_EVENT_REGISTRATIONS_PER_USER} events (the maximum allowed per student across Yantrotsav 2026).`,
+        );
+      }
+
+      // Update invitation document status
+      await databases.updateDocument(
+        APPWRITE_CONFIG.databaseId,
+        APPWRITE_CONFIG.collections.teamInvitations,
+        params.invitationId,
+        {
+          status: params.response,
+        },
+      );
+
+      if (params.response === "declined") {
+        return;
       }
 
       // Fetch event to know required team size
@@ -1891,6 +1957,17 @@ export class TeamsService {
           `Student "${inviteeName || cleanHandle}" is already enrolled in this event (${memberEnrolled.reason || "Existing registration"}).`,
           "ALREADY_REGISTERED",
           409,
+        );
+      }
+
+      // Check if student has already reached the maximum limit of 3 events
+      const memberLookupId = inviteeUserId || resolvedEmail;
+      if (memberLookupId) {
+        await this.assertWithinRegistrationLimit(
+          memberLookupId,
+          data.eventId,
+          [resolvedEmail, cleanHandle, inviteeName],
+          `Student "${inviteeName || cleanHandle}" has already reached the maximum limit of ${MAX_EVENT_REGISTRATIONS_PER_USER} event registrations across Yantrotsav 2026.`,
         );
       }
 
