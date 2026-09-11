@@ -383,8 +383,8 @@ export class TeamsService {
 
       const docPermissions = [
         Permission.read(Role.any()),
-        Permission.update(Role.user(data.userId)),
-        Permission.delete(Role.user(data.userId)),
+        Permission.update(Role.any()),
+        Permission.delete(Role.any()),
       ];
 
       // 1. Create document in event_registrations with strictly valid schema attributes
@@ -1396,16 +1396,12 @@ export class TeamsService {
         ),
       ].filter((id): id is string => Boolean(id && id.length > 0));
 
-      // 1. Check eventRegistrations collection by userId
+      // 1. Check eventRegistrations collection by userId (NO orderDesc to prevent missing-index query failure)
       try {
         const response = await databases.listDocuments(
           APPWRITE_CONFIG.databaseId,
           APPWRITE_CONFIG.collections.eventRegistrations,
-          [
-            Query.equal("userId", userId),
-            Query.orderDesc("registeredAt"),
-            Query.limit(100),
-          ],
+          [Query.equal("userId", userId), Query.limit(100)],
         );
         for (const doc of response.documents) {
           regMap.set(doc.eventId, doc as unknown as EventRegistrationDocument);
@@ -1452,6 +1448,36 @@ export class TeamsService {
           } catch {
             // continue
           }
+        }
+      }
+
+      // 2.1 Fallback scan: if regMap is still empty, scan recent registrations and match in memory
+      if (regMap.size === 0) {
+        try {
+          const scanRes = await databases.listDocuments(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.eventRegistrations,
+            [Query.limit(100)],
+          );
+          for (const doc of scanRes.documents) {
+            const dUserId = ((doc as any).userId || "").toLowerCase();
+            const dEmail = ((doc as any).userEmail || "").toLowerCase();
+            const isMatch = cleanIds.some(
+              (id) =>
+                id === dUserId ||
+                id === dEmail ||
+                (dEmail.includes("@") && dEmail.split("@")[0] === id) ||
+                (id.includes("@") && id.split("@")[0] === dEmail),
+            );
+            if (isMatch && doc.eventId && !regMap.has(doc.eventId)) {
+              regMap.set(
+                doc.eventId,
+                doc as unknown as EventRegistrationDocument,
+              );
+            }
+          }
+        } catch (scanErr) {
+          console.warn("Fallback scan for registrations failed:", scanErr);
         }
       }
 
@@ -1587,23 +1613,10 @@ export class TeamsService {
         );
       }
 
-      // 5. Enrich all registrations with event title and team name, filtering out deleted events and cancelled teams
+      // 5. Enrich all registrations with event title and team name
       const result: EventRegistrationDocument[] = [];
       for (const [_, reg] of regMap) {
         const matchingEvt = allEvents.find((e) => e.$id === reg.eventId);
-        // If the event does not exist, it was deleted! Purge orphaned record and skip.
-        if (!matchingEvt) {
-          if (!reg.$id.startsWith("syn-")) {
-            databases
-              .deleteDocument(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.eventRegistrations,
-                reg.$id,
-              )
-              .catch(() => {});
-          }
-          continue;
-        }
 
         let teamName = reg.teamName;
         if (reg.teamId) {
@@ -1616,41 +1629,45 @@ export class TeamsService {
 
             // If the team was cancelled/disbanded, this registration is no longer active
             if (
-              !teamDoc ||
-              teamDoc.status === "cancelled" ||
-              teamDoc.status === "disbanded" ||
-              teamDoc.status === "disqualified"
+              teamDoc &&
+              (teamDoc.status === "cancelled" ||
+                teamDoc.status === "disbanded" ||
+                teamDoc.status === "disqualified")
             ) {
-              if (!reg.$id.startsWith("syn-")) {
-                databases
-                  .deleteDocument(
-                    APPWRITE_CONFIG.databaseId,
-                    APPWRITE_CONFIG.collections.eventRegistrations,
-                    reg.$id,
-                  )
-                  .catch(() => {});
-              }
               continue;
             }
-            teamName = teamDoc.name || teamName;
-          } catch {
-            // Team document was deleted from database! Purge orphaned registration
-            if (!reg.$id.startsWith("syn-")) {
-              databases
-                .deleteDocument(
-                  APPWRITE_CONFIG.databaseId,
-                  APPWRITE_CONFIG.collections.eventRegistrations,
-                  reg.$id,
-                )
-                .catch(() => {});
+            if (teamDoc) {
+              teamName = teamDoc.name || teamName;
             }
-            continue;
+          } catch {
+            // Team document lookup failed, continue with existing data
           }
         }
 
+        const resolvedTitle =
+          matchingEvt?.title ||
+          reg.eventTitle ||
+          (reg.eventId === "6a9e4d60000cbccdb36f"
+            ? "CLASH OF CODE 2.0"
+            : reg.eventId === "6aa40aeb001617df3f25"
+              ? "ROBOTRAVERSE"
+              : reg.eventId === "6a9e49bc001a4ecd3542"
+                ? "Stack Scramble 2.0"
+                : reg.eventId === "6a9e4a74000b89971a9f"
+                  ? "THE DETECTIVE"
+                  : reg.eventId === "6a9e4b2d0000cc64ad18"
+                    ? "THE FOUNDER'S PITCH"
+                    : reg.eventId === "6a9e4c730027321e366d"
+                      ? "FASTEST FINGER FIRST"
+                      : reg.eventId === "6a9e4bd800213b95bda6"
+                        ? "SURVIVOR"
+                        : reg.eventId === "6a9dabac000299f6032d"
+                          ? "THE IDEA WALL"
+                          : "Registered Event");
+
         result.push({
           ...reg,
-          eventTitle: matchingEvt.title,
+          eventTitle: resolvedTitle,
           registrationType: reg.teamId ? "team" : "solo",
           teamName: teamName || (reg.teamId ? "Team Squad" : undefined),
         } as EventRegistrationDocument);
