@@ -387,36 +387,44 @@ export class TeamsService {
         Permission.delete(Role.user(data.userId)),
       ];
 
-      // Build document payload — include all profile fields from the DTO
-      const docPayload: Record<string, any> = {
-        eventId: data.eventId,
-        userId: data.userId,
-        userName: data.studentName,
-        userEmail: data.studentEmail,
-        registeredAt: new Date().toISOString(),
-      };
-
-      // Add optional profile fields only if they have a value
-      if (data.studentPhone?.trim())
-        docPayload.studentPhone = data.studentPhone.trim();
-      if (data.studentRollNumber?.trim())
-        docPayload.studentRollNumber = data.studentRollNumber.trim();
-      if (data.studentRollNo?.trim())
-        docPayload.studentRollNo = data.studentRollNo.trim();
-      if (data.department?.trim())
-        docPayload.department = data.department.trim();
-      if (data.semester?.trim())
-        docPayload.semester = data.semester.trim();
-      if (data.collegeName?.trim())
-        docPayload.collegeName = data.collegeName.trim();
-
+      // 1. Create document in event_registrations with strictly valid schema attributes
       const regDoc = await databases.createDocument(
         APPWRITE_CONFIG.databaseId,
         APPWRITE_CONFIG.collections.eventRegistrations,
         ID.unique(),
-        docPayload,
+        {
+          eventId: data.eventId,
+          userId: data.userId,
+          userName: data.studentName,
+          userEmail: data.studentEmail,
+          registeredAt: new Date().toISOString(),
+        },
         docPermissions,
       );
+
+      // 2. Safely sync student profile attributes (phone, rollNumber, department, etc.) to the users collection
+      try {
+        const userUpdatePayload: Record<string, any> = {};
+        if (data.studentPhone?.trim()) userUpdatePayload.phone = data.studentPhone.trim();
+        const roll = (data.studentRollNumber || data.studentRollNo || '').trim();
+        if (roll) userUpdatePayload.rollNumber = roll;
+        if (data.department?.trim()) userUpdatePayload.department = data.department.trim();
+        if (data.semester?.trim()) userUpdatePayload.semester = data.semester.trim();
+        if (data.collegeName?.trim()) userUpdatePayload.college = data.collegeName.trim();
+
+        if (Object.keys(userUpdatePayload).length > 0 && data.userId) {
+          databases
+            .updateDocument(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.users,
+              data.userId,
+              userUpdatePayload,
+            )
+            .catch(() => {});
+        }
+      } catch {
+        // Non-blocking background sync
+      }
 
       await eventsService.syncOccupancy(data.eventId).catch(() => {});
 
