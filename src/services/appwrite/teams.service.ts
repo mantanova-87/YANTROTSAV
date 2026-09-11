@@ -238,7 +238,20 @@ export class TeamsService {
     customErrorMessage?: string,
   ): Promise<void> {
     if (!userId && (!identifiers || identifiers.length === 0)) return;
-    const userRegs = await this.getUserRegistrations(userId, identifiers).catch(() => []);
+    let userRegs: EventRegistrationDocument[];
+    try {
+      userRegs = await this.getUserRegistrations(userId, identifiers);
+    } catch (regErr) {
+      console.error(
+        "assertWithinRegistrationLimit: Failed to fetch registrations, blocking registration as a safety measure.",
+        regErr,
+      );
+      throw new AppError(
+        "Unable to verify your registration count. Please try again in a moment.",
+        "UNKNOWN_ERROR",
+        503,
+      );
+    }
     const isAlreadyInThisEvent = userRegs.some((r) => r.eventId === targetEventId);
 
     if (!isAlreadyInThisEvent && userRegs.length >= MAX_EVENT_REGISTRATIONS_PER_USER) {
@@ -370,21 +383,38 @@ export class TeamsService {
 
       const docPermissions = [
         Permission.read(Role.any()),
-        Permission.update(Role.any()),
-        Permission.delete(Role.any()),
+        Permission.update(Role.user(data.userId)),
+        Permission.delete(Role.user(data.userId)),
       ];
+
+      // Build document payload — include all profile fields from the DTO
+      const docPayload: Record<string, any> = {
+        eventId: data.eventId,
+        userId: data.userId,
+        userName: data.studentName,
+        userEmail: data.studentEmail,
+        registeredAt: new Date().toISOString(),
+      };
+
+      // Add optional profile fields only if they have a value
+      if (data.studentPhone?.trim())
+        docPayload.studentPhone = data.studentPhone.trim();
+      if (data.studentRollNumber?.trim())
+        docPayload.studentRollNumber = data.studentRollNumber.trim();
+      if (data.studentRollNo?.trim())
+        docPayload.studentRollNo = data.studentRollNo.trim();
+      if (data.department?.trim())
+        docPayload.department = data.department.trim();
+      if (data.semester?.trim())
+        docPayload.semester = data.semester.trim();
+      if (data.collegeName?.trim())
+        docPayload.collegeName = data.collegeName.trim();
 
       const regDoc = await databases.createDocument(
         APPWRITE_CONFIG.databaseId,
         APPWRITE_CONFIG.collections.eventRegistrations,
         ID.unique(),
-        {
-          eventId: data.eventId,
-          userId: data.userId,
-          userName: data.studentName,
-          userEmail: data.studentEmail,
-          registeredAt: new Date().toISOString(),
-        },
+        docPayload,
         docPermissions,
       );
 
@@ -1504,6 +1534,8 @@ export class TeamsService {
           [
             Query.equal("leaderId", userId),
             Query.notEqual("status", "cancelled"),
+            Query.notEqual("status", "disbanded"),
+            Query.notEqual("status", "disqualified"),
             Query.limit(50),
           ],
         );
@@ -1728,6 +1760,8 @@ export class TeamsService {
             Query.equal("eventId", eventId),
             Query.equal("leaderId", userId),
             Query.notEqual("status", "cancelled"),
+            Query.notEqual("status", "disbanded"),
+            Query.notEqual("status", "disqualified"),
           ],
         );
         if (teamRes.documents.length > 0) {
