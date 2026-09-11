@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import type { FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Users, User, Plus, Trash2, CheckCircle2, AlertCircle, Loader2, ArrowRight } from 'lucide-react'
+import { X, Users, User, Plus, Trash2, CheckCircle2, AlertCircle, ShieldAlert, Loader2, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { teamsService } from '../../services/appwrite/teams.service'
+import { teamsService, MAX_EVENT_REGISTRATIONS_PER_USER } from '../../services/appwrite/teams.service'
 import type { EventDocument } from '../../types/database.types'
 import { showToast } from '../../utils/toast'
 import { isEventFullyBooked, isEventDeadlinePassed, getEventSeatsSummary } from '../../utils/eventCapacity'
@@ -41,6 +41,7 @@ export default function EventRegistrationModal({
     reason?: string
     teamName?: string
   } | null>(null)
+  const [userRegisteredCount, setUserRegisteredCount] = useState<number>(0)
   const [checkingEnrollment, setCheckingEnrollment] = useState(false)
   const [, setDeadlineTick] = useState(0)
 
@@ -65,9 +66,11 @@ export default function EventRegistrationModal({
   }, [profile])
 
   // Check whether user is already enrolled for this event (as leader, member, or solo)
+  // and count total registered events across the fest
   useEffect(() => {
     if (!isOpen || !event || !user) {
       setExistingEnrollment(null)
+      setUserRegisteredCount(0)
       return
     }
 
@@ -82,13 +85,17 @@ export default function EventRegistrationModal({
       profile?.rollNo,
     ].filter(Boolean) as string[]
 
-    teamsService
-      .checkUserEventEnrollment(event.$id, user.$id, userIdentifiers)
-      .then((res) => {
-        setExistingEnrollment(res)
+    Promise.all([
+      teamsService.checkUserEventEnrollment(event.$id, user.$id, userIdentifiers),
+      teamsService.getUserRegistrations(user.$id, userIdentifiers),
+    ])
+      .then(([enrollRes, userRegs]) => {
+        setExistingEnrollment(enrollRes)
+        setUserRegisteredCount(userRegs.length)
       })
       .catch(() => {
         setExistingEnrollment(null)
+        setUserRegisteredCount(0)
       })
       .finally(() => {
         setCheckingEnrollment(false)
@@ -102,6 +109,7 @@ export default function EventRegistrationModal({
   const seats = getEventSeatsSummary(event)
   const isFullyBooked = isEventFullyBooked(event)
   const isRegistrationClosed = event.status !== 'published' || isDeadlinePassed || isFullyBooked
+  const isLimitReached = !existingEnrollment?.enrolled && userRegisteredCount >= MAX_EVENT_REGISTRATIONS_PER_USER
   const requiredAdditionalMembers = Math.max(1, (event.minTeamSize || 2) - 1)
   const maxAdditionalMembers = Math.max(1, (event.maxTeamSize || 4) - 1)
 
@@ -134,6 +142,13 @@ export default function EventRegistrationModal({
     if (existingEnrollment?.enrolled) {
       showToast.info(
         `You are already enrolled in this event (${existingEnrollment.reason}). Duplicate registrations are not permitted.`,
+      )
+      return
+    }
+
+    if (isLimitReached) {
+      showToast.error(
+        `Registration limit reached: You have already registered for ${userRegisteredCount} events (maximum ${MAX_EVENT_REGISTRATIONS_PER_USER} allowed per student).`,
       )
       return
     }
@@ -383,8 +398,49 @@ export default function EventRegistrationModal({
                   </button>
                 </div>
               </div>
+            ) : isLimitReached ? (
+              <div className="py-6 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-400">
+                  <ShieldAlert size={32} />
+                </div>
+                <h3 className="mt-4 text-xl font-black uppercase tracking-tight text-white">
+                  Event Limit Reached ({userRegisteredCount}/{MAX_EVENT_REGISTRATIONS_PER_USER})
+                </h3>
+                <p className="mt-2 text-xs leading-relaxed text-slate-300">
+                  You have already registered for <span className="text-[#00E5FF] font-semibold">{MAX_EVENT_REGISTRATIONS_PER_USER} events</span> (solo registrations and team events combined).
+                </p>
+                <p className="mt-2 text-xs text-slate-400">
+                  Each student can participate in a maximum of {MAX_EVENT_REGISTRATIONS_PER_USER} events across YANTROTSAV. You can view your registered events in your dashboard.
+                </p>
+
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+                  <Link
+                    to="/dashboard"
+                    onClick={handleClose}
+                    className="flex items-center justify-center gap-2 border border-[#FF6B00] bg-[#FF6B00] px-6 py-2.5 font-mono text-xs font-bold uppercase tracking-[0.15em] text-white transition-all hover:bg-transparent hover:text-[#FF6B00]"
+                  >
+                    <span>Go to My Dashboard</span>
+                    <ArrowRight size={14} />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    className="border border-white/15 px-5 py-2.5 font-mono text-xs uppercase tracking-[0.15em] text-slate-400 transition-colors hover:text-white"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
+                {/* User registration quota counter badge */}
+                <div className="flex items-center justify-between border border-white/10 bg-[#00E5FF]/5 px-3 py-2 text-[10px] font-mono">
+                  <span className="text-slate-400">YOUR EVENT REGISTRATIONS:</span>
+                  <span className="font-bold text-[#00E5FF]">
+                    {userRegisteredCount} / {MAX_EVENT_REGISTRATIONS_PER_USER} EVENTS USED
+                  </span>
+                </div>
+
                 {isRegistrationClosed && (
                   <div className="flex items-center gap-3 border border-amber-500/40 bg-amber-950/30 p-3 text-xs text-amber-400">
                     <AlertCircle size={16} className="shrink-0" />

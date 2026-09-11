@@ -79,3 +79,26 @@
     opacity: 0;
   }
 }
+
+/* ==========================================================================
+   CYBERPUNK MARQUEE TICKER ANIMATION
+   ========================================================================== */
+@keyframes cyberMarquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-cyber-marquee {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: cyberMarquee 35s linear infinite;
+}
+
+.animate-cyber-marquee:hover {
+  animation-play-state: paused;
+}
