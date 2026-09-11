@@ -17,7 +17,16 @@ function EventDetailsModal({
 }: EventDetailsModalProps) {
   if (!isOpen || !event) return null
 
-  const details = eventDetails[event.$id]
+  const normalizedTitle = (event.title || '').toLowerCase()
+  const details =
+    eventDetails[event.$id] ||
+    (normalizedTitle.includes('clash') ? eventDetails['6a9e4d60000cbccdb36f'] : undefined) ||
+    (normalizedTitle.includes('stack') ? eventDetails['6a9e49bc001a4ecd3542'] : undefined) ||
+    (normalizedTitle.includes('detective') ? eventDetails['6a9e4a74000b89971a9f'] : undefined) ||
+    (normalizedTitle.includes('pitch') || normalizedTitle.includes('founder') ? eventDetails['6a9e4b2d0000cc64ad18'] : undefined) ||
+    (normalizedTitle.includes('finger') || normalizedTitle.includes('fastest') ? eventDetails['6a9e4c730027321e366d'] : undefined) ||
+    (normalizedTitle.includes('survivor') ? eventDetails['6a9e4bd800213b95bda6'] : undefined) ||
+    (normalizedTitle.includes('idea') || normalizedTitle.includes('wall') ? eventDetails['6a9dabac000299f6032d'] : undefined)
 
   return (
     <div

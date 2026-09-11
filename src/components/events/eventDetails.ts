@@ -49,15 +49,14 @@ export const eventDetails: Record<
   },
   "6a9e4d60000cbccdb36f": {
     about:
-      "Clash of Code 2.0 is a competitive coding event organized by Coding Club - Central University of Jammu* to test participants' problem-solving, logical thinking, and programming skills.The competition consists of *two elimination rounds*, designed to evaluate participants on concepts ranging from computer science fundamentals to advanced Data Structures and Algorithms (DSA).In the first round, participants will solve carefully selected **GATE Computer Science Previous Year Questions (PYQs) to assess their aptitude, analytical thinking, and core CS knowledge.Based on their performance, the 'Top 15 participants' will qualify for the *Final Round, where they will solve two DSA programming problems within the allotted time.The event aims to encourage algorithmic thinking, improve coding proficiency, and provide participants with a competitive programming experience similar to technical interviews and coding contests.",
+      "Clash of Code 2.0 is a premier two-round competitive programming and Data Structures & Algorithms (DSA) challenge organized by Code.connect CUJ. Designed to sharpen algorithmic thinking and problem-solving, participants first face a GATE CS Aptitude Round (90 mins), with the Top 15 qualifiers battling in an advanced DSA Coding Round (120 mins, 3 problems). It is the perfect arena for GATE, interview, and placement prep, offering certificates, official club recognition, and exciting prizes to the top performers.",
     instructions: [
-      "The use of unfair means is strictly prohibited.",
-      "Plagiarism or code sharing will result in immediate disqualification.",
-      "Internet access is permitted only if explicitly allowed by the organizers.",
-      "AI tools (ChatGPT, Gemini, Claude, Copilot, etc.) are *strictly prohibited* during the competition.",
-      "Participants must not communicate with others during the contest.",
-      "Any attempt to exploit loopholes or violate contest rules may lead to disqualification.",
-      "The organizers' decision will be final and binding.",
+      "Eligibility & Platform: Individual participation only. Open to all 1st Semester students of Central University of Jammu. Registration and submissions on Unstop are mandatory.",
+      "Round 1 – GATE CS Challenge (Online • 90 Mins): MCQs, MSQs, and NAT questions testing core CS fundamentals & logical reasoning. Marking Scheme: +4 for correct answers, -1 for wrong answers. Top 15 rankers qualify for Round 2.",
+      "Round 2 – DSA Coding Challenge (Online • 120 Mins): Top 15 finalists solve 3 DSA problems. Any programming language supported on Unstop is permitted.",
+      "Evaluation Criteria: Solutions are evaluated on visible & hidden test cases passed, algorithmic efficiency, code quality, and earliest submission time (tie-breaker).",
+      "Strict Anti-Cheating & AI Ban: Plagiarism, code sharing, or external communication leads to immediate disqualification. The use of AI assistants (ChatGPT, Gemini, Claude, GitHub Copilot, etc.) is strictly prohibited.",
+      "Submission & Rewards: Submit via Unstop before the timer expires (latest valid compilation counts). Top 3 winners receive winner certificates, Code.connect CUJ recognition, and prizes/merchandise. Judges' decision is final.",
     ],
   },
   "6a9e4c730027321e366d": {
