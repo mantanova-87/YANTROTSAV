@@ -88,11 +88,11 @@ const clubMembers = [
   {
     title: "DHIRENDRA KUMAR SINGH",
     text: "Coding-Club Lead",
-    image: 'DhirendraKumarSingh.jpeg',
+    image: 'DhirendraKumarSingh.jpg',
     accent:"violet",
   },
   {
-    title: "DHIRENDRA KUMAR SINGH",
+    title: "NAMAN",
     text: "Esports-Club Lead",
     image: 'naman.PNG',
     accent:"orange"
