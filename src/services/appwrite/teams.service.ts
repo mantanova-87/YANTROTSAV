@@ -1541,15 +1541,19 @@ export class TeamsService {
           APPWRITE_CONFIG.collections.teams,
           [
             Query.equal("leaderId", userId),
-            Query.notEqual("status", "cancelled"),
-            Query.notEqual("status", "disbanded"),
-            Query.notEqual("status", "disqualified"),
             Query.limit(50),
           ],
         );
 
         for (const tDoc of leaderTeamsRes.documents) {
           const t = tDoc as unknown as TeamDocument;
+          if (
+            t.status === "cancelled" ||
+            (t.status as any) === "disbanded" ||
+            (t.status as any) === "disqualified"
+          ) {
+            continue;
+          }
           if (t.eventId && !regMap.has(t.eventId)) {
             const matchingEvt = allEvents.find((e) => e.$id === t.eventId);
             if (!matchingEvt) {
@@ -1767,13 +1771,15 @@ export class TeamsService {
           [
             Query.equal("eventId", eventId),
             Query.equal("leaderId", userId),
-            Query.notEqual("status", "cancelled"),
-            Query.notEqual("status", "disbanded"),
-            Query.notEqual("status", "disqualified"),
+            Query.limit(20),
           ],
         );
-        if (teamRes.documents.length > 0) {
-          const t = teamRes.documents[0] as any;
+        const activeLeaderTeam = teamRes.documents.find((d: any) => {
+          const s = String(d.status || "");
+          return s !== "cancelled" && s !== "disbanded" && s !== "disqualified";
+        });
+        if (activeLeaderTeam) {
+          const t = activeLeaderTeam as any;
           return {
             enrolled: true,
             reason: `Team Leader (${t.name || "Team"})`,

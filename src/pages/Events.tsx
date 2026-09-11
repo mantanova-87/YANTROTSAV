@@ -52,47 +52,43 @@ function Events() {
     new Set()
   )
 
-  // Load user's registered event IDs to prevent duplicate registration
-  useEffect(() => {
-    if (!user) {
-      setEnrolledEventIds(new Set())
-      return
-    }
-
-    let isMounted = true
-
-    const userIdentifiers = [
-      profile?.userId,
-      user.email,
-      user.email.split('@')[0],
-      (user.prefs as Record<string, any>)?.username,
-      profile?.username,
-      profile?.rollNumber,
-      profile?.rollNo,
-    ].filter(Boolean) as string[]
-
-    Promise.all([
-      teamsService
-        .getUserRegistrations(user.$id, userIdentifiers)
-        .catch(() => []),
-      teamsService
-        .getUserTeams(user.$id, userIdentifiers)
-        .catch(() => []),
-    ]).then(([regs, teams]) => {
-      if (!isMounted) return
-
-      const ids = new Set<string>()
-
-      regs.forEach((r) => ids.add(r.eventId))
-      teams.forEach((t) => ids.add(t.eventId))
-
-      setEnrolledEventIds(ids)
-    })
-
+  const refreshEnrollments = useMemo(() => {
     return () => {
-      isMounted = false
+      if (!user) {
+        setEnrolledEventIds(new Set())
+        return
+      }
+
+      const userIdentifiers = [
+        profile?.userId,
+        user.email,
+        user.email.split('@')[0],
+        (user.prefs as Record<string, any>)?.username,
+        profile?.username,
+        profile?.rollNumber,
+        profile?.rollNo,
+      ].filter(Boolean) as string[]
+
+      Promise.all([
+        teamsService
+          .getUserRegistrations(user.$id, userIdentifiers)
+          .catch(() => []),
+        teamsService
+          .getUserTeams(user.$id, userIdentifiers)
+          .catch(() => []),
+      ]).then(([regs, teams]) => {
+        const ids = new Set<string>()
+        regs.forEach((r) => ids.add(r.eventId))
+        teams.forEach((t) => ids.add(t.eventId))
+        setEnrolledEventIds(ids)
+      })
     }
   }, [user, profile])
+
+  // Load user's registered event IDs to prevent duplicate registration
+  useEffect(() => {
+    refreshEnrollments()
+  }, [refreshEnrollments])
 
   // Load events with live occupancy so seat counts stay accurate, and persist
   // deadline/capacity closures on the server instead of serving a stale cache.
@@ -1048,6 +1044,10 @@ function Events() {
         event={selectedEvent}
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
+        onSuccess={() => {
+          dispatch(fetchEventsThunk({ force: true }))
+          refreshEnrollments()
+        }}
       />
 
       {/* ========================================================= */}
