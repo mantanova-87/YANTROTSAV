@@ -624,7 +624,12 @@ export class EventsService {
         ? Math.max(teamsCountFromTeams, teamsCountFromRegs)
         : regsByEvent.get(event.$id) || 0;
       event.currentRegistrations = occupancy;
-      this.closeEventIfWindowEnded(event, false).catch(() => {});
+
+      const deadlinePassed = isEventDeadlinePassed(event);
+      const maxAllowed = getEventSlotLimit(event);
+      if (deadlinePassed || Boolean(maxAllowed && occupancy >= maxAllowed)) {
+        event.status = "closed";
+      }
     }
 
     return events;
