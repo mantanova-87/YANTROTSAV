@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import type { EventDocument } from '../../types/database.types'
 import { eventDetails } from './eventDetails'
+import { getEventSeatsSummary, isEventFullyBooked } from '../../utils/eventCapacity'
 
 type EventDetailsModalProps = {
   event: EventDocument | null
@@ -49,6 +50,16 @@ function EventDetailsModal({
             <h2 className="text-2xl font-black uppercase tracking-tight text-white sm:text-3xl">
               {event.title}
             </h2>
+            {(() => {
+              const seats = getEventSeatsSummary(event)
+              return (
+                <p className={`mt-3 font-mono text-[10px] uppercase tracking-[0.18em] ${
+                  isEventFullyBooked(event) ? 'text-[#FF6B00]' : 'text-[#00E5FF]'
+                }`}>
+                  {seats.label}: {seats.display} {seats.unit}
+                </p>
+              )
+            })()}
           </div>
 
           {details ? (
