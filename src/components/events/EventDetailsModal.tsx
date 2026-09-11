@@ -26,6 +26,7 @@ function EventDetailsModal({
     (normalizedTitle.includes('pitch') || normalizedTitle.includes('founder') ? eventDetails['6a9e4b2d0000cc64ad18'] : undefined) ||
     (normalizedTitle.includes('finger') || normalizedTitle.includes('fastest') ? eventDetails['6a9e4c730027321e366d'] : undefined) ||
     (normalizedTitle.includes('survivor') ? eventDetails['6a9e4bd800213b95bda6'] : undefined) ||
+    (normalizedTitle.includes('robotraverse') || normalizedTitle.includes('traverse') || normalizedTitle.includes('robo') ? eventDetails['6aa40aeb001617df3f25'] : undefined) ||
     (normalizedTitle.includes('idea') || normalizedTitle.includes('wall') ? eventDetails['6a9dabac000299f6032d'] : undefined)
 
   return (

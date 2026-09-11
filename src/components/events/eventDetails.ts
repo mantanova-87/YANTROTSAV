@@ -83,4 +83,16 @@ export const eventDetails: Record<
       "Each title is decided over 3 matches. Teams are ranked on cumulative points.",
     ],
   },
+  "6aa40aeb001617df3f25": {
+    about:
+      "RoboTraverse is an exciting team-based robotics challenge organized by the CSE Robotics Club, CUJ. Teams design and operate their own robots through a physical obstacle course in a race against time, putting engineering creativity, control skills, and problem-solving under pressure to the test. Each team gets three attempts, with the fastest valid run determining the final ranking. The event is open to CUJ students and offers a hands-on arena to build, compete, and showcase practical robotics skills.",
+    instructions: [
+      "Team Eligibility: Team size is 2 to 3 members. Free for all CUJ students. Robots must be self-built (pre-built or unmodified commercial kits are not allowed).",
+      "Robot Specifications: Maximum weight 500g. Manual control only (wired or wireless remote). Power source must be battery only.",
+      "Pre-Match Inspection: Every robot must pass a technical inspection (size, weight, voltage, manual control check) before its first attempt.",
+      "Match Format: Maximum 5 minutes per attempt with 3 attempts per team. Final ranking is based on the best (fastest) valid time among the 3 attempts.",
+      "Penalties & Disqualification: Touching the robot after match start adds +10s per touch (3+ touches disqualifies that attempt). Autonomous operation or dangerous behavior results in disqualification.",
+      "Safety Rules: Robots must not include sharp, sparkling, flammable, or projectile components. Battery must be securely mounted and insulated. Judges' decisions are final.",
+    ],
+  },
 };
