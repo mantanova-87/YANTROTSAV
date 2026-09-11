@@ -402,6 +402,39 @@ export class TeamsService {
         docPermissions,
       );
 
+      // 1.1 Dual-write to `teams` collection so solo registrations ALSO appear in Appwrite Console `teams` table and Admin directory
+      let mirrorTeamId = "";
+      try {
+        const teamDoc = await databases.createDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.teams,
+          ID.unique(),
+          {
+            name: `${data.studentName} (Solo)`,
+            eventId: data.eventId,
+            leaderId: data.userId,
+            leaderName: data.studentName,
+            leaderEmail: data.studentEmail,
+            status: "confirmed",
+          },
+          docPermissions,
+        );
+
+        if (teamDoc?.$id) {
+          mirrorTeamId = teamDoc.$id;
+          await databases
+            .updateDocument(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.eventRegistrations,
+              regDoc.$id,
+              { teamId: mirrorTeamId },
+            )
+            .catch(() => {});
+        }
+      } catch (teamMirrorErr) {
+        console.warn("[registerSolo] Mirroring to teams collection non-blocking notice:", teamMirrorErr);
+      }
+
       // 2. Safely sync student profile attributes (phone, rollNumber, department, etc.) to the users collection
       try {
         const userUpdatePayload: Record<string, any> = {};
@@ -430,6 +463,7 @@ export class TeamsService {
 
       return {
         ...regDoc,
+        teamId: mirrorTeamId || (regDoc as any).teamId,
         eventTitle: event.title,
         registrationType: "solo",
         studentName: data.studentName,
@@ -1195,7 +1229,8 @@ export class TeamsService {
           if (
             t.status === "cancelled" ||
             (t.status as any) === "disbanded" ||
-            (t.status as any) === "disqualified"
+            (t.status as any) === "disqualified" ||
+            (t.name && t.name.includes("(Solo)"))
           ) {
             continue;
           }
@@ -1665,11 +1700,20 @@ export class TeamsService {
                           ? "THE IDEA WALL"
                           : "Registered Event");
 
+        const isSolo =
+          (matchingEvt &&
+            (matchingEvt.eventType === "solo" ||
+              (matchingEvt.minTeamSize || 1) <= 1)) ||
+          reg.registrationType === "solo" ||
+          (teamName && teamName.includes("(Solo)"));
+
         result.push({
           ...reg,
           eventTitle: resolvedTitle,
-          registrationType: reg.teamId ? "team" : "solo",
-          teamName: teamName || (reg.teamId ? "Team Squad" : undefined),
+          registrationType: isSolo ? "solo" : "team",
+          teamName: isSolo
+            ? undefined
+            : teamName || (reg.teamId ? "Team Squad" : undefined),
         } as EventRegistrationDocument);
       }
 

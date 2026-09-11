@@ -35,7 +35,7 @@ import { eventsService } from '../services/appwrite/events.service'
 import { storageService } from '../services/appwrite/storage.service'
 import CyberLoader from '../components/common/CyberLoader'
 import fallbackBanner from '../assets/images/event-fallback.jpg'
-import { DEPARTMENT_OPTIONS } from '../types/database.types'
+import { DEPARTMENT_OPTIONS, type EventStatus } from '../types/database.types'
 import { showToast } from '../utils/toast'
 import { toDatetimeLocalValue } from '../utils/datetime'
 import { isEventFullyBooked } from '../utils/eventCapacity'
@@ -324,6 +324,7 @@ export default function AdminDashboard() {
       eventDate: toDatetimeLocalValue(event.eventTiming || event.eventDate),
       eventTiming: toDatetimeLocalValue(event.eventTiming || event.eventDate),
       registrationDeadline: toDatetimeLocalValue(event.registrationDeadline),
+      status: event.status || 'published',
       bannerUrl: event.bannerUrl || '',
     })
     setEditBannerPreview(event.bannerUrl || null)
@@ -371,13 +372,11 @@ export default function AdminDashboard() {
       }
 
       dispatch(invalidateEventsCache())
-      showNotification(`Event "${editFormData.title}" updated successfully!`)
+      showNotification(`✅ Event "${editFormData.title}" updated successfully!`)
       setEditModalOpen(false)
-      setEditingEvent(null)
-      setEditBannerFile(null)
-      setEditBannerPreview(null)
       await loadAdminOverview()
     } catch (err: any) {
+      console.error('[Admin] Update event failed:', err)
       showNotification(err?.message || 'Failed to update event', 'error')
     } finally {
       setUpdatingEvent(false)
@@ -395,7 +394,7 @@ export default function AdminDashboard() {
     try {
       await eventsService.deleteEvent(eventToDelete.$id, eventToDelete.bannerUrl)
       dispatch(invalidateEventsCache())
-      showNotification(`Event "${eventToDelete.title}" and all related banner, teams, registrations, and invites deleted successfully!`)
+      showNotification(`Event "${eventToDelete.title}" and its roster purged successfully.`)
       setDeleteModalOpen(false)
       setEventToDelete(null)
       await loadAdminOverview()
@@ -419,6 +418,24 @@ export default function AdminDashboard() {
       await loadAdminOverview()
     } catch (err: any) {
       showNotification(err?.message || 'Failed to toggle status', 'error')
+    }
+  }
+
+  const handlePublishAllActiveEvents = async () => {
+    if (!window.confirm('Make all events LIVE (published)?')) return
+    try {
+      let publishedCount = 0
+      for (const ev of eventsList) {
+        if (ev.status !== 'published') {
+          await eventsService.toggleRegistration(ev.$id, true)
+          publishedCount++
+        }
+      }
+      dispatch(invalidateEventsCache())
+      showNotification(`✅ Successfully published ${publishedCount} event(s)!`)
+      await loadAdminOverview()
+    } catch (err: any) {
+      showNotification(err?.message || 'Failed to publish all events', 'error')
     }
   }
 
@@ -986,6 +1003,16 @@ export default function AdminDashboard() {
                   <option value="workshop">Workshop</option>
                   <option value="other">Other</option>
                 </select>
+
+                {/* Publish All Active Events Button */}
+                <button
+                  onClick={handlePublishAllActiveEvents}
+                  className="flex items-center gap-1.5 border border-emerald-500/60 bg-emerald-950/20 px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-400 hover:bg-emerald-500 hover:text-black transition-colors"
+                  title="Make all events with future deadlines LIVE"
+                >
+                  <CheckCircle2 size={13} />
+                  <span>Publish All Events</span>
+                </button>
               </div>
             </div>
 
@@ -2437,7 +2464,7 @@ export default function AdminDashboard() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
                 <div>
                   <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
                     Category
@@ -2482,7 +2509,27 @@ export default function AdminDashboard() {
 
                 <div>
                   <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
-                    Max Teams / Slots Capacity
+                    Status
+                  </label>
+                  <select
+                    value={editFormData.status || 'published'}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        status: e.target.value as EventStatus,
+                      })
+                    }
+                    className="mt-1 w-full border border-white/10 bg-[#050816] px-3 py-2 text-xs text-white outline-none focus:border-[#00E5FF]"
+                  >
+                    <option value="published">Published (Live)</option>
+                    <option value="closed">Closed</option>
+                    <option value="draft">Draft</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-mono text-[9px] uppercase tracking-[0.18em] text-slate-400">
+                    Max Capacity
                   </label>
                   <input
                     type="number"

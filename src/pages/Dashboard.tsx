@@ -90,9 +90,15 @@ export default function Dashboard() {
         teamsService.getUserTeams(user.$id, userIdentifiers),
       ])
 
-      // Sanitize: ensure no cancelled teams leak in
+      // Sanitize: ensure no cancelled teams or solo mirror entries leak into My Teams squad list
       const validRegs = regs.filter((r) => Boolean(r.eventId))
-      const validTeams = teams.filter((t) => t.status !== 'cancelled' && (t.status as any) !== 'disbanded' && Boolean(t.eventId))
+      const validTeams = teams.filter(
+        (t) =>
+          t.status !== 'cancelled' &&
+          (t.status as any) !== 'disbanded' &&
+          Boolean(t.eventId) &&
+          !t.name?.includes('(Solo)'),
+      )
 
       setInvitations(invites)
       setRegistrations(validRegs)
@@ -587,12 +593,12 @@ export default function Dashboard() {
                           <div className="flex items-center gap-2">
                             <span
                               className={`font-mono text-[8px] uppercase tracking-[0.2em] px-2 py-0.5 border ${
-                                reg.registrationType === 'team' || reg.teamId
-                                  ? 'border-[#FF6B00]/40 text-[#FF6B00]'
-                                  : 'border-[#00E5FF]/40 text-[#00E5FF]'
+                                reg.registrationType === 'solo'
+                                  ? 'border-[#00E5FF]/40 text-[#00E5FF]'
+                                  : 'border-[#FF6B00]/40 text-[#FF6B00]'
                               }`}
                             >
-                              {reg.registrationType === 'team' || reg.teamId ? 'TEAM EVENT' : 'SOLO EVENT'}
+                              {reg.registrationType === 'solo' ? 'SOLO EVENT' : 'TEAM EVENT'}
                             </span>
                             {reg.checkedIn ? (
                               <span className="flex items-center gap-1 font-mono text-[8px] text-emerald-400 border border-emerald-500/30 bg-emerald-950/20 px-1.5 py-0.5">
@@ -607,7 +613,7 @@ export default function Dashboard() {
                           <h3 className="mt-1.5 text-base font-black uppercase text-white">
                             {reg.eventTitle}
                           </h3>
-                          {reg.teamName && (
+                          {reg.registrationType !== 'solo' && reg.teamName && (
                             <p className="font-mono text-[10px] text-slate-400">
                               Roster Squad: <span className="text-white font-bold">{reg.teamName}</span>
                             </p>
