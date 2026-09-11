@@ -404,13 +404,13 @@ export default function EventRegistrationModal({
                   <ShieldAlert size={32} />
                 </div>
                 <h3 className="mt-4 text-xl font-black uppercase tracking-tight text-white">
-                  Registration Quota Reached ({userRegisteredCount}/{MAX_EVENT_REGISTRATIONS_PER_USER})
+                  Event Limit Reached ({userRegisteredCount}/{MAX_EVENT_REGISTRATIONS_PER_USER})
                 </h3>
                 <p className="mt-2 text-xs leading-relaxed text-slate-300">
-                  You have reached the maximum fest quota of <span className="text-[#00E5FF] font-semibold">{MAX_EVENT_REGISTRATIONS_PER_USER} event registrations</span> (solo entries and team memberships combined).
+                  You have already registered for <span className="text-[#00E5FF] font-semibold">{MAX_EVENT_REGISTRATIONS_PER_USER} events</span> (solo registrations and team events combined).
                 </p>
-                <p className="mt-2 text-[11px] font-mono text-slate-400">
-                  To ensure equitable participation across all colleges, each student is strictly limited to {MAX_EVENT_REGISTRATIONS_PER_USER} events. You can manage and review your registered events on your student dashboard.
+                <p className="mt-2 text-xs text-slate-400">
+                  Each student can participate in a maximum of {MAX_EVENT_REGISTRATIONS_PER_USER} events across YANTROTSAV. You can view your registered events in your dashboard.
                 </p>
 
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
@@ -419,7 +419,7 @@ export default function EventRegistrationModal({
                     onClick={handleClose}
                     className="flex items-center justify-center gap-2 border border-[#FF6B00] bg-[#FF6B00] px-6 py-2.5 font-mono text-xs font-bold uppercase tracking-[0.15em] text-white transition-all hover:bg-transparent hover:text-[#FF6B00]"
                   >
-                    <span>View Registered Events</span>
+                    <span>Go to My Dashboard</span>
                     <ArrowRight size={14} />
                   </Link>
                   <button
@@ -435,7 +435,7 @@ export default function EventRegistrationModal({
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* User registration quota counter badge */}
                 <div className="flex items-center justify-between border border-white/10 bg-[#00E5FF]/5 px-3 py-2 text-[10px] font-mono">
-                  <span className="text-slate-400">STUDENT FEST REGISTRATION QUOTA:</span>
+                  <span className="text-slate-400">YOUR EVENT REGISTRATIONS:</span>
                   <span className="font-bold text-[#00E5FF]">
                     {userRegisteredCount} / {MAX_EVENT_REGISTRATIONS_PER_USER} EVENTS USED
                   </span>

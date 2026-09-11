@@ -182,74 +182,10 @@ function Events() {
   return (
     <main className="min-h-screen overflow-hidden bg-[#050816] text-[#F8FAFC]">
       {/* ========================================================= */}
-      {/* FLOATING CYBERPUNK POLICY MARQUEE (3 EVENTS PER STUDENT) */}
-      {/* ========================================================= */}
-      <div className="sticky top-20 z-30 w-full border-y border-[#00E5FF]/20 bg-[#080A0F]/90 shadow-[0_10px_30px_rgba(0,0,0,0.8)] backdrop-blur-md">
-        <div className="mx-auto flex max-w-[1400px] items-center overflow-hidden py-2.5 px-4 sm:px-6">
-          {/* Badge indicator */}
-          <div className="mr-3 sm:mr-4 flex shrink-0 items-center gap-2 border border-[#00E5FF]/40 bg-[#00E5FF]/10 px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-[#00E5FF]">
-            <Zap size={12} className="text-[#FF6B00] animate-pulse" />
-            <span className="hidden sm:inline">POLICY NOTICE</span>
-            <span className="text-white/60">::</span>
-            <span className="text-[#FF6B00]">MAX 3 EVENTS</span>
-          </div>
-
-          {/* Marquee Ticker */}
-          <div className="relative flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]">
-            <div className="animate-cyber-marquee whitespace-nowrap py-0.5">
-              {[...Array(2)].map((_, idx) => (
-                <div key={idx} className="flex items-center gap-6 pr-6 font-mono text-[10px] tracking-[0.14em] text-slate-300">
-                  <span className="text-[#00E5FF] font-semibold">
-                    REGISTRATION LIMIT: Maximum 3 event registrations permitted per student across YANTROTSAV 2026 (Solo & Squad entries combined).
-                  </span>
-                  <span className="text-white/30">•</span>
-                  <span className="text-slate-300">
-                    Plan your challenges strategically across tech, coding, gaming & design arenas.
-                  </span>
-                  <span className="text-white/30">•</span>
-                  <span className="text-[#FF6B00]">
-                    Live quota enforcement active on all registrations.
-                  </span>
-                  <span className="text-white/30">•</span>
-                  <span className="text-slate-400">
-                    Review and manage your registered event passes in your Student Dashboard.
-                  </span>
-                  <span className="text-white/30">•</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* User Quota Quick Status Badge */}
-          {user ? (
-            <Link
-              to="/dashboard"
-              className="ml-3 sm:ml-4 flex shrink-0 items-center gap-2 border px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] transition-all hover:scale-105"
-              style={{
-                borderColor: enrolledEventIds.size >= MAX_EVENT_REGISTRATIONS_PER_USER ? 'rgba(245, 158, 11, 0.6)' : 'rgba(0, 229, 255, 0.4)',
-                backgroundColor: enrolledEventIds.size >= MAX_EVENT_REGISTRATIONS_PER_USER ? 'rgba(245, 158, 11, 0.12)' : 'rgba(0, 229, 255, 0.08)',
-                color: enrolledEventIds.size >= MAX_EVENT_REGISTRATIONS_PER_USER ? '#F59E0B' : '#00E5FF',
-              }}
-              title="Click to view and manage registered events on Dashboard"
-            >
-              <ShieldAlert size={12} />
-              <span>
-                QUOTA: {enrolledEventIds.size}/{MAX_EVENT_REGISTRATIONS_PER_USER}
-              </span>
-            </Link>
-          ) : (
-            <div className="ml-3 sm:ml-4 hidden md:flex shrink-0 items-center gap-1.5 border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[9px] uppercase tracking-wider text-slate-400">
-              <span>3 PASSES / STUDENT</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ========================================================= */}
       {/* HERO SECTION */}
       {/* ========================================================= */}
 
-      <section className="relative mx-auto max-w-[1400px] px-5 pb-20 pt-36 md:px-8 md:pb-28 md:pt-44">
+      <section className="relative mx-auto max-w-[1400px] px-5 pb-12 pt-36 md:px-8 md:pb-16 md:pt-44">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/10" />
 
         <div className="pointer-events-none absolute left-0 top-24 h-28 w-px bg-gradient-to-b from-[#00E5FF] to-transparent" />
@@ -305,6 +241,70 @@ function Events() {
             battles, and innovation stages. Explore the Yantrotsav 2026 event
             catalogue and enroll solo or with your team.
           </motion.p>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* POLICY MARQUEE BANNER (MAX 3 EVENTS PER STUDENT) */}
+      {/* ========================================================= */}
+      <section className="mx-auto max-w-[1400px] px-5 pb-10 md:px-8">
+        <div className="relative flex items-center overflow-hidden border border-[#00E5FF]/30 bg-[#080A0F] py-3 px-4 shadow-[0_4px_25px_rgba(0,229,255,0.06)]">
+          {/* Cyber accents */}
+          <span className="absolute left-0 top-0 h-2 w-2 border-l-2 border-t-2 border-[#00E5FF]" />
+          <span className="absolute right-0 top-0 h-2 w-2 border-r-2 border-t-2 border-[#FF6B00]" />
+          <span className="absolute bottom-0 left-0 h-2 w-2 border-b-2 border-l-2 border-[#FF6B00]" />
+          <span className="absolute bottom-0 right-0 h-2 w-2 border-b-2 border-r-2 border-[#00E5FF]" />
+
+          {/* Badge indicator */}
+          <div className="mr-3 sm:mr-4 flex shrink-0 items-center gap-2 border border-[#FF6B00]/40 bg-[#FF6B00]/10 px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-[#FF6B00]">
+            <Zap size={12} className="animate-pulse" />
+            <span>MAX 3 EVENTS</span>
+          </div>
+
+          {/* Simple Marquee Ticker */}
+          <div className="relative flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]">
+            <div className="animate-cyber-marquee whitespace-nowrap py-0.5">
+              {[...Array(2)].map((_, idx) => (
+                <div key={idx} className="flex items-center gap-6 pr-6 font-mono text-[11px] tracking-[0.12em] text-slate-300">
+                  <span className="text-[#00E5FF] font-semibold">
+                    Each student can register for a maximum of 3 events only (Solo + Team combined).
+                  </span>
+                  <span className="text-white/30">•</span>
+                  <span className="text-slate-300">
+                    Choose your events carefully across tech, robotics, gaming & coding!
+                  </span>
+                  <span className="text-white/30">•</span>
+                  <span className="text-slate-400">
+                    You can view and manage all your registered events anytime in your Student Dashboard.
+                  </span>
+                  <span className="text-white/30">•</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* User Quota Quick Status Badge */}
+          {user ? (
+            <Link
+              to="/dashboard"
+              className="ml-3 sm:ml-4 flex shrink-0 items-center gap-2 border px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.15em] transition-all hover:scale-105"
+              style={{
+                borderColor: enrolledEventIds.size >= MAX_EVENT_REGISTRATIONS_PER_USER ? 'rgba(245, 158, 11, 0.6)' : 'rgba(0, 229, 255, 0.4)',
+                backgroundColor: enrolledEventIds.size >= MAX_EVENT_REGISTRATIONS_PER_USER ? 'rgba(245, 158, 11, 0.12)' : 'rgba(0, 229, 255, 0.08)',
+                color: enrolledEventIds.size >= MAX_EVENT_REGISTRATIONS_PER_USER ? '#F59E0B' : '#00E5FF',
+              }}
+              title="Click to view your registered events on Dashboard"
+            >
+              <ShieldAlert size={12} />
+              <span>
+                MY EVENTS: {enrolledEventIds.size}/{MAX_EVENT_REGISTRATIONS_PER_USER}
+              </span>
+            </Link>
+          ) : (
+            <div className="ml-3 sm:ml-4 hidden md:flex shrink-0 items-center gap-1.5 border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-[9px] uppercase tracking-wider text-slate-400">
+              <span>LIMIT: 3 EVENTS</span>
+            </div>
+          )}
         </div>
       </section>
 
