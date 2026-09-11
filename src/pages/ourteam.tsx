@@ -7,7 +7,6 @@ import mehak from "../assets/images/mehak.png";
 import priyanshu from "../assets/images/priyanshu.jpeg";
 import abhinav from "../assets/images/abhinav.png";
 import Harsh from "../assets/images/Harsh.jpeg";
-import ankit from "../assets/images/ankitojha.jpeg";
 const images = import.meta.glob(
   '../assets/images/*',
   {
