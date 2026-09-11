@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 import { teamsService } from '../../services/appwrite/teams.service'
 import type { EventDocument } from '../../types/database.types'
 import { showToast } from '../../utils/toast'
-import { isEventFullyBooked } from '../../utils/eventCapacity'
+import { isEventFullyBooked, isEventDeadlinePassed, getEventSeatsSummary } from '../../utils/eventCapacity'
 
 export interface EventRegistrationModalProps {
   event: EventDocument | null
@@ -42,6 +42,13 @@ export default function EventRegistrationModal({
     teamName?: string
   } | null>(null)
   const [checkingEnrollment, setCheckingEnrollment] = useState(false)
+  const [, setDeadlineTick] = useState(0)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const timer = window.setInterval(() => setDeadlineTick((tick) => tick + 1), 15000)
+    return () => window.clearInterval(timer)
+  }, [isOpen])
 
   useEffect(() => {
     if (profile) {
@@ -91,9 +98,8 @@ export default function EventRegistrationModal({
   if (!isOpen || !event) return null
 
   const isTeamEvent = (event.eventType || event.format) === 'team' || (event.minTeamSize || 1) > 1
-  const isDeadlinePassed = Boolean(
-    event.registrationDeadline && new Date(event.registrationDeadline).getTime() < Date.now()
-  )
+  const isDeadlinePassed = isEventDeadlinePassed(event)
+  const seats = getEventSeatsSummary(event)
   const isFullyBooked = isEventFullyBooked(event)
   const isRegistrationClosed = event.status !== 'published' || isDeadlinePassed || isFullyBooked
   const requiredAdditionalMembers = Math.max(1, (event.minTeamSize || 2) - 1)
@@ -398,6 +404,12 @@ export default function EventRegistrationModal({
                     <div>
                       <span className="text-slate-500">VENUE:</span>{' '}
                       <span className="text-white">{event.venue || 'TBA'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">{seats.label.toUpperCase()}:</span>{' '}
+                      <span className={isFullyBooked ? 'text-[#FF6B00]' : 'text-white'}>
+                        {seats.display} {seats.unit}
+                      </span>
                     </div>
                     <div>
                       <span className="text-slate-500">DATE:</span>{' '}

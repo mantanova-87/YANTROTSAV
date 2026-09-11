@@ -18,7 +18,7 @@ import { fetchEventsThunk } from '../store/slices/eventsSlice'
 import { useAuth } from '../context/AuthContext'
 import { teamsService } from '../services/appwrite/teams.service'
 import type { EventDocument } from '../types/database.types'
-import { isEventFullyBooked } from '../utils/eventCapacity'
+import { isEventFullyBooked, isEventDeadlinePassed, getEventSeatsSummary } from '../utils/eventCapacity'
 
 const CATEGORIES: { label: string; value: string }[] = [
   { label: 'ALL EVENTS', value: 'all' },
@@ -92,10 +92,18 @@ function Events() {
     }
   }, [user, profile])
 
-  // Fetch events from Appwrite database with intelligent Redux caching
+  // Load events with live occupancy so seat counts stay accurate, and persist
+  // deadline/capacity closures on the server instead of serving a stale cache.
   useEffect(() => {
-    dispatch(fetchEventsThunk())
+    dispatch(fetchEventsThunk({ force: true }))
   }, [dispatch])
+
+  // Re-render when a registration deadline elapses while the page is open.
+  const [, setDeadlineTick] = useState(0)
+  useEffect(() => {
+    const timer = window.setInterval(() => setDeadlineTick((tick) => tick + 1), 15000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   // Filter events based on active category
   const filteredEvents = useMemo(() => {
@@ -148,7 +156,7 @@ function Events() {
   }, [events])
 
   const handleOpenRegistration = (event: EventDocument) => {
-    if (isEventFullyBooked(event)) return
+    if (isEventFullyBooked(event) || isEventDeadlinePassed(event)) return
 
     setSelectedEvent(event)
     setModalOpen(true)
@@ -677,6 +685,21 @@ function Events() {
                                 } MEMBERS)`}
                           </span>
 
+                          {(() => {
+                            const seats = getEventSeatsSummary(event)
+                            return (
+                              <span
+                                className={`border px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.18em] ${
+                                  isEventFullyBooked(event)
+                                    ? 'border-[#FF6B00]/50 text-[#FF6B00]'
+                                    : 'border-white/15 text-slate-300'
+                                }`}
+                              >
+                                {seats.display} {seats.unit}
+                              </span>
+                            )
+                          })()}
+
                           {enrolledEventIds.has(event.$id) && (
                             <span className="flex items-center gap-1 border border-emerald-500/60 bg-emerald-950/40 px-2.5 py-1 font-mono text-[8px] font-bold uppercase tracking-[0.18em] text-emerald-400">
                               <CheckCircle2 size={10} />
@@ -696,8 +719,8 @@ function Events() {
                           </p>
                         </div>
 
-                        {/* DATE / TIME / VENUE */}
-                        <div className="mt-9 grid border-y border-white/[0.08] py-5 sm:grid-cols-3">
+                        {/* DATE / TIME / VENUE / SEATS */}
+                        <div className="mt-9 grid border-y border-white/[0.08] py-5 sm:grid-cols-2 lg:grid-cols-4">
                           <div className="border-b border-white/[0.07] pb-4 sm:border-b-0 sm:border-r sm:pb-0">
                             <span className="block font-mono text-[8px] uppercase tracking-[0.18em] text-slate-600">
                               Date
@@ -769,7 +792,7 @@ function Events() {
                             </span>
                           </div>
 
-                          <div className="pt-4 sm:px-5 sm:pt-0">
+                          <div className="border-b border-white/[0.07] py-4 sm:border-b-0 sm:border-r sm:px-5 sm:py-0 lg:border-b-0">
                             <span className="block font-mono text-[8px] uppercase tracking-[0.18em] text-slate-600">
                               Venue
                             </span>
@@ -778,16 +801,40 @@ function Events() {
                               {event.venue}
                             </span>
                           </div>
+
+                          <div className="pt-4 sm:px-5 sm:pt-0">
+                            {(() => {
+                              const seats = getEventSeatsSummary(event)
+                              const booked = isEventFullyBooked(event)
+                              const remaining = seats.remaining
+                              return (
+                                <>
+                                  <span className="block font-mono text-[8px] uppercase tracking-[0.18em] text-slate-600">
+                                    {seats.label}
+                                  </span>
+                                  <span
+                                    className={`mt-2 block text-[11px] font-semibold uppercase tracking-[0.08em] ${
+                                      booked ? 'text-[#FF6B00]' : 'text-[#00E5FF]'
+                                    }`}
+                                  >
+                                    {seats.display}
+                                  </span>
+                                  <span className="mt-1 block font-mono text-[8px] uppercase tracking-[0.16em] text-slate-500">
+                                    {seats.total
+                                      ? booked
+                                        ? 'Completely booked'
+                                        : `${remaining} ${seats.remainingUnit} left`
+                                      : 'Open seating'}
+                                  </span>
+                                </>
+                              )
+                            })()}
+                          </div>
                         </div>
 
                         {/* FOOTER ACTION */}
                         {(() => {
-                          const isDeadlinePassed = Boolean(
-                            event.registrationDeadline &&
-                              new Date(
-                                event.registrationDeadline
-                              ).getTime() < Date.now()
-                          )
+                          const isDeadlinePassed = isEventDeadlinePassed(event)
 
                           const isFullyBooked = isEventFullyBooked(event)
 

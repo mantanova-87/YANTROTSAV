@@ -33,8 +33,9 @@ export const fetchEventsThunk = createAsyncThunk(
       const state = getState() as { events: EventsState }
       const { lastFetched, events } = state.events
 
-      // Return cached events if fresh and force is not requested
+      // Cached lists can still have published events whose deadline just elapsed.
       if (!options?.force && lastFetched && Date.now() - lastFetched < CACHE_TTL_MS && events.length > 0) {
+        eventsService.enforceRegistrationWindows(events).catch(() => {})
         return { events, fromCache: true }
       }
 
