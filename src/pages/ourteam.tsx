@@ -349,9 +349,9 @@ export default function OurTeam() {
           </h1>
         </motion.div>
       </section>
-      <section className="mx-auto max-w-[900px] px-5 pb-16 md:px-8 md:pb-10">
+      <section className="mx-auto max-w-[1400px] px-5 pb-16 md:px-8 md:pb-10">
       
-                <div className="grid gap-20 ml-4 mr-4 md:grid-cols-2 lg:grid-cols-2">
+                <div className="grid gap-20  md:grid-cols-4 lg:grid-cols-4">
       
                   {clubMembers.map((card, index) => {
       
@@ -459,7 +459,7 @@ export default function OurTeam() {
                                     : index * 0.15 + 0.1,
                                   ease: [0.22, 1, 0.36, 1],
                                 }}
-                                className="relative z-10 h-64 w-64  object-contain object-center transition-transform duration-700 ease-out group-hover:scale-105"
+                                className="relative z-10 h-45 w-45  object-contain object-center transition-transform duration-700 ease-out group-hover:scale-105"
                               />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center border border-white/5">
