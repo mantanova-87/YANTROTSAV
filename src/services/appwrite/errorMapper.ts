@@ -171,14 +171,31 @@ export function mapAppwriteError(error: unknown, context?: string): AppError {
         break
       }
 
-      case 404:
-        mappedError = new AppError(
-          'The requested resource was not found.',
-          'EVENT_NOT_FOUND',
-          404,
-          error,
-        )
+      case 404: {
+        const lowerMsg = (message || '').toLowerCase()
+        const errorType = ((error as any)?.type || '').toLowerCase()
+        if (
+          lowerMsg.includes('document') ||
+          errorType.includes('document') ||
+          lowerMsg.includes('user') ||
+          lowerMsg.includes('profile')
+        ) {
+          mappedError = new AppError(
+            'The requested record was not found in the database. Updating your profile will automatically restore it.',
+            'UNKNOWN_ERROR',
+            404,
+            error,
+          )
+        } else {
+          mappedError = new AppError(
+            'The requested resource was not found.',
+            'EVENT_NOT_FOUND',
+            404,
+            error,
+          )
+        }
         break
+      }
 
       case 400:
         mappedError = new AppError(

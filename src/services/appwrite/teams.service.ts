@@ -446,14 +446,43 @@ export class TeamsService {
         if (data.collegeName?.trim()) userUpdatePayload.college = data.collegeName.trim();
 
         if (Object.keys(userUpdatePayload).length > 0 && data.userId) {
-          databases
-            .updateDocument(
+          try {
+            await databases.updateDocument(
               APPWRITE_CONFIG.databaseId,
               APPWRITE_CONFIG.collections.users,
               data.userId,
               userUpdatePayload,
-            )
-            .catch(() => {});
+            );
+          } catch (syncErr: any) {
+            const isNotFound =
+              syncErr?.code === 404 ||
+              syncErr?.type === "document_not_found" ||
+              syncErr?.message?.toLowerCase().includes("not found");
+            if (isNotFound) {
+              const studentHandle =
+                data.studentEmail?.split("@")[0] ||
+                data.studentName?.toLowerCase().replace(/[^a-z0-9._]/g, "") ||
+                data.userId;
+              await databases
+                .createDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.users,
+                  data.userId,
+                  {
+                    userId: studentHandle.slice(0, 128),
+                    fullName: (data.studentName || studentHandle).slice(0, 128),
+                    email: data.studentEmail?.slice(0, 128) || "",
+                    phone: (data.studentPhone?.trim() || "").slice(0, 32),
+                    department: data.department?.trim() || "",
+                    semester: data.semester?.trim() || "",
+                    rollNumber: roll.slice(0, 128),
+                    ...userUpdatePayload,
+                  },
+                  docPermissions,
+                )
+                .catch(() => {});
+            }
+          }
         }
       } catch {
         // Non-blocking background sync
