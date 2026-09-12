@@ -61,7 +61,7 @@ export const eventDetails: Record<
   },
   "6a9e4c730027321e366d": {
     about:
-      "FASTEST FINGER FIRST is a dynamic quiz based oon basic python and computer knowledge.It is mainly for freshers.The scoring will be done based on quickness to answer corectly",
+      "FASTEST FINGER FIRST is a dynamic quiz based oon basic python and computer knowledge.It is ONLY for freshers.The scoring will be done based on quickness to answer corectly",
     instructions: [
       "Organising team will not be responsible for any technical shortcomings that may occur during the event.",
       "Any participant found to be malpracticing will be disqualified.",
