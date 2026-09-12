@@ -50,7 +50,6 @@ export default function Dashboard() {
   const [addMemberModalTeam, setAddMemberModalTeam] = useState<UserTeamInfo | null>(null)
   const [addMemberInput, setAddMemberInput] = useState('')
   const [isSubmittingAddMember, setIsSubmittingAddMember] = useState(false)
-  const [addMemberSuggestion, setAddMemberSuggestion] = useState<string | null>(null)
 
   const [disbandModalTeam, setDisbandModalTeam] = useState<UserTeamInfo | null>(null)
   const [disbandReason, setDisbandReason] = useState('')
@@ -322,11 +321,9 @@ export default function Dashboard() {
     const input = addMemberInput.trim()
     if (!input) {
       showToast.warning('Please enter a username, email, or roll number.')
-      setAddMemberSuggestion(null)
       return
     }
     setIsSubmittingAddMember(true)
-    setAddMemberSuggestion(null)
     try {
       await teamsService.addMemberToTeam({
         teamId: addMemberModalTeam.$id,
@@ -339,18 +336,10 @@ export default function Dashboard() {
       showToast.success(`Invitation successfully sent to "${input}"!`)
       setAddMemberModalTeam(null)
       setAddMemberInput('')
-      setAddMemberSuggestion(null)
       await loadStudentData()
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : 'Failed to send invitation.'
       showToast.error(errMsg)
-      const explicitSuggestion = (err as any)?.suggestion
-      const match = errMsg.match(/Did you mean ["']([^"']+)["']/i)
-      if (explicitSuggestion) {
-        setAddMemberSuggestion(explicitSuggestion)
-      } else if (match && match[1]) {
-        setAddMemberSuggestion(match[1])
-      }
     } finally {
       setIsSubmittingAddMember(false)
     }
@@ -821,7 +810,6 @@ export default function Dashboard() {
                                   onClick={() => {
                                     setAddMemberModalTeam(t)
                                     setAddMemberInput('')
-                                    setAddMemberSuggestion(null)
                                   }}
                                   className="flex items-center gap-1.5 border border-[#00E5FF]/40 bg-[#00E5FF]/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#00E5FF] hover:bg-[#00E5FF] hover:text-black transition-colors"
                                 >
@@ -1227,7 +1215,6 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => {
                     setAddMemberModalTeam(null)
-                    setAddMemberSuggestion(null)
                   }}
                   className="text-slate-400 hover:text-white"
                 >
@@ -1246,25 +1233,6 @@ export default function Dashboard() {
                   Event: <span className="text-[#00E5FF]">{addMemberModalTeam.eventTitle || 'Event'}</span>
                 </p>
               </div>
-
-              {addMemberSuggestion && (
-                <div className="mt-3 flex items-center justify-between border border-[#00E5FF]/40 bg-[#00E5FF]/10 p-2.5 font-mono text-xs text-[#00E5FF]">
-                  <span className="text-[11px] text-slate-300">
-                    Did you mean: <strong className="text-[#00E5FF]">{addMemberSuggestion}</strong>?
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAddMemberInput(addMemberSuggestion)
-                      setAddMemberSuggestion(null)
-                    }}
-                    className="inline-flex items-center gap-1 rounded bg-[#00E5FF] px-2.5 py-1 text-[10px] font-bold uppercase text-black hover:bg-white transition-colors cursor-pointer"
-                  >
-                    <span>Use "{addMemberSuggestion}"</span>
-                    <ArrowRight size={10} />
-                  </button>
-                </div>
-              )}
 
               <form onSubmit={handleSendAddMemberInvite} className="mt-4 space-y-4">
                 {(() => {
@@ -1301,9 +1269,6 @@ export default function Dashboard() {
                           value={addMemberInput}
                           onChange={(e) => {
                             setAddMemberInput(e.target.value)
-                            if (addMemberSuggestion) {
-                              setAddMemberSuggestion(null)
-                            }
                           }}
                           className="w-full border border-white/10 bg-[#050816] pl-8 pr-3 py-2 font-mono text-xs text-white outline-none focus:border-[#00E5FF]"
                         />
@@ -1320,7 +1285,6 @@ export default function Dashboard() {
                     type="button"
                     onClick={() => {
                       setAddMemberModalTeam(null)
-                      setAddMemberSuggestion(null)
                     }}
                     className="px-3 py-1.5 font-mono text-xs uppercase text-slate-400 hover:text-white"
                   >

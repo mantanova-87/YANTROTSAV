@@ -436,6 +436,9 @@ export class AuthService {
             ? normalizeUsername(data.userId)
             : undefined;
 
+      // Get current auth user details to verify ownership and assist with recovery/upsert
+      const authUser = await account.get().catch(() => null);
+
       if (requestedUsername !== undefined) {
         const usernameError = getUsernameError(requestedUsername);
         if (usernameError)
@@ -445,7 +448,13 @@ export class AuthService {
           APPWRITE_CONFIG.collections.users,
           [Query.equal("userId", requestedUsername), Query.limit(2)],
         );
-        if (matches.documents.some((document) => document.$id !== userId)) {
+        if (
+          matches.documents.some(
+            (document) =>
+              document.$id !== userId &&
+              (!authUser || (document as any).email !== authUser.email),
+          )
+        ) {
           throw new AppError(
             "This username is already taken. Please choose another one.",
             "ALREADY_REGISTERED",
@@ -472,13 +481,128 @@ export class AuthService {
         updateData.userId = requestedUsername;
       }
 
-      // 2. Update database document in users collection
-      const updatedDoc = await databases.updateDocument(
-        APPWRITE_CONFIG.databaseId,
-        APPWRITE_CONFIG.collections.users,
-        userId,
-        updateData,
-      );
+      // 2. Update database document in users collection with intelligent auto-heal / upsert
+      let updatedDoc: any;
+      let targetDocId = userId;
+
+      try {
+        updatedDoc = await databases.updateDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.users,
+          targetDocId,
+          updateData,
+        );
+      } catch (updateErr: any) {
+        const isNotFound =
+          updateErr?.code === 404 ||
+          updateErr?.type === "document_not_found" ||
+          updateErr?.message?.toLowerCase().includes("not found");
+
+        if (!isNotFound) {
+          throw updateErr;
+        }
+
+        // Auto-heal fallback: If document was deleted from table or has a different doc ID
+        let existingDoc: any = null;
+        if (authUser?.email) {
+          try {
+            const emailSearch = await databases.listDocuments(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.users,
+              [Query.equal("email", authUser.email), Query.limit(1)],
+            );
+            if (emailSearch.documents.length > 0) {
+              existingDoc = emailSearch.documents[0];
+            }
+          } catch {
+            // Ignore search error
+          }
+        }
+
+        if (existingDoc) {
+          targetDocId = existingDoc.$id;
+          updatedDoc = await databases.updateDocument(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.users,
+            targetDocId,
+            updateData,
+          );
+        } else {
+          // Document was wiped or deleted from database: Recreate it immediately!
+          const chosenHandle =
+            requestedUsername ||
+            (authUser?.prefs as any)?.username ||
+            (authUser?.name
+              ? authUser.name.toLowerCase().replace(/[^a-z0-9._]/g, "")
+              : "") ||
+            authUser?.email?.split("@")[0] ||
+            userId;
+
+          const createPayload: Record<string, any> = {
+            userId: chosenHandle.slice(0, 128),
+            fullName: (
+              data.fullName?.trim() ||
+              authUser?.name ||
+              chosenHandle
+            ).slice(0, 128),
+            email: authUser?.email || "",
+            phone: (data.phone?.trim() || authUser?.phone || "").slice(0, 32),
+            department: data.department?.trim() || "",
+            semester: data.semester?.trim() || "",
+            rollNumber: (data.rollNumber?.trim() || "").slice(0, 128),
+            ...updateData,
+          };
+
+          if (data.customDepartment?.trim()) {
+            createPayload.customDepartment = data.customDepartment
+              .trim()
+              .slice(0, 128);
+          }
+
+          const docPermissions = [
+            Permission.read(Role.any()),
+            Permission.update(Role.any()),
+            Permission.delete(Role.any()),
+          ];
+
+          try {
+            updatedDoc = await databases.createDocument(
+              APPWRITE_CONFIG.databaseId,
+              APPWRITE_CONFIG.collections.users,
+              targetDocId,
+              createPayload,
+              docPermissions,
+            );
+          } catch (createErr: any) {
+            const errMsg = createErr?.message?.toLowerCase() || "";
+            if (
+              errMsg.includes("customdepartment") ||
+              createErr?.code === 400
+            ) {
+              delete createPayload.customDepartment;
+              updatedDoc = await databases.createDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.users,
+                targetDocId,
+                createPayload,
+                docPermissions,
+              );
+            } else if (
+              createErr?.code === 409 ||
+              createErr?.type === "document_already_exists"
+            ) {
+              updatedDoc = await databases.updateDocument(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.collections.users,
+                targetDocId,
+                updateData,
+              );
+            } else {
+              throw createErr;
+            }
+          }
+        }
+      }
 
       // 3. If full name was modified, synchronize with Appwrite Auth User name
       if (data.fullName?.trim()) {
@@ -493,9 +617,9 @@ export class AuthService {
       const chosenUserHandle = requestedUsername;
       if (chosenUserHandle !== undefined) {
         try {
-          const authUser = await account.get();
+          const authUserObj = await account.get();
           await account.updatePrefs({
-            ...(authUser.prefs || {}),
+            ...(authUserObj.prefs || {}),
             username: chosenUserHandle,
           });
         } catch (prefErr) {
@@ -560,7 +684,61 @@ export class AuthService {
         }
       };
 
-      const doc = await loadDocument();
+      let doc = await loadDocument();
+
+      // If document was not found by authUser.$id, check if it exists under email
+      if (!doc && authUser.email) {
+        try {
+          const byEmail = await databases.listDocuments(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.users,
+            [Query.equal("email", authUser.email), Query.limit(1)],
+          );
+          if (byEmail.documents.length > 0) {
+            doc = byEmail.documents[0];
+          }
+        } catch {
+          // Ignore
+        }
+      }
+
+      // If document was deleted from database, self-heal automatically!
+      if (!doc) {
+        try {
+          const initialHandle =
+            (authUser.prefs as any)?.username ||
+            (authUser.name
+              ? authUser.name.toLowerCase().replace(/[^a-z0-9._]/g, "")
+              : "") ||
+            authUser.email.split("@")[0];
+
+          doc = await databases.createDocument(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.users,
+            authUser.$id,
+            {
+              userId: initialHandle.slice(0, 128),
+              fullName: (authUser.name || initialHandle).slice(0, 128),
+              email: authUser.email.slice(0, 128),
+              phone: (authUser.phone || "").slice(0, 32),
+              semester: "",
+              rollNumber: "",
+              department: "",
+            },
+            [
+              Permission.read(Role.any()),
+              Permission.update(Role.any()),
+              Permission.delete(Role.any()),
+            ],
+          );
+        } catch (healErr) {
+          console.warn(
+            "[AuthService.getCurrentUserProfile] Auto-heal notice:",
+            healErr,
+          );
+        }
+      }
+
       if (!doc) return null;
 
       const profile = doc as unknown as UserProfile;
@@ -624,16 +802,48 @@ export class AuthService {
   }
 
   /**
-   * Fetch user profile from database by userId
+   * Fetch user profile from database by userId, email, or rollNumber
    */
   async getProfile(userId: string): Promise<UserProfile | null> {
     try {
-      const doc = await databases.getDocument(
-        APPWRITE_CONFIG.databaseId,
-        APPWRITE_CONFIG.collections.users,
-        userId,
-      );
-      return doc as unknown as UserProfile;
+      try {
+        const doc = await databases.getDocument(
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collections.users,
+          userId,
+        );
+        return doc as unknown as UserProfile;
+      } catch (err: any) {
+        const isNotFound =
+          err?.code === 404 ||
+          err?.type === "document_not_found" ||
+          err?.message?.toLowerCase().includes("not found");
+        if (!isNotFound) throw err;
+      }
+
+      // If not found by primary document ID, query by userId, email, or rollNumber
+      const queries = [
+        [Query.equal("userId", userId), Query.limit(1)],
+        [Query.equal("email", userId), Query.limit(1)],
+        [Query.equal("rollNumber", userId), Query.limit(1)],
+      ];
+
+      for (const q of queries) {
+        try {
+          const res = await databases.listDocuments(
+            APPWRITE_CONFIG.databaseId,
+            APPWRITE_CONFIG.collections.users,
+            q,
+          );
+          if (res.documents.length > 0) {
+            return res.documents[0] as unknown as UserProfile;
+          }
+        } catch {
+          // Continue to next query
+        }
+      }
+
+      return null;
     } catch {
       return null;
     }

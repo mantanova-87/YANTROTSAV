@@ -33,33 +33,6 @@ export interface UserTeamInfo extends TeamDocument {
 }
 
 /**
- * Damerau-Levenshtein distance helper for fuzzy typo detection (transpositions, insertions, deletions)
- */
-function damerauLevenshtein(a: string, b: string): number {
-  const m = a.length;
-  const n = b.length;
-  const d: number[][] = Array.from({ length: m + 1 }, () =>
-    Array(n + 1).fill(0),
-  );
-  for (let i = 0; i <= m; i++) d[i][0] = i;
-  for (let j = 0; j <= n; j++) d[0][j] = j;
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      d[i][j] = Math.min(
-        d[i - 1][j] + 1,
-        d[i][j - 1] + 1,
-        d[i - 1][j - 1] + cost,
-      );
-      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
-        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
-      }
-    }
-  }
-  return d[m][n];
-}
-
-/**
  * Intelligent helper to resolve prospective teammate from raw handle, email, or roll number.
  * Supports normalization, exact lookup, and fuzzy typo detection with suggestions.
  */
@@ -150,46 +123,8 @@ function resolveProspectiveTeammate(
     };
   }
 
-  // 3. Typo / Fuzzy match detection (Damerau-Levenshtein distance <= 2)
-  let bestMatch: any = null;
-  let bestDistance = Infinity;
-  let suggestedValue = "";
-
-  for (const u of allUsers) {
-    const uRoll = (u.rollNumber || u.rollNo || "").trim();
-    const uRollNorm = uRoll.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
-    const uUserId = (u.userId || "").trim().toLowerCase();
-
-    if (isLikelyRoll && uRollNorm && cleanAlphaNum) {
-      const dist = damerauLevenshtein(cleanAlphaNum, uRollNorm);
-      if (dist <= 2 && dist < bestDistance) {
-        bestDistance = dist;
-        bestMatch = u;
-        suggestedValue = uRoll;
-      }
-    } else if (uUserId) {
-      const dist = damerauLevenshtein(clean.toLowerCase(), uUserId);
-      if (dist <= 2 && dist < bestDistance) {
-        bestDistance = dist;
-        bestMatch = u;
-        suggestedValue = isExplicitHandle ? `@${u.userId}` : u.userId;
-      }
-    }
-  }
-
-  if (bestMatch && suggestedValue) {
-    const suggestionName = bestMatch.fullName || bestMatch.name || "Student";
-    throw new AppError(
-      `No registered student found with ${identifierType} "${clean}". Did you mean "${suggestedValue}" (${suggestionName})?`,
-      "UNKNOWN_ERROR",
-      404,
-      undefined,
-      suggestedValue,
-    );
-  }
-
   throw new AppError(
-    `No registered student found with ${identifierType} "${clean}". Please verify the ${identifierType.toLowerCase()} or invite using their registered institutional email address.`,
+    `No registered student found with ${identifierType} "${clean}". Please verify the ${identifierType.toLowerCase()} or make sure they have created an account on Yantrotsav.`,
     "UNKNOWN_ERROR",
     404,
   );
@@ -446,14 +381,43 @@ export class TeamsService {
         if (data.collegeName?.trim()) userUpdatePayload.college = data.collegeName.trim();
 
         if (Object.keys(userUpdatePayload).length > 0 && data.userId) {
-          databases
-            .updateDocument(
+          try {
+            await databases.updateDocument(
               APPWRITE_CONFIG.databaseId,
               APPWRITE_CONFIG.collections.users,
               data.userId,
               userUpdatePayload,
-            )
-            .catch(() => {});
+            );
+          } catch (syncErr: any) {
+            const isNotFound =
+              syncErr?.code === 404 ||
+              syncErr?.type === "document_not_found" ||
+              syncErr?.message?.toLowerCase().includes("not found");
+            if (isNotFound) {
+              const studentHandle =
+                data.studentEmail?.split("@")[0] ||
+                data.studentName?.toLowerCase().replace(/[^a-z0-9._]/g, "") ||
+                data.userId;
+              await databases
+                .createDocument(
+                  APPWRITE_CONFIG.databaseId,
+                  APPWRITE_CONFIG.collections.users,
+                  data.userId,
+                  {
+                    userId: studentHandle.slice(0, 128),
+                    fullName: (data.studentName || studentHandle).slice(0, 128),
+                    email: data.studentEmail?.slice(0, 128) || "",
+                    phone: (data.studentPhone?.trim() || "").slice(0, 32),
+                    department: data.department?.trim() || "",
+                    semester: data.semester?.trim() || "",
+                    rollNumber: roll.slice(0, 128),
+                    ...userUpdatePayload,
+                  },
+                  docPermissions,
+                )
+                .catch(() => {});
+            }
+          }
         }
       } catch {
         // Non-blocking background sync
