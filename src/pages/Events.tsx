@@ -40,101 +40,101 @@ type EventResult = {
   winners: Winner[]
 }
 
-const results: EventResult[] = 
-[
-  {
-    eventLogo: 'fff.png',
-    eventName: 'FASTEST FINGER FIRST',
-    eventType: 'SOLO',
-    winners: [
-      {
-        position: '1ST POSITION',
-        name: 'Adarsh Raj Kushwaha (26BECCS02)',
-      },
-      {
-        position: '2ND POSITION',
-        name: 'Ajay Kumar (26BECSE03)',
-      },
-      {
-        position: '3RD POSITION',
-        name: 'Shubham Kumar (26BECSE56)',
-      },
-    ],
-  },
-  {
-    eventLogo: 'coc.png',
-    eventName: 'CLASH OF CODE 2.0',
-    eventType: 'SOLO',
-    winners: [
-      {
-        position: '1ST POSITION',
-        name: 'Cherry Bohra (24BECCS16)',
-      },
-      {
-        position: '2ND POSITION',
-        name: 'Darsh Dhawan (25BECCS22)',
-      },
-      {
-        position: '3RD POSITION',
-        name: 'MD Anees Alam (23BECSE13)',
-      },
-    ],
-  },
-  {
-    eventLogo: 'stc.png',
-    eventName: 'STACK SCRAMBLE',
-    eventType: 'SOLO',
-    winners: [
-      {
-        position: '1ST POSITION',
-        name: 'Shreyash Prajapati (26BECCS55)',
-      },
-      {
-        position: '2ND POSITION',
-        name: 'Harisankaran (26beccs21)',
-      },
-      {
-        position: '3RD POSITION',
-        name: 'Tanya Popat (26BEMNC47)',
-      },
-    ],
-  },
+const results: EventResult[] =
+  [
+    {
+      eventLogo: 'fff.png',
+      eventName: 'FASTEST FINGER FIRST',
+      eventType: 'SOLO',
+      winners: [
+        {
+          position: '1ST POSITION',
+          name: 'Adarsh Raj Kushwaha (26BECCS02)',
+        },
+        {
+          position: '2ND POSITION',
+          name: 'Ajay Kumar (26BECSE03)',
+        },
+        {
+          position: '3RD POSITION',
+          name: 'Shubham Kumar (26BECSE56)',
+        },
+      ],
+    },
+    {
+      eventLogo: 'coc.png',
+      eventName: 'CLASH OF CODE 2.0',
+      eventType: 'SOLO',
+      winners: [
+        {
+          position: '1ST POSITION',
+          name: 'Cherry Bohra (24BECCS16)',
+        },
+        {
+          position: '2ND POSITION',
+          name: 'Darsh Dhawan (25BECCS22)',
+        },
+        {
+          position: '3RD POSITION',
+          name: 'MD Anees Alam (23BECSE13)',
+        },
+      ],
+    },
+    {
+      eventLogo: 'stc.png',
+      eventName: 'STACK SCRAMBLE',
+      eventType: 'SOLO',
+      winners: [
+        {
+          position: '1ST POSITION',
+          name: 'Shreyash Prajapati (26BECCS55)',
+        },
+        {
+          position: '2ND POSITION',
+          name: 'Harisankaran (26beccs21)',
+        },
+        {
+          position: '3RD POSITION',
+          name: 'Tanya Popat (26BEMNC47)',
+        },
+      ],
+    },
 
-  {
-    eventLogo: 'quiz.png',
-    eventName: 'TECH QUIZ',
-    eventType: 'TEAM',
-    winners: [
-      {
-        position: '1ST POSITION',
-        name: 'TEAM ALPHA',
-        members: [
-          'Abhinav Kumar',
-          'Rahul Sharma',
-          'Aman Singh',
-        ],
-      },
-      {
-        position: '2ND POSITION',
-        name: 'TEAM OMEGA',
-        members: [
-          'Rohit Kumar',
-          'Vikas Sharma',
-          'Arjun Singh',
-        ],
-      },
-      {
-        position: '3RD POSITION',
-        name: 'TEAM DELTA',
-        members: [
-          'Karan Kumar',
-          'Aditya Singh',
-          'Mohit Sharma',
-        ],
-      },
-    ],
-  },
-]
+    {
+      eventLogo: 'quiz.png',
+      eventName: 'TECH QUIZ',
+      eventType: 'TEAM',
+      winners: [
+        {
+          position: '1ST POSITION',
+          name: 'TEAM ALPHA',
+          members: [
+            'Abhinav Kumar',
+            'Rahul Sharma',
+            'Aman Singh',
+          ],
+        },
+        {
+          position: '2ND POSITION',
+          name: 'TEAM OMEGA',
+          members: [
+            'Rohit Kumar',
+            'Vikas Sharma',
+            'Arjun Singh',
+          ],
+        },
+        {
+          position: '3RD POSITION',
+          name: 'TEAM DELTA',
+          members: [
+            'Karan Kumar',
+            'Aditya Singh',
+            'Mohit Sharma',
+          ],
+        },
+      ],
+    },
+  ]
 
 const CATEGORIES: { label: string; value: string }[] = [
   { label: 'ALL EVENTS', value: 'all' },
@@ -628,16 +628,16 @@ function Events() {
                                     {/* Paper edge */}
                                     <span
                                       className={`absolute left-0 right-0 top-0 h-px ${stripIndex === 0
-                                          ? 'bg-[#00E5FF]/40'
-                                          : 'bg-white/[0.05]'
+                                        ? 'bg-[#00E5FF]/40'
+                                        : 'bg-white/[0.05]'
                                         }`}
                                     />
 
                                     {/* Technical paper mark */}
                                     <span
                                       className={`absolute top-1/2 h-px w-8 -translate-y-1/2 ${fromLeft
-                                          ? 'right-5 bg-[#FF6B00]/50'
-                                          : 'left-5 bg-[#00E5FF]/50'
+                                        ? 'right-5 bg-[#FF6B00]/50'
+                                        : 'left-5 bg-[#00E5FF]/50'
                                         }`}
                                     />
                                   </motion.div>
@@ -701,8 +701,8 @@ function Events() {
                 key={cat.value}
                 onClick={() => setSelectedCategory(cat.value)}
                 className={`border px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.15em] transition-all ${selectedCategory === cat.value
-                    ? 'border-[#00E5FF] bg-[#00E5FF] text-black shadow-[0_0_15px_rgba(0,229,255,0.3)]'
-                    : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/30 hover:text-white'
+                  ? 'border-[#00E5FF] bg-[#00E5FF] text-black shadow-[0_0_15px_rgba(0,229,255,0.3)]'
+                  : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/30 hover:text-white'
                   }`}
               >
                 {cat.label}
@@ -761,8 +761,8 @@ function Events() {
                     ease: [0.22, 1, 0.36, 1],
                   }}
                   className={`group relative ${isReversed
-                      ? 'md:ml-auto md:max-w-[1080px]'
-                      : 'md:mr-auto md:max-w-[1080px]'
+                    ? 'md:ml-auto md:max-w-[1080px]'
+                    : 'md:mr-auto md:max-w-[1080px]'
                     }`}
                 >
                   <div className="relative border border-white/10 bg-[#080A0F] transition-all duration-500 group-hover:-translate-y-1 group-hover:border-white/20">
@@ -847,8 +847,8 @@ function Events() {
                             return (
                               <span
                                 className={`border px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.18em] ${isEventFullyBooked(event)
-                                    ? 'border-[#FF6B00]/50 text-[#FF6B00]'
-                                    : 'border-white/15 text-slate-300'
+                                  ? 'border-[#FF6B00]/50 text-[#FF6B00]'
+                                  : 'border-white/15 text-slate-300'
                                   }`}
                               >
                                 {seats.display} {seats.unit}
@@ -998,15 +998,15 @@ function Events() {
                               <div className="flex items-center gap-3">
                                 <span
                                   className={`h-1.5 w-1.5 ${enrolledEventIds.has(event.$id)
-                                      ? 'bg-emerald-400'
-                                      : 'bg-red-400'
+                                    ? 'bg-emerald-400'
+                                    : 'bg-red-400'
                                     }`}
                                 />
 
                                 <span
                                   className={`font-mono text-[9px] uppercase tracking-[0.2em] ${enrolledEventIds.has(event.$id)
-                                      ? 'text-emerald-400'
-                                      : 'text-red-400'
+                                    ? 'text-emerald-400'
+                                    : 'text-red-400'
                                     }`}
                                 >
                                   {enrolledEventIds.has(event.$id)
@@ -1148,7 +1148,7 @@ function Events() {
               key={result.eventName}
               initial={{
                 opacity: 0,
-                y: 45,
+                y: 40,
                 scale: 0.98,
               }}
               whileInView={{
@@ -1165,48 +1165,45 @@ function Events() {
                 delay: index * 0.1,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              whileHover={{
-                y: -4,
-              }}
-              className="group relative overflow-hidden border border-white/10 bg-[#080A0F] transition-colors duration-500 hover:border-white/20"
+              whileHover={{ y: -4 }}
+              className="group relative overflow-hidden border border-white/10 bg-[#080A0F] transition-all duration-500 hover:border-white/20"
             >
-              {/* TOP TECHNICAL LINE */}
+              {/* TECHNICAL ACCENTS */}
               <div className="absolute left-0 top-0 h-px w-24 bg-[#00E5FF] transition-all duration-500 group-hover:w-40" />
-
               <div className="absolute right-0 top-0 h-px w-16 bg-[#FF6B00] transition-all duration-500 group-hover:w-28" />
 
-              {/* CORNER BRACKETS */}
               <span className="absolute left-0 top-0 h-5 w-px bg-[#00E5FF]" />
               <span className="absolute right-0 top-0 h-5 w-px bg-[#FF6B00]" />
 
               <span className="absolute bottom-0 left-0 h-4 w-px bg-[#00E5FF]/40" />
               <span className="absolute bottom-0 right-0 h-4 w-px bg-[#FF6B00]/40" />
 
-              <div className="grid md:grid-cols-[220px_1fr]">
-                {/* EVENT INFORMATION */}
-                <div className="relative border-b border-white/10 p-5 sm:p-6 md:border-b-0 md:border-r md:p-7">
-                  {/* INDEX */}
-                  <div className="absolute right-5 top-5 font-mono text-[9px] text-slate-700">
+              <div className="grid md:grid-cols-[180px_1fr]">
+                {/* =====================================================
+          LEFT BOX — LOGO ONLY
+      ====================================================== */}
+                <div className="relative flex min-h-[180px] items-center justify-center border-b border-white/10 bg-[#050816] p-6 md:min-h-[240px] md:border-b-0 md:border-r">
+                  {/* EVENT NUMBER */}
+                  <span className="absolute left-4 top-4 font-mono text-[8px] tracking-[0.2em] text-slate-700">
                     {String(index + 1).padStart(2, '0')}
-                  </div>
+                  </span>
 
-                  {/* LOGO */}
+                  {/* LOGO FRAME */}
                   <motion.div
                     whileHover={{
                       rotateY: 8,
                       rotateX: -5,
-                      scale: 1.04,
+                      scale: 1.05,
                     }}
-                    transition={{
-                      duration: 0.35,
-                    }}
-                    className="relative flex h-24 w-24 items-center justify-center border border-white/10 bg-[#050816] [transform-style:preserve-3d] sm:h-28 sm:w-28"
+                    transition={{ duration: 0.35 }}
+                    className="relative flex h-28 w-28 items-center justify-center [transform-style:preserve-3d] sm:h-32 sm:w-32"
                   >
-                    {/* LOGO CORNERS */}
-                    <span className="absolute left-0 top-0 h-3 w-3 border-l border-t border-[#00E5FF]" />
-                    <span className="absolute right-0 top-0 h-3 w-3 border-r border-t border-[#00E5FF]/50" />
-                    <span className="absolute bottom-0 left-0 h-3 w-3 border-b border-l border-[#FF6B00]/50" />
-                    <span className="absolute bottom-0 right-0 h-3 w-3 border-b border-r border-[#FF6B00]" />
+                    {/* CORNER BRACKETS */}
+                    <span className="absolute left-0 top-0 h-5 w-5 border-l border-t border-[#00E5FF]" />
+                    <span className="absolute right-0 top-0 h-5 w-5 border-r border-t border-[#00E5FF]/50" />
+
+                    <span className="absolute bottom-0 left-0 h-5 w-5 border-b border-l border-[#FF6B00]/50" />
+                    <span className="absolute bottom-0 right-0 h-5 w-5 border-b border-r border-[#FF6B00]" />
 
                     {getEventLogo(result.eventLogo) ? (
                       <img
@@ -1221,24 +1218,30 @@ function Events() {
                     )}
                   </motion.div>
 
-                  {/* EVENT NAME */}
-                  <div className="mt-6">
-                    <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-600">
-                      Event Name
-                    </p>
+                  {/* SMALL TECH LABEL */}
+                  <span className="absolute bottom-4 left-4 font-mono text-[7px] uppercase tracking-[0.18em] text-slate-700">
+                    Event Identity
+                  </span>
+                </div>
 
-                    <h3 className="mt-2 text-lg font-black uppercase tracking-tight text-white transition-colors duration-300 group-hover:text-[#00E5FF]">
-                      {result.eventName}
-                    </h3>
-                  </div>
+                {/* =====================================================
+          RIGHT BOX — ALL EVENT INFORMATION
+      ====================================================== */}
+                <div className="relative p-5 sm:p-6 md:p-7">
+                  {/* EVENT HEADER */}
+                  <div className="flex flex-col justify-between gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-start">
+                    <div>
+                      <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-600">
+                        Event Name
+                      </p>
 
-                  {/* EVENT TYPE */}
-                  <div className="mt-5">
-                    <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-600">
-                      Event Type
-                    </p>
+                      <h3 className="mt-2 text-xl font-black uppercase tracking-tight text-white transition-colors duration-300 group-hover:text-[#00E5FF] md:text-2xl">
+                        {result.eventName}
+                      </h3>
+                    </div>
 
-                    <div className="mt-2 flex items-center gap-2">
+                    {/* EVENT TYPE */}
+                    <div className="flex items-center gap-2 sm:pt-1">
                       <span
                         className={`h-1.5 w-1.5 ${result.eventType === 'TEAM'
                             ? 'bg-[#7C3AED]'
@@ -1247,7 +1250,7 @@ function Events() {
                       />
 
                       <span
-                        className={`font-mono text-[9px] font-bold uppercase tracking-[0.16em] ${result.eventType === 'TEAM'
+                        className={`font-mono text-[9px] font-bold uppercase tracking-[0.18em] ${result.eventType === 'TEAM'
                             ? 'text-[#A78BFA]'
                             : 'text-[#00E5FF]'
                           }`}
@@ -1256,12 +1259,9 @@ function Events() {
                       </span>
                     </div>
                   </div>
-                </div>
 
-                {/* WINNERS AREA */}
-                <div className="relative p-5 sm:p-6 md:p-7">
-                  {/* WINNER HEADER */}
-                  <div className="flex items-center gap-3">
+                  {/* WINNERS HEADER */}
+                  <div className="mt-6 flex items-center gap-3">
                     <span className="h-1.5 w-1.5 bg-[#FFB000]" />
 
                     <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[#FFB000]">
@@ -1275,14 +1275,14 @@ function Events() {
                     </span>
                   </div>
 
-                  {/* WINNER CARDS */}
+                  {/* WINNERS */}
                   <div className="mt-6 grid grid-cols-1 md:grid-cols-3">
                     {result.winners.map((winner, winnerIndex) => (
                       <motion.div
                         key={`${result.eventName}-${winner.position}`}
                         initial={{
                           opacity: 0,
-                          x: winnerIndex === 0 ? -15 : winnerIndex === 1 ? 0 : 15,
+                          x: winnerIndex === 0 ? -15 : winnerIndex === 2 ? 15 : 0,
                         }}
                         whileInView={{
                           opacity: 1,
@@ -1296,9 +1296,9 @@ function Events() {
                           duration: 0.5,
                           delay: index * 0.1 + winnerIndex * 0.08,
                         }}
-                        className={`relative py-2 md:px-5 ${winnerIndex > 0
-                            ? 'mt-5 border-t border-white/10 md:mt-0 md:border-l md:border-t-0'
-                            : ''
+                        className={`relative py-2 ${winnerIndex > 0
+                            ? 'mt-5 border-t border-white/10 pt-6 md:mt-0 md:border-l md:border-t-0 md:pl-5'
+                            : 'md:pr-5'
                           }`}
                       >
                         {/* POSITION */}
@@ -1317,14 +1317,14 @@ function Events() {
                           </span>
                         </div>
 
-                        {/* WINNER NAME */}
-                        <h4 className="mt-4 text-sm font-black uppercase tracking-wide text-white transition-colors duration-300 group-hover:text-slate-100">
+                        {/* WINNER / TEAM NAME */}
+                        <h4 className="mt-4 text-sm font-black uppercase tracking-wide text-white">
                           {winner.name}
                         </h4>
 
-                        {/* SOLO */}
+                        {/* SOLO LABEL */}
                         {result.eventType === 'SOLO' && (
-                          <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.15em] text-slate-600">
+                          <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.15em] text-slate-700">
                             Individual Winner
                           </p>
                         )}
