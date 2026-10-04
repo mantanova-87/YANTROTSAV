@@ -18,6 +18,124 @@ import { teamsService, MAX_EVENT_REGISTRATIONS_PER_USER } from '../services/appw
 import type { EventDocument } from '../types/database.types'
 import { isEventFullyBooked, getEventSeatsSummary } from '../utils/eventCapacity'
 
+const eventLogos = import.meta.glob('../assets/event-logos/*', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+}) as Record<string, string>
+
+const getEventLogo = (filename: string) => {
+  return eventLogos[`../assets/event-logos/${filename}`] ?? ''
+}
+type Winner = {
+  position: string
+  name: string
+  members?: string[]
+}
+
+type EventResult = {
+  eventLogo: string
+  eventName: string
+  eventType: 'SOLO' | 'TEAM'
+  winners: Winner[]
+}
+
+const results: EventResult[] = 
+[
+  {
+    eventLogo: 'fff.png',
+    eventName: 'FASTEST FINGER FIRST',
+    eventType: 'SOLO',
+    winners: [
+      {
+        position: '1ST POSITION',
+        name: 'Adarsh Raj Kushwaha (26BECCS02)',
+      },
+      {
+        position: '2ND POSITION',
+        name: 'Ajay Kumar (26BECSE03)',
+      },
+      {
+        position: '3RD POSITION',
+        name: 'Shubham Kumar (26BECSE56)',
+      },
+    ],
+  },
+  {
+    eventLogo: 'coc.png',
+    eventName: 'CLASH OF CODE 2.0',
+    eventType: 'SOLO',
+    winners: [
+      {
+        position: '1ST POSITION',
+        name: 'Cherry Bohra (24BECCS16)',
+      },
+      {
+        position: '2ND POSITION',
+        name: 'Darsh Dhawan (25BECCS22)',
+      },
+      {
+        position: '3RD POSITION',
+        name: 'MD Anees Alam (23BECSE13)',
+      },
+    ],
+  },
+  {
+    eventLogo: 'stc.png',
+    eventName: 'STACK SCRAMBLE',
+    eventType: 'SOLO',
+    winners: [
+      {
+        position: '1ST POSITION',
+        name: 'Shreyash Prajapati (26BECCS55)',
+      },
+      {
+        position: '2ND POSITION',
+        name: 'Harisankaran (26beccs21)',
+      },
+      {
+        position: '3RD POSITION',
+        name: 'Tanya Popat (26BEMNC47)',
+      },
+    ],
+  },
+
+  {
+    eventLogo: 'quiz.png',
+    eventName: 'TECH QUIZ',
+    eventType: 'TEAM',
+    winners: [
+      {
+        position: '1ST POSITION',
+        name: 'TEAM ALPHA',
+        members: [
+          'Abhinav Kumar',
+          'Rahul Sharma',
+          'Aman Singh',
+        ],
+      },
+      {
+        position: '2ND POSITION',
+        name: 'TEAM OMEGA',
+        members: [
+          'Rohit Kumar',
+          'Vikas Sharma',
+          'Arjun Singh',
+        ],
+      },
+      {
+        position: '3RD POSITION',
+        name: 'TEAM DELTA',
+        members: [
+          'Karan Kumar',
+          'Aditya Singh',
+          'Mohit Sharma',
+        ],
+      },
+    ],
+  },
+]
+
 const CATEGORIES: { label: string; value: string }[] = [
   { label: 'ALL EVENTS', value: 'all' },
   { label: 'CODING', value: 'coding' },
@@ -328,11 +446,11 @@ function Events() {
               initial={
                 shouldReduceMotion
                   ? {
-                      opacity: 1,
-                    }
+                    opacity: 1,
+                  }
                   : {
-                      opacity: 0,
-                    }
+                    opacity: 0,
+                  }
               }
               whileInView={{
                 opacity: 1,
@@ -478,9 +596,8 @@ function Events() {
                             {Array.from({ length: 5 }).map(
                               (_, stripIndex) => {
                                 const top = `${stripIndex * 20}%`
-                                const bottom = `${
-                                  (4 - stripIndex) * 20
-                                }%`
+                                const bottom = `${(4 - stripIndex) * 20
+                                  }%`
 
                                 return (
                                   <motion.div
@@ -510,20 +627,18 @@ function Events() {
                                   >
                                     {/* Paper edge */}
                                     <span
-                                      className={`absolute left-0 right-0 top-0 h-px ${
-                                        stripIndex === 0
+                                      className={`absolute left-0 right-0 top-0 h-px ${stripIndex === 0
                                           ? 'bg-[#00E5FF]/40'
                                           : 'bg-white/[0.05]'
-                                      }`}
+                                        }`}
                                     />
 
                                     {/* Technical paper mark */}
                                     <span
-                                      className={`absolute top-1/2 h-px w-8 -translate-y-1/2 ${
-                                        fromLeft
+                                      className={`absolute top-1/2 h-px w-8 -translate-y-1/2 ${fromLeft
                                           ? 'right-5 bg-[#FF6B00]/50'
                                           : 'left-5 bg-[#00E5FF]/50'
-                                      }`}
+                                        }`}
                                     />
                                   </motion.div>
                                 )
@@ -585,11 +700,10 @@ function Events() {
               <button
                 key={cat.value}
                 onClick={() => setSelectedCategory(cat.value)}
-                className={`border px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.15em] transition-all ${
-                  selectedCategory === cat.value
+                className={`border px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.15em] transition-all ${selectedCategory === cat.value
                     ? 'border-[#00E5FF] bg-[#00E5FF] text-black shadow-[0_0_15px_rgba(0,229,255,0.3)]'
                     : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/30 hover:text-white'
-                }`}
+                  }`}
               >
                 {cat.label}
               </button>
@@ -621,13 +735,13 @@ function Events() {
 
               const cardInitial = shouldReduceMotion
                 ? {
-                    opacity: 1,
-                    x: 0,
-                  }
+                  opacity: 1,
+                  x: 0,
+                }
                 : {
-                    opacity: 0,
-                    x: isReversed ? 120 : -120,
-                  }
+                  opacity: 0,
+                  x: isReversed ? 120 : -120,
+                }
 
               return (
                 <motion.article
@@ -646,18 +760,16 @@ function Events() {
                     delay: 0.05,
                     ease: [0.22, 1, 0.36, 1],
                   }}
-                  className={`group relative ${
-                    isReversed
+                  className={`group relative ${isReversed
                       ? 'md:ml-auto md:max-w-[1080px]'
                       : 'md:mr-auto md:max-w-[1080px]'
-                  }`}
+                    }`}
                 >
                   <div className="relative border border-white/10 bg-[#080A0F] transition-all duration-500 group-hover:-translate-y-1 group-hover:border-white/20">
                     {/* Bookmark Notch */}
                     <div
-                      className={`absolute top-0 h-10 w-10 bg-[#050816] ${
-                        isReversed ? 'right-0' : 'left-0'
-                      }`}
+                      className={`absolute top-0 h-10 w-10 bg-[#050816] ${isReversed ? 'right-0' : 'left-0'
+                        }`}
                       style={{
                         clipPath:
                           'polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%)',
@@ -665,9 +777,8 @@ function Events() {
                     />
 
                     <div
-                      className={`absolute top-0 h-10 w-10 bg-[#FF6B00] opacity-80 ${
-                        isReversed ? 'right-0' : 'left-0'
-                      }`}
+                      className={`absolute top-0 h-10 w-10 bg-[#FF6B00] opacity-80 ${isReversed ? 'right-0' : 'left-0'
+                        }`}
                       style={{
                         clipPath:
                           'polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%)',
@@ -727,20 +838,18 @@ function Events() {
                           <span className="font-mono text-[8px] uppercase tracking-[0.18em] text-slate-400">
                             {(event.eventType || event.format) === 'solo'
                               ? 'INDIVIDUAL EVENT'
-                              : `TEAM (${event.minTeamSize || 1}-${
-                                  event.maxTeamSize || 4
-                                } MEMBERS)`}
+                              : `TEAM (${event.minTeamSize || 1}-${event.maxTeamSize || 4
+                              } MEMBERS)`}
                           </span>
 
                           {(() => {
                             const seats = getEventSeatsSummary(event)
                             return (
                               <span
-                                className={`border px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.18em] ${
-                                  isEventFullyBooked(event)
+                                className={`border px-2.5 py-1 font-mono text-[8px] uppercase tracking-[0.18em] ${isEventFullyBooked(event)
                                     ? 'border-[#FF6B00]/50 text-[#FF6B00]'
                                     : 'border-white/15 text-slate-300'
-                                }`}
+                                  }`}
                               >
                                 {seats.display} {seats.unit}
                               </span>
@@ -864,9 +973,8 @@ function Events() {
                                     {seats.label}
                                   </span>
                                   <span
-                                    className={`mt-2 block text-[11px] font-semibold uppercase tracking-[0.08em] ${
-                                      booked ? 'text-[#FF6B00]' : 'text-[#00E5FF]'
-                                    }`}
+                                    className={`mt-2 block text-[11px] font-semibold uppercase tracking-[0.08em] ${booked ? 'text-[#FF6B00]' : 'text-[#00E5FF]'
+                                      }`}
                                   >
                                     {seats.display}
                                   </span>
@@ -889,19 +997,17 @@ function Events() {
                             <div className="mt-7 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                               <div className="flex items-center gap-3">
                                 <span
-                                  className={`h-1.5 w-1.5 ${
-                                    enrolledEventIds.has(event.$id)
+                                  className={`h-1.5 w-1.5 ${enrolledEventIds.has(event.$id)
                                       ? 'bg-emerald-400'
                                       : 'bg-red-400'
-                                  }`}
+                                    }`}
                                 />
 
                                 <span
-                                  className={`font-mono text-[9px] uppercase tracking-[0.2em] ${
-                                    enrolledEventIds.has(event.$id)
+                                  className={`font-mono text-[9px] uppercase tracking-[0.2em] ${enrolledEventIds.has(event.$id)
                                       ? 'text-emerald-400'
                                       : 'text-red-400'
-                                  }`}
+                                    }`}
                                 >
                                   {enrolledEventIds.has(event.$id)
                                     ? 'Registered'
@@ -953,9 +1059,8 @@ function Events() {
 
                   {/* Bookmark tail */}
                   <div
-                    className={`absolute -bottom-3 h-7 w-9 bg-[#FF6B00] ${
-                      isReversed ? 'right-8' : 'left-8'
-                    }`}
+                    className={`absolute -bottom-3 h-7 w-9 bg-[#FF6B00] ${isReversed ? 'right-8' : 'left-8'
+                      }`}
                     style={{
                       clipPath:
                         'polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%)',
@@ -990,6 +1095,309 @@ function Events() {
           setDetailsEvent(null)
         }}
       />
+      <section className="relative mx-auto max-w-[1400px] overflow-hidden px-4 py-16 sm:px-5 md:px-8 md:py-24">
+        {/* BACKGROUND DETAIL */}
+        <div className="pointer-events-none absolute left-0 top-24 h-32 w-px bg-gradient-to-b from-[#00E5FF]/60 to-transparent" />
+        <div className="pointer-events-none absolute right-0 top-24 h-32 w-px bg-gradient-to-b from-[#FF6B00]/60 to-transparent" />
+
+        {/* SECTION HEADER */}
+        <motion.div
+          initial={{ opacity: 0, x: -35 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, amount: 0.25 }}
+          transition={{
+            duration: 0.7,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="mb-10 md:mb-12"
+        >
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-[#FF6B00]">
+              04 / Results
+            </span>
+
+            <span className="h-px w-10 bg-[#FF6B00]/50" />
+
+            <span className="font-mono text-[8px] uppercase tracking-[0.18em] text-slate-700">
+              Final Standings
+            </span>
+          </div>
+
+          <div className="mt-4 flex items-end justify-between gap-6">
+            <div>
+              <h2 className="text-2xl font-black uppercase tracking-[-0.02em] text-white sm:text-3xl md:text-4xl">
+                Event Results
+              </h2>
+
+              <p className="mt-3 max-w-xl text-[11px] leading-6 text-slate-500">
+                Celebrating the teams and individuals who stood at the top
+                of every challenge.
+              </p>
+            </div>
+
+            <span className="hidden font-mono text-[9px] uppercase tracking-[0.2em] text-slate-700 sm:block">
+              YTS / 2026
+            </span>
+          </div>
+        </motion.div>
+
+        {/* RESULT LIST */}
+        <div className="space-y-5">
+          {results.map((result, index) => (
+            <motion.article
+              key={result.eventName}
+              initial={{
+                opacity: 0,
+                y: 45,
+                scale: 0.98,
+              }}
+              whileInView={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+              }}
+              viewport={{
+                once: true,
+                amount: 0.12,
+              }}
+              transition={{
+                duration: 0.7,
+                delay: index * 0.1,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              whileHover={{
+                y: -4,
+              }}
+              className="group relative overflow-hidden border border-white/10 bg-[#080A0F] transition-colors duration-500 hover:border-white/20"
+            >
+              {/* TOP TECHNICAL LINE */}
+              <div className="absolute left-0 top-0 h-px w-24 bg-[#00E5FF] transition-all duration-500 group-hover:w-40" />
+
+              <div className="absolute right-0 top-0 h-px w-16 bg-[#FF6B00] transition-all duration-500 group-hover:w-28" />
+
+              {/* CORNER BRACKETS */}
+              <span className="absolute left-0 top-0 h-5 w-px bg-[#00E5FF]" />
+              <span className="absolute right-0 top-0 h-5 w-px bg-[#FF6B00]" />
+
+              <span className="absolute bottom-0 left-0 h-4 w-px bg-[#00E5FF]/40" />
+              <span className="absolute bottom-0 right-0 h-4 w-px bg-[#FF6B00]/40" />
+
+              <div className="grid md:grid-cols-[220px_1fr]">
+                {/* EVENT INFORMATION */}
+                <div className="relative border-b border-white/10 p-5 sm:p-6 md:border-b-0 md:border-r md:p-7">
+                  {/* INDEX */}
+                  <div className="absolute right-5 top-5 font-mono text-[9px] text-slate-700">
+                    {String(index + 1).padStart(2, '0')}
+                  </div>
+
+                  {/* LOGO */}
+                  <motion.div
+                    whileHover={{
+                      rotateY: 8,
+                      rotateX: -5,
+                      scale: 1.04,
+                    }}
+                    transition={{
+                      duration: 0.35,
+                    }}
+                    className="relative flex h-24 w-24 items-center justify-center border border-white/10 bg-[#050816] [transform-style:preserve-3d] sm:h-28 sm:w-28"
+                  >
+                    {/* LOGO CORNERS */}
+                    <span className="absolute left-0 top-0 h-3 w-3 border-l border-t border-[#00E5FF]" />
+                    <span className="absolute right-0 top-0 h-3 w-3 border-r border-t border-[#00E5FF]/50" />
+                    <span className="absolute bottom-0 left-0 h-3 w-3 border-b border-l border-[#FF6B00]/50" />
+                    <span className="absolute bottom-0 right-0 h-3 w-3 border-b border-r border-[#FF6B00]" />
+
+                    {getEventLogo(result.eventLogo) ? (
+                      <img
+                        src={getEventLogo(result.eventLogo)}
+                        alt={`${result.eventName} logo`}
+                        className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <span className="font-mono text-[8px] uppercase tracking-[0.18em] text-slate-700">
+                        No Logo
+                      </span>
+                    )}
+                  </motion.div>
+
+                  {/* EVENT NAME */}
+                  <div className="mt-6">
+                    <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-600">
+                      Event Name
+                    </p>
+
+                    <h3 className="mt-2 text-lg font-black uppercase tracking-tight text-white transition-colors duration-300 group-hover:text-[#00E5FF]">
+                      {result.eventName}
+                    </h3>
+                  </div>
+
+                  {/* EVENT TYPE */}
+                  <div className="mt-5">
+                    <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-600">
+                      Event Type
+                    </p>
+
+                    <div className="mt-2 flex items-center gap-2">
+                      <span
+                        className={`h-1.5 w-1.5 ${result.eventType === 'TEAM'
+                            ? 'bg-[#7C3AED]'
+                            : 'bg-[#00E5FF]'
+                          }`}
+                      />
+
+                      <span
+                        className={`font-mono text-[9px] font-bold uppercase tracking-[0.16em] ${result.eventType === 'TEAM'
+                            ? 'text-[#A78BFA]'
+                            : 'text-[#00E5FF]'
+                          }`}
+                      >
+                        {result.eventType}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* WINNERS AREA */}
+                <div className="relative p-5 sm:p-6 md:p-7">
+                  {/* WINNER HEADER */}
+                  <div className="flex items-center gap-3">
+                    <span className="h-1.5 w-1.5 bg-[#FFB000]" />
+
+                    <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[#FFB000]">
+                      Winners
+                    </span>
+
+                    <span className="h-px flex-1 bg-white/10" />
+
+                    <span className="hidden font-mono text-[8px] uppercase tracking-[0.15em] text-slate-700 sm:block">
+                      Top 03
+                    </span>
+                  </div>
+
+                  {/* WINNER CARDS */}
+                  <div className="mt-6 grid grid-cols-1 md:grid-cols-3">
+                    {result.winners.map((winner, winnerIndex) => (
+                      <motion.div
+                        key={`${result.eventName}-${winner.position}`}
+                        initial={{
+                          opacity: 0,
+                          x: winnerIndex === 0 ? -15 : winnerIndex === 1 ? 0 : 15,
+                        }}
+                        whileInView={{
+                          opacity: 1,
+                          x: 0,
+                        }}
+                        viewport={{
+                          once: true,
+                          amount: 0.2,
+                        }}
+                        transition={{
+                          duration: 0.5,
+                          delay: index * 0.1 + winnerIndex * 0.08,
+                        }}
+                        className={`relative py-2 md:px-5 ${winnerIndex > 0
+                            ? 'mt-5 border-t border-white/10 md:mt-0 md:border-l md:border-t-0'
+                            : ''
+                          }`}
+                      >
+                        {/* POSITION */}
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`h-1.5 w-1.5 ${winnerIndex === 0
+                                ? 'bg-[#FFB000]'
+                                : winnerIndex === 1
+                                  ? 'bg-slate-400'
+                                  : 'bg-[#FF6B00]'
+                              }`}
+                          />
+
+                          <span className="font-mono text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                            {winner.position}
+                          </span>
+                        </div>
+
+                        {/* WINNER NAME */}
+                        <h4 className="mt-4 text-sm font-black uppercase tracking-wide text-white transition-colors duration-300 group-hover:text-slate-100">
+                          {winner.name}
+                        </h4>
+
+                        {/* SOLO */}
+                        {result.eventType === 'SOLO' && (
+                          <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.15em] text-slate-600">
+                            Individual Winner
+                          </p>
+                        )}
+
+                        {/* TEAM MEMBERS */}
+                        {result.eventType === 'TEAM' && winner.members && (
+                          <div className="mt-4 border-l border-white/10 pl-3">
+                            <p className="mb-2 font-mono text-[7px] uppercase tracking-[0.18em] text-slate-700">
+                              Team Members
+                            </p>
+
+                            <div className="space-y-1.5">
+                              {winner.members.map((member, memberIndex) => (
+                                <motion.div
+                                  key={`${winner.name}-${member}`}
+                                  initial={{
+                                    opacity: 0,
+                                    x: -5,
+                                  }}
+                                  whileInView={{
+                                    opacity: 1,
+                                    x: 0,
+                                  }}
+                                  viewport={{
+                                    once: true,
+                                  }}
+                                  transition={{
+                                    duration: 0.3,
+                                    delay:
+                                      index * 0.1 +
+                                      winnerIndex * 0.08 +
+                                      memberIndex * 0.04,
+                                  }}
+                                  className="flex items-start gap-2"
+                                >
+                                  <span className="mt-0.5 font-mono text-[7px] text-[#00E5FF]/50">
+                                    {String(memberIndex + 1).padStart(2, '0')}
+                                  </span>
+
+                                  <span className="text-[9px] uppercase leading-4 text-slate-500 transition-colors duration-300 hover:text-white">
+                                    {member}
+                                  </span>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.article>
+          ))}
+        </div>
+
+        {/* BOTTOM TECHNICAL LABEL */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="mt-6 flex items-center justify-between border-t border-white/5 pt-4"
+        >
+          <span className="font-mono text-[8px] uppercase tracking-[0.18em] text-slate-700">
+            YANTROTSAV / Official Results
+          </span>
+
+          <span className="font-mono text-[8px] uppercase tracking-[0.18em] text-slate-700">
+            2026
+          </span>
+        </motion.div>
+      </section>
     </main>
   )
 }
