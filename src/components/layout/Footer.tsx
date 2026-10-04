@@ -13,7 +13,7 @@ const footerLinks = [
 const socialLinks = [
   {
     name: 'Instagram',
-    href: 'https://www.instagram.com/yantrotsav_2026',
+    href: 'https://www.instagram.com/yantrotsav_cuj',
     icon: (
       <FaInstagram />
     ),
