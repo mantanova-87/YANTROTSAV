@@ -81,7 +81,7 @@ const results: EventResult[] =
       ],
     },
     {
-      eventLogo: 'stc.png',
+      eventLogo: 'stc.jpg',
       eventName: 'STACK SCRAMBLE',
       eventType: 'SOLO',
       winners: [
@@ -101,17 +101,15 @@ const results: EventResult[] =
     },
 
     {
-      eventLogo: 'quiz.png',
-      eventName: 'TECH QUIZ',
+      eventLogo: 'det.jpg',
+      eventName: 'THE DETECTIVE',
       eventType: 'TEAM',
       winners: [
         {
           position: '1ST POSITION',
-          name: 'TEAM ALPHA',
+          name: 'NIGHTOWL',
           members: [
-            'Abhinav Kumar',
-            'Rahul Sharma',
-            'Aman Singh',
+            'Manpreet Kaur(25BECCS42)','Kajal Kumari (25BEMNC26)', 'Ayush Kumar(25BEMNC16)'
           ],
         },
         {
