@@ -114,20 +114,17 @@ const results: EventResult[] =
         },
         {
           position: '2ND POSITION',
-          name: 'TEAM OMEGA',
+          name: 'BHARAT',
           members: [
-            'Rohit Kumar',
-            'Vikas Sharma',
-            'Arjun Singh',
+            'Ankit Gupta (26BECCS06)','Aashish Pandey (26BECCS11)','Pinkal Bharia, (26BECCS41)'
+
           ],
         },
         {
           position: '3RD POSITION',
-          name: 'TEAM DELTA',
+          name: 'PANTHEON',
           members: [
-            'Karan Kumar',
-            'Aditya Singh',
-            'Mohit Sharma',
+          'Lakshit Bansal (25BECCS39)','Harshdeep Kaur Raina (25beccs29)','Navneet Kour (25BECSE02)'
           ],
         },
       ],
