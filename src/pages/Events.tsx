@@ -129,6 +129,151 @@ const results: EventResult[] =
         },
       ],
     },
+    {
+      eventLogo: 'tiw.jpg',
+      eventName: 'THE IDEA WALL',
+      eventType: 'TEAM',
+      winners: [
+        {
+          position: '1ST POSITION',
+          name: 'SAMBA KE ASTER',
+          members: [
+            'Sahil khanna (24BECSE50)','Ruhaan Fariz (24BECSE49)'
+          ],
+        },
+        {
+          position: '2ND POSITION',
+          name: 'FINAL_FINAL_REAL',
+          members: [
+            'Bhanu Jangra (24BECCS13)','Cherry Bohra (24BECCS16)'
+
+          ],
+        },
+        {
+          position: '3RD POSITION',
+          name: 'LITTIOKLA',
+          members: [
+          'Anshu Raj (26BEMNC07)','Tanya Popat (26BEMNC47)'
+          ],
+        },
+      ],
+    },
+    {
+      eventLogo: 'det.jpg',
+      eventName: 'THE DETECTIVE',
+      eventType: 'TEAM',
+      winners: [
+        {
+          position: '1ST POSITION',
+          name: 'NIGHTOWL',
+          members: [
+            'Manpreet Kaur(25BECCS42)','Kajal Kumari (25BEMNC26)', 'Ayush Kumar(25BEMNC16)'
+          ],
+        },
+        {
+          position: '2ND POSITION',
+          name: 'BHARAT',
+          members: [
+            'Ankit Gupta (26BECCS06)','Aashish Pandey (26BECCS11)','Pinkal Bharia, (26BECCS41)'
+
+          ],
+        },
+        {
+          position: '3RD POSITION',
+          name: 'PANTHEON',
+          members: [
+          'Lakshit Bansal (25BECCS39)','Harshdeep Kaur Raina (25beccs29)','Navneet Kour (25BECSE02)'
+          ],
+        },
+      ],
+    },
+    {
+      eventLogo: 'det.jpg',
+      eventName: 'THE DETECTIVE',
+      eventType: 'TEAM',
+      winners: [
+        {
+          position: '1ST POSITION',
+          name: 'NIGHTOWL',
+          members: [
+            'Manpreet Kaur(25BECCS42)','Kajal Kumari (25BEMNC26)', 'Ayush Kumar(25BEMNC16)'
+          ],
+        },
+        {
+          position: '2ND POSITION',
+          name: 'BHARAT',
+          members: [
+            'Ankit Gupta (26BECCS06)','Aashish Pandey (26BECCS11)','Pinkal Bharia, (26BECCS41)'
+
+          ],
+        },
+        {
+          position: '3RD POSITION',
+          name: 'PANTHEON',
+          members: [
+          'Lakshit Bansal (25BECCS39)','Harshdeep Kaur Raina (25beccs29)','Navneet Kour (25BECSE02)'
+          ],
+        },
+      ],
+    },
+    {
+      eventLogo: 'det.jpg',
+      eventName: 'THE DETECTIVE',
+      eventType: 'TEAM',
+      winners: [
+        {
+          position: '1ST POSITION',
+          name: 'NIGHTOWL',
+          members: [
+            'Manpreet Kaur(25BECCS42)','Kajal Kumari (25BEMNC26)', 'Ayush Kumar(25BEMNC16)'
+          ],
+        },
+        {
+          position: '2ND POSITION',
+          name: 'BHARAT',
+          members: [
+            'Ankit Gupta (26BECCS06)','Aashish Pandey (26BECCS11)','Pinkal Bharia, (26BECCS41)'
+
+          ],
+        },
+        {
+          position: '3RD POSITION',
+          name: 'PANTHEON',
+          members: [
+          'Lakshit Bansal (25BECCS39)','Harshdeep Kaur Raina (25beccs29)','Navneet Kour (25BECSE02)'
+          ],
+        },
+      ],
+    },
+    {
+      eventLogo: 'det.jpg',
+      eventName: 'THE DETECTIVE',
+      eventType: 'TEAM',
+      winners: [
+        {
+          position: '1ST POSITION',
+          name: 'NIGHTOWL',
+          members: [
+            'Manpreet Kaur(25BECCS42)','Kajal Kumari (25BEMNC26)', 'Ayush Kumar(25BEMNC16)'
+          ],
+        },
+        {
+          position: '2ND POSITION',
+          name: 'BHARAT',
+          members: [
+            'Ankit Gupta (26BECCS06)','Aashish Pandey (26BECCS11)','Pinkal Bharia, (26BECCS41)'
+
+          ],
+        },
+        {
+          position: '3RD POSITION',
+          name: 'PANTHEON',
+          members: [
+          'Lakshit Bansal (25BECCS39)','Harshdeep Kaur Raina (25beccs29)','Navneet Kour (25BECSE02)'
+          ],
+        },
+      ],
+    },
   ]
 
 const CATEGORIES: { label: string; value: string }[] = [
