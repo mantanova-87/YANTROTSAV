@@ -1,5 +1,5 @@
 import { ArrowUpRight } from 'lucide-react'
-import { FaInstagram, FaWhatsapp } from 'react-icons/fa6';
+import { FaInstagram, FaWhatsapp, FaLinkedin } from 'react-icons/fa6';
 import { BiLogoGmail } from 'react-icons/bi';
 import { Link } from 'react-router-dom'
 import logo from "../../assets/images/logo.png";
@@ -23,6 +23,13 @@ const socialLinks = [
     href: 'https://chat.whatsapp.com/D9qI7lPQgBGHQg2v07Cdxb',
     icon: (
       <FaWhatsapp />
+    ),
+  },
+  {
+    name: 'Yantrotsav Official Page',
+    href: 'https://www.linkedin.com/company/yantrotsav/',
+    icon: (
+      <FaLinkedin />
     ),
   },
 
