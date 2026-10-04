@@ -157,19 +157,46 @@ function Home() {
         <div className="pointer-events-none absolute -right-40 bottom-1/4 h-96 w-96 rounded-full bg-[#FF6B00]/10 blur-[120px]" />
 
         <div className="relative mx-auto mt-26 max-w-[1400px] px-5 md:px-8">
-          {/* Section Tag */}
-          {/* <div className="mb-6 flex items-center gap-3">
-            <span className="font-mono text-[10px] tracking-[0.25em] text-[#FF6B00] font-bold">
-              01
-            </span>
-            <span className="h-px w-10 bg-[#FF6B00]" />
-            <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.25em] text-slate-400">
-              About The Event / Fest Overview
-            </span>
-          </div> */}
+          {/* ========================================================= */}
+          {/* OFFICIAL ANNOUNCEMENT MARQUEE BANNER: REGISTRATIONS CLOSED */}
+          {/* ========================================================= */}
+          <div className="relative mb-8 sm:mb-12 overflow-hidden border border-[#FF6B00]/40 bg-gradient-to-r from-[#FF6B00]/10 via-[#050816] to-[#00E5FF]/10 p-2.5 sm:p-3.5 shadow-[0_0_30px_rgba(255,107,0,0.15)] backdrop-blur-md">
+            {/* Cyberpunk corner brackets */}
+            <span className="absolute left-0 top-0 h-3 w-3 border-l-2 border-t-2 border-[#FF6B00]" />
+            <span className="absolute bottom-0 left-0 h-3 w-3 border-b-2 border-l-2 border-[#FF6B00]" />
+            <span className="absolute right-0 top-0 h-3 w-3 border-r-2 border-t-2 border-[#00E5FF]" />
+            <span className="absolute bottom-0 right-0 h-3 w-3 border-b-2 border-r-2 border-[#00E5FF]" />
 
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+              {/* Status Badge */}
+              <div className="flex shrink-0 items-center gap-2 border border-[#FF6B00] bg-[#FF6B00]/20 px-3.5 py-1.5 font-mono text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-[#FF6B00] shadow-[0_0_15px_rgba(255,107,0,0.3)]">
+                <span className="h-2 w-2 rounded-full bg-[#FF6B00] animate-pulse shrink-0" />
+                <span>ANNOUNCEMENT</span>
+              </div>
 
-
+              {/* Scrolling Marquee */}
+              <div className="relative w-full flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_3%,black_97%,transparent)]">
+                <div className="animate-cyber-marquee whitespace-nowrap py-1">
+                  {[...Array(2)].map((_, idx) => (
+                    <div key={idx} className="flex items-center gap-8 pr-8 font-mono text-xs sm:text-sm tracking-[0.14em]">
+                      <span className="text-[#00E5FF] font-bold uppercase tracking-[0.18em] flex items-center gap-2">
+                        Online Registrations Are Officially Closed
+                      </span>
+                      <span className="text-[#FF6B00] font-black">///</span>
+                      <span className="text-white font-semibold">
+                        No Further Registrations Will Be Entertained
+                      </span>
+                      <span className="text-[#FF6B00] font-black">///</span>
+                      <span className="text-slate-300">
+                        For Official Queries, Please Contact the Organising Team
+                      </span>
+                      <span className="text-[#FF6B00] font-black">///</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Two-Column Hero Showcase */}
           <div className="grid items-center gap-12 mb-6 lg:grid-cols-12 lg:gap-16">
@@ -187,6 +214,12 @@ function Home() {
               <h2 className="text-4xl font-black uppercase tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
                 YANTROTSAV <span className="text-[#00E5FF]">2026</span>
               </h2>
+
+              {/* Closed Status Pill */}
+              <div className="mt-4 inline-flex items-center gap-2 border border-[#FF6B00]/40 bg-[#FF6B00]/10 px-3.5 py-1.5 font-mono text-[10px] sm:text-xs font-bold uppercase tracking-[0.16em] text-[#FF6B00]">
+                <span className="h-2 w-2 rounded-full bg-[#FF6B00]" />
+                <span>Online Registrations Closed</span>
+              </div>
 
               <div className="mt-4 flex items-center gap-3 sm:mt-6">
                 <span className="h-2 w-2 rounded-full bg-[#FF6B00]" />

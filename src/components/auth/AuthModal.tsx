@@ -7,7 +7,6 @@ import {
   Mail,
   User,
   Phone,
-  Loader2,
   Eye,
   EyeOff,
   AtSign,
@@ -63,6 +62,8 @@ export default function AuthModal() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    showToast.error('Online registrations are officially closed. No further registrations will be accepted.')
+    return
 
     try {
       if (authModalMode === 'login') {
@@ -87,7 +88,7 @@ export default function AuthModal() {
         const normalizedPhone = normalizeMobile(phone)
         const contactError = getContactError(normalizedEmail, normalizedPhone)
         if (contactError) {
-          showToast.warning(contactError)
+          showToast.warning(contactError!)
           return
         }
         if (!password) {
@@ -105,7 +106,7 @@ export default function AuthModal() {
         const normalizedUsername = normalizeUsername(username)
         const usernameError = getUsernameError(normalizedUsername)
         if (usernameError) {
-          showToast.warning(usernameError)
+          showToast.warning(usernameError!)
           return
         }
         if (!rollNo.trim()) {
@@ -135,9 +136,9 @@ export default function AuthModal() {
         resetForm()
         closeAuthModal()
       }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        const msg = err.message
+    } catch (err: any) {
+      if (err instanceof Error || (err && err.message)) {
+        const msg = err.message || ''
         if (authModalMode === 'register') {
           if (msg.toLowerCase().includes('roll') || msg.toLowerCase().includes('idx_rollnumber')) {
             showToast.error('A student with this Roll Number is already registered.')
@@ -482,21 +483,21 @@ export default function AuthModal() {
               )}
             </div>
 
+              {/* Official Closed Notice */}
+              <div className="mt-4 flex items-center gap-2 border border-amber-500/40 bg-amber-950/30 p-3 text-xs text-amber-300">
+                <Lock size={16} className="shrink-0" />
+                <span>
+                  Online registrations are officially closed. No further registrations will be accepted. For queries, please contact the organizing team.
+                </span>
+              </div>
+
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="mt-6 flex w-full items-center justify-center gap-2 border border-[#FF6B00] bg-[#FF6B00] py-3 text-xs font-black uppercase tracking-[0.18em] text-white transition-all hover:bg-transparent hover:text-[#FF6B00] disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={isSubmitting || true}
+                className="mt-4 flex w-full items-center justify-center gap-2 border border-white/15 bg-white/5 py-3 text-xs font-black uppercase tracking-[0.18em] text-slate-400 cursor-not-allowed opacity-80"
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>Processing...</span>
-                  </>
-                ) : authModalMode === 'login' ? (
-                  'Access Portal'
-                ) : (
-                  'Generate Identity Pass'
-                )}
+                <Lock size={16} />
+                <span>Registrations Closed</span>
               </button>
             </form>
           </div>

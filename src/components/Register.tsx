@@ -65,12 +65,8 @@ export default function Register() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-
-    // Basic frontend validation
-    if (!formData.fullName.trim() || !formData.email.trim() || !formData.password) {
-      showToast.warning('Please fill in your Full Name, Email, and Password.')
-      return
-    }
+    showToast.error('Online registrations are officially closed. No further registrations will be accepted.')
+    return
 
     if (formData.password.length < 8) {
       showToast.warning('Password must contain at least 8 characters.')
@@ -85,7 +81,7 @@ export default function Register() {
     const username = normalizeUsername(formData.username || '')
     const usernameError = getUsernameError(username)
     if (usernameError) {
-      showToast.warning(usernameError)
+      showToast.warning(usernameError!)
       return
     }
 
@@ -98,7 +94,7 @@ export default function Register() {
     const phone = normalizeMobile(formData.phone)
     const contactError = getContactError(email, phone)
     if (contactError) {
-      showToast.warning(contactError)
+      showToast.warning(contactError!)
       return
     }
 
@@ -132,10 +128,10 @@ export default function Register() {
       await refreshUser()
       showToast.success(`Welcome to Yantrotsav, ${formData.fullName}! Your registration is complete.`)
       setSuccess(true)
-    } catch (err: unknown) {
-      if (err instanceof Error) {
+    } catch (err: any) {
+      if (err instanceof Error || (err && err.message)) {
         // Friendly mapping for duplicate rollNumber, email, or other unique constraints
-        const msg = err.message
+        const msg = err.message || ''
         if (msg.toLowerCase().includes('roll') || msg.toLowerCase().includes('idx_rollnumber')) {
           showToast.error('A student with this Roll Number is already registered for Yantrotsav.')
         } else if (msg.toLowerCase().includes('email') || msg.toLowerCase().includes('user_already_exists')) {
@@ -458,23 +454,22 @@ export default function Register() {
                 </div>
               )}
 
+              {/* Closed Notice Banner */}
+              <div className="mt-6 flex items-center gap-3 border border-amber-500/40 bg-amber-950/30 p-3.5 text-xs text-amber-300">
+                <Lock size={18} className="shrink-0" />
+                <span>
+                  Online registrations are officially closed. No further registrations will be accepted. For queries, please contact the organizing team.
+                </span>
+              </div>
+
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="mt-6 flex w-full items-center justify-center gap-2 border border-[#FF6B00] bg-[#FF6B00] py-3.5 font-mono text-xs font-black uppercase tracking-[0.18em] text-white transition-all hover:bg-transparent hover:text-[#FF6B00] disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={isSubmitting || true}
+                className="mt-4 flex w-full items-center justify-center gap-2 border border-white/15 bg-white/5 py-3.5 font-mono text-xs font-black uppercase tracking-[0.18em] text-slate-400 cursor-not-allowed opacity-80"
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>Creating Account...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Complete Registration</span>
-                    <ArrowRight size={14} />
-                  </>
-                )}
+                <Lock size={14} />
+                <span>Registrations Closed</span>
               </button>
 
               <div className="text-center font-mono text-[10px] text-slate-500">

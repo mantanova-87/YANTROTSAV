@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
+  Lock,
   Loader2,
   ArrowRight,
   ShieldCheck,
@@ -38,7 +39,7 @@ export default function Dashboard() {
    useEffect(() => {
     document.title = 'YANTROTSAV | Dashboard'
   }, [])
-  const { user, profile, openAuthModal, loading: authLoading, updateProfile } = useAuth()
+  const { user, profile, loading: authLoading, updateProfile } = useAuth()
 
   const [invitations, setInvitations] = useState<TeamInvitationDocument[]>([])
   const [registrations, setRegistrations] = useState<EventRegistrationDocument[]>([])
@@ -386,22 +387,23 @@ export default function Dashboard() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#050816] px-4 pt-20 text-white">
         <div className="relative w-full max-w-md border border-white/10 bg-[#080A0F] p-8 text-center shadow-2xl">
-          <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#00E5FF]">
-            [SECURITY ENCLAVE]
+          <span className="font-mono text-[9px] uppercase tracking-[0.25em] text-[#FF6B00]">
+            [OFFICIAL ANNOUNCEMENT]
           </span>
           <h2 className="mt-2 text-2xl font-black uppercase tracking-tight text-white">
-            Participant Login Required
+            Registrations Closed
           </h2>
           <p className="mt-3 text-xs leading-relaxed text-slate-400">
-            Please sign in to view your registered events, track team formation, edit your profile, and accept pending invitations.
+            Online registrations are officially closed. No further registrations will be accepted. For official queries, please contact the organising team.
           </p>
 
           <button
-            onClick={() => openAuthModal('login')}
-            className="mt-6 inline-flex items-center gap-2 border border-[#00E5FF] bg-[#00E5FF] px-6 py-3 font-mono text-xs font-black uppercase tracking-[0.18em] text-black transition-all hover:bg-transparent hover:text-[#00E5FF]"
+            type="button"
+            disabled
+            className="mt-6 inline-flex items-center gap-2 border border-white/15 bg-white/5 px-6 py-3 font-mono text-xs font-black uppercase tracking-[0.18em] text-slate-400 cursor-not-allowed opacity-80"
           >
-            <span>Sign In to Dashboard</span>
-            <ArrowRight size={14} />
+            <Lock size={14} />
+            <span>Registrations Closed</span>
           </button>
         </div>
       </div>
