@@ -159,30 +159,30 @@ const results: EventResult[] =
       ],
     },
     {
-      eventLogo: 'det.jpg',
-      eventName: 'THE DETECTIVE',
+      eventLogo: 'tfp.jpg',
+      eventName: "THE FOUNDER'S PITCH",
       eventType: 'TEAM',
       winners: [
         {
           position: '1ST POSITION',
-          name: 'NIGHTOWL',
+          name: 'THE UNPAID INTERNS',
           members: [
-            'Manpreet Kaur(25BECCS42)','Kajal Kumari (25BEMNC26)', 'Ayush Kumar(25BEMNC16)'
+                'Vyom Upadhyay (25BECSE72)','Aman Sharma (25BECSE01)','Raghuvansh Yudhvir (25BECCS59)'
           ],
         },
         {
           position: '2ND POSITION',
-          name: 'BHARAT',
+          name: 'NOTS',
           members: [
-            'Ankit Gupta (26BECCS06)','Aashish Pandey (26BECCS11)','Pinkal Bharia, (26BECCS41)'
+              'Juttuga Mohit Krishna (26BECCS26)','Ankit Rawat (26BECCS08)','Likhit Chawla, (26BECSE34)'
 
           ],
         },
         {
           position: '3RD POSITION',
-          name: 'PANTHEON',
+          name: 'YUVA',
           members: [
-          'Lakshit Bansal (25BECCS39)','Harshdeep Kaur Raina (25beccs29)','Navneet Kour (25BECSE02)'
+                'Ankit Gupta (26BECCS06)','Aashish Pandey (26BECCS11)','Pinkal Bharia (26BECCS41)'
           ],
         },
       ],
