@@ -13,7 +13,7 @@ function Navbar() {
 
   const navItems = [
     { name: 'Home', path: '/' },
-    { name: 'Events', path: '/events' },
+    { name: 'Events/Results', path: '/events' },
     { name: 'Our Team', path: '/OurTeam' },
     { name: 'Contact', path: '/contact' },
     ...(user ? [{ name: 'Dashboard', path: '/dashboard' }] : []),

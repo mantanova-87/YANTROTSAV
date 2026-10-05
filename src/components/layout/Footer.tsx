@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import logo from "../../assets/images/logo.png";
 const footerLinks = [
   { name: 'Home', path: '/' },
-  { name: 'Events', path: '/events' },
+  { name: 'Events/Results', path: '/events' },
   { name: 'Our Team', path: '/OurTeam' },
   { name: 'Contact', path: '/contact' },
 ]
