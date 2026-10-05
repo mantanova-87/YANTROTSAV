@@ -1259,13 +1259,13 @@ function Events() {
                 Event Results
               </h2>
 
-              <p className="mt-3 max-w-xl text-[11px] leading-6 text-slate-500">
+              <p className="mt-3 max-w-xl text-[13px] leading-6 text-slate-500">
                 Celebrating the teams and individuals who stood at the top
                 of every challenge.
               </p>
             </div>
 
-            <span className="hidden font-mono text-[9px] uppercase tracking-[0.2em] text-slate-700 sm:block">
+            <span className="hidden font-mono text-[11px] uppercase tracking-[0.2em] text-slate-700 sm:block">
               YTS / 2026
             </span>
           </div>
@@ -1314,7 +1314,7 @@ function Events() {
       ====================================================== */}
                 <div className="relative flex min-h-[180px] items-center justify-center border-b border-white/10 bg-[#050816] p-6 md:min-h-[240px] md:border-b-0 md:border-r">
                   {/* EVENT NUMBER */}
-                  <span className="absolute left-4 top-4 font-mono text-[8px] tracking-[0.2em] text-slate-700">
+                  <span className="absolute left-4 top-4 font-mono text-[12px] tracking-[0.2em] text-slate-700">
                     {String(index + 1).padStart(2, '0')}
                   </span>
 
@@ -1349,7 +1349,7 @@ function Events() {
                   </motion.div>
 
                   {/* SMALL TECH LABEL */}
-                  <span className="absolute bottom-4 left-4 font-mono text-[7px] uppercase tracking-[0.18em] text-slate-700">
+                  <span className="absolute bottom-4 left-4 font-mono text-[10px] uppercase tracking-[0.18em] text-slate-700">
                     Event Identity
                   </span>
                 </div>
@@ -1361,7 +1361,7 @@ function Events() {
                   {/* EVENT HEADER */}
                   <div className="flex flex-col justify-between gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-start">
                     <div>
-                      <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-slate-600">
+                      <p className="font-mono text-[12px] uppercase tracking-[0.2em] text-slate-600">
                         Event Name
                       </p>
 
@@ -1380,7 +1380,7 @@ function Events() {
                       />
 
                       <span
-                        className={`font-mono text-[9px] font-bold uppercase tracking-[0.18em] ${result.eventType === 'TEAM'
+                        className={`font-mono text-[12px] font-bold uppercase tracking-[0.18em] ${result.eventType === 'TEAM'
                             ? 'text-[#A78BFA]'
                             : 'text-[#00E5FF]'
                           }`}
@@ -1394,13 +1394,13 @@ function Events() {
                   <div className="mt-6 flex items-center gap-3">
                     <span className="h-1.5 w-1.5 bg-[#FFB000]" />
 
-                    <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[#FFB000]">
+                    <span className="font-mono text-[12px] font-bold uppercase tracking-[0.2em] text-[#FFB000]">
                       Winners
                     </span>
 
                     <span className="h-px flex-1 bg-white/10" />
 
-                    <span className="hidden font-mono text-[8px] uppercase tracking-[0.15em] text-slate-700 sm:block">
+                    <span className="hidden font-mono text-[10px] uppercase tracking-[0.15em] text-slate-700 sm:block">
                       Top 03
                     </span>
                   </div>
@@ -1442,19 +1442,19 @@ function Events() {
                               }`}
                           />
 
-                          <span className="font-mono text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] custom-text">
                             {winner.position}
                           </span>
                         </div>
 
                         {/* WINNER / TEAM NAME */}
-                        <h4 className="mt-4 text-sm font-black uppercase tracking-wide text-white">
+                        <h4 className="mt-4 text-lg font-black uppercase tracking-wide custom-text">
                           {winner.name}
                         </h4>
 
                         {/* SOLO LABEL */}
                         {result.eventType === 'SOLO' && (
-                          <p className="mt-2 font-mono text-[8px] uppercase tracking-[0.15em] text-slate-700">
+                          <p className="mt-2 font-mono text-[12px] uppercase tracking-[0.15em] custom-text">
                             Individual Winner
                           </p>
                         )}
@@ -1462,7 +1462,7 @@ function Events() {
                         {/* TEAM MEMBERS */}
                         {result.eventType === 'TEAM' && winner.members && (
                           <div className="mt-4 border-l border-white/10 pl-3">
-                            <p className="mb-2 font-mono text-[7px] uppercase tracking-[0.18em] text-slate-700">
+                            <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] custom-text">
                               Team Members
                             </p>
 
@@ -1488,13 +1488,13 @@ function Events() {
                                       winnerIndex * 0.08 +
                                       memberIndex * 0.04,
                                   }}
-                                  className="flex items-start gap-2"
+                                  className="flex items-start gap-2 custom-text"
                                 >
-                                  <span className="mt-0.5 font-mono text-[7px] text-[#00E5FF]/50">
+                                  <span className="mt-0.5 font-mono text-[10px] custom-text">
                                     {String(memberIndex + 1).padStart(2, '0')}
                                   </span>
 
-                                  <span className="text-[9px] uppercase leading-4 text-slate-500 transition-colors duration-300 hover:text-white">
+                                  <span className="text-[16px] uppercase leading-4 custom-text transition-colors duration-300 hover:custom-text">
                                     {member}
                                   </span>
                                 </motion.div>
@@ -1519,11 +1519,11 @@ function Events() {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="mt-6 flex items-center justify-between border-t border-white/5 pt-4"
         >
-          <span className="font-mono text-[8px] uppercase tracking-[0.18em] text-slate-700">
+          <span className="font-mono text-[12px] uppercase tracking-[0.18em] text-slate-700">
             YANTROTSAV / Official Results
           </span>
 
-          <span className="font-mono text-[8px] uppercase tracking-[0.18em] text-slate-700">
+          <span className="font-mono text-[12px] uppercase tracking-[0.18em] text-slate-700">
             2026
           </span>
         </motion.div>

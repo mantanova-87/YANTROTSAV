@@ -102,3 +102,6 @@
 .animate-cyber-marquee:hover {
   animation-play-state: paused;
 }
+.custom-text {
+  color: #7AA6CC;
+}
