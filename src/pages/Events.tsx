@@ -188,90 +188,80 @@ const results: EventResult[] =
       ],
     },
     {
-      eventLogo: 'det.jpg',
-      eventName: 'THE DETECTIVE',
+      eventLogo: 'survivor.jpg',
+      eventName: 'SURVIVOR (FREE-FIRE)',
       eventType: 'TEAM',
       winners: [
         {
           position: '1ST POSITION',
-          name: 'NIGHTOWL',
+          name: 'NOTS',
           members: [
-            'Manpreet Kaur(25BECCS42)','Kajal Kumari (25BEMNC26)', 'Ayush Kumar(25BEMNC16)'
+            'Aditya Yadav (24BECSE02)', 'Rudra Vijay Saha (26BECCS48)','Ankit Rawat (26BECCS08)','Priyanshu Shekhawat (24BECSE44)'
           ],
         },
         {
           position: '2ND POSITION',
-          name: 'BHARAT',
+          name: 'USEEN GODS',
           members: [
-            'Ankit Gupta (26BECCS06)','Aashish Pandey (26BECCS11)','Pinkal Bharia, (26BECCS41)'
+            'Sanjit Singh (24BECCS45)', 'Prashant Singh (24BECCS38)','Anil Prajapati (24BECCS07)','Anubhav Prakash (25BECCS19)'
 
           ],
         },
         {
           position: '3RD POSITION',
-          name: 'PANTHEON',
+          name: 'APEX PREDATORS',
           members: [
-          'Lakshit Bansal (25BECCS39)','Harshdeep Kaur Raina (25beccs29)','Navneet Kour (25BECSE02)'
+              'Md Sakib (26BEECE26)','Shourya Minhas','Atik Ahmad (26BECCS13)','Abdul Rafey (26BEECA01)'],
+        },
+      ],
+    },
+    {
+      eventLogo: 'survivor.jpg',
+      eventName: 'SURVIVOR(BGMI)',
+      eventType: 'TEAM',
+      winners: [
+        {
+          position: '1ST POSITION',
+          name: 'TEAM ECONOMICS',
+          members: [
+            'Saksham Ajay (24IECO21)','Tanvir Singh (24IECO28)','VINIT SANGRAL (24IECO30)','AAYUSHMAAN (26IECO01)'
+          ],
+        },
+        {
+          position: '2ND POSITION',
+          name: '_',
+          members: [
+            '_'
+
+          ],
+        },
+        {
+          position: '3RD POSITION',
+          name: '_',
+          members: [
+          '_'
           ],
         },
       ],
     },
     {
-      eventLogo: 'det.jpg',
-      eventName: 'THE DETECTIVE',
+      eventLogo: 'robo.png',
+      eventName: 'ROBOTRAVERSE',
       eventType: 'TEAM',
       winners: [
         {
-          position: '1ST POSITION',
-          name: 'NIGHTOWL',
-          members: [
-            'Manpreet Kaur(25BECCS42)','Kajal Kumari (25BEMNC26)', 'Ayush Kumar(25BEMNC16)'
-          ],
+          position: 'ADVANCED MODEL',
+          name: 'N/A',
+          members: 
+            ['Shubh Aryan ( 25BECSE67 )','Kaushal Kumar ( 25BEMNC28 )','Sukhdeep Kaur ( 25BEMNC56 )'],
         },
         {
-          position: '2ND POSITION',
-          name: 'BHARAT',
+          position: 'BASIC MODEL',
+          name: 'N/A',
           members: [
-            'Ankit Gupta (26BECCS06)','Aashish Pandey (26BECCS11)','Pinkal Bharia, (26BECCS41)'
-
-          ],
+            'Samkit Mishra (25BECSE62)','Sahdev Choudhary (25BECSE58)','Prashant Bhandari (25BECSE50)'],
         },
-        {
-          position: '3RD POSITION',
-          name: 'PANTHEON',
-          members: [
-          'Lakshit Bansal (25BECCS39)','Harshdeep Kaur Raina (25beccs29)','Navneet Kour (25BECSE02)'
-          ],
-        },
-      ],
-    },
-    {
-      eventLogo: 'det.jpg',
-      eventName: 'THE DETECTIVE',
-      eventType: 'TEAM',
-      winners: [
-        {
-          position: '1ST POSITION',
-          name: 'NIGHTOWL',
-          members: [
-            'Manpreet Kaur(25BECCS42)','Kajal Kumari (25BEMNC26)', 'Ayush Kumar(25BEMNC16)'
-          ],
-        },
-        {
-          position: '2ND POSITION',
-          name: 'BHARAT',
-          members: [
-            'Ankit Gupta (26BECCS06)','Aashish Pandey (26BECCS11)','Pinkal Bharia, (26BECCS41)'
-
-          ],
-        },
-        {
-          position: '3RD POSITION',
-          name: 'PANTHEON',
-          members: [
-          'Lakshit Bansal (25BECCS39)','Harshdeep Kaur Raina (25beccs29)','Navneet Kour (25BECSE02)'
-          ],
-        },
+       
       ],
     },
   ]
@@ -1253,7 +1243,7 @@ function Events() {
         >
           <div className="flex items-center gap-3">
             <span className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-[#FF6B00]">
-              04 / Results
+              2.4 / Results
             </span>
 
             <span className="h-px w-10 bg-[#FF6B00]/50" />
