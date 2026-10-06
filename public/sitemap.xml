@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <url>
+    <loc>https://yantrotsav.vercel.app/</loc>
+  </url>
+
+  <url>
+    <loc>https://yantrotsav.vercel.app/events</loc>
+  </url>
+
+  <url>
+    <loc>https://yantrotsav.vercel.app/ourteam</loc>
+  </url>
+
+  <url>
+    <loc>https://yantrotsav.vercel.app/gallery</loc>
+  </url>
+
+  <url>
+    <loc>https://yantrotsav.vercel.app/contact</loc>
+  </url>
+
+  <url>
+    <loc>https://yantrotsav.vercel.app/register</loc>
+  </url>
+
+</urlset>
