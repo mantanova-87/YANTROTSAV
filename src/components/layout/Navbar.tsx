@@ -16,7 +16,7 @@ function Navbar() {
     { name: 'Events/Results', path: '/events' },
     { name: 'Our Team', path: '/ourteam' },
     { name: 'Contact', path: '/contact' },
-    { name: 'Yantrotsav Gallery', path: '/gallery' },
+    { name: 'Yantrotsav Gallery', path: '/yantrotsavgallery' },
     ...(user ? [{ name: 'Dashboard', path: '/dashboard' }] : []),
     ...(isAdmin ? [{ name: 'Admin', path: '/admin' }] : []),
   ]

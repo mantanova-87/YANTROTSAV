@@ -22,7 +22,7 @@ function AppRoutes() {
           <Route path="/ourteam" element={<OurTeam />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/gallery" element={<YantrotsavGallery />} />
+          <Route path="/yantrotsavgallery" element={<YantrotsavGallery />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Navigate to="/register" replace />} />
