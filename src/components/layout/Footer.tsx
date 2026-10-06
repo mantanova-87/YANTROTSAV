@@ -8,6 +8,7 @@ const footerLinks = [
   { name: 'Events/Results', path: '/events' },
   { name: 'Our Team', path: '/OurTeam' },
   { name: 'Contact', path: '/contact' },
+  { name: 'Yantrotsav Gallery', path: '/gallery' },
 ]
 
 const socialLinks = [

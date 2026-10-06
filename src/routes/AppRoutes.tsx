@@ -8,6 +8,7 @@ const Home = lazy(() => import('../pages/Home'))
 const Events = lazy(() => import('../pages/Events'))
 const OurTeam = lazy(() => import('../pages/ourteam'))
 const Contact = lazy(() => import('../pages/Contact'))
+const YantrotsavGallery = lazy(() => import('../pages/yantrotsavgallery'))
 const Dashboard = lazy(() => import('../pages/Dashboard'))
 const AdminDashboard = lazy(() => import('../pages/AdminDashboard'))
 const Register = lazy(() => import('../components/Register'))
@@ -18,10 +19,10 @@ function AppRoutes() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/events" element={<Events />} />
-          <Route path="/OurTeam" element={<OurTeam />} />
           <Route path="/ourteam" element={<OurTeam />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/gallery" element={<YantrotsavGallery />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Navigate to="/register" replace />} />
