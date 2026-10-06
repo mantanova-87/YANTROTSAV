@@ -17,13 +17,32 @@ import { useAuth } from '../context/AuthContext'
 import { teamsService, MAX_EVENT_REGISTRATIONS_PER_USER } from '../services/appwrite/teams.service'
 import type { EventDocument } from '../types/database.types'
 import { isEventFullyBooked, getEventSeatsSummary } from '../utils/eventCapacity'
-
+import { FaMedal } from 'react-icons/fa6'
+import type { IconType } from 'react-icons/lib'
 const eventLogos = import.meta.glob('../assets/event-logos/*', {
   eager: true,
   query: '?url',
   import: 'default',
 }) as Record<string, string>
+const getPositionColor = (position: string) => {
+  switch (position) {
+    case '1ST POSITION':
+      return '#FFD700' // Gold
 
+    case '2ND POSITION':
+      return '#C0C0C0' // Silver
+
+    case '3RD POSITION':
+      return '#7e2d2d' // Bronze
+    case 'ADVANCED MODEL':
+      return '#FFD700' // Gold
+
+    case 'BASIC MODEL':
+      return '#C0C0C0' // Silver
+    default:
+      return '#94A3B8'
+  }
+}
 const getEventLogo = (filename: string) => {
   return eventLogos[`../assets/event-logos/${filename}`] ?? ''
 }
@@ -31,6 +50,7 @@ type Winner = {
   position: string
   name: string
   members?: string[]
+  icon: IconType
 }
 
 type EventResult = {
@@ -50,56 +70,20 @@ const results: EventResult[] =
         {
           position: '1ST POSITION',
           name: 'Adarsh Raj Kushwaha (26BECCS02)',
+          icon: FaMedal,
         },
         {
           position: '2ND POSITION',
           name: 'Ajay Kumar (26BECSE03)',
+          icon: FaMedal
         },
         {
           position: '3RD POSITION',
           name: 'Shubham Kumar (26BECSE56)',
+          icon: FaMedal
         },
       ],
     },
-    {
-      eventLogo: 'coc.png',
-      eventName: 'CLASH OF CODE 2.0',
-      eventType: 'SOLO',
-      winners: [
-        {
-          position: '1ST POSITION',
-          name: 'Cherry Bohra (24BECCS16)',
-        },
-        {
-          position: '2ND POSITION',
-          name: 'Darsh Dhawan (25BECCS22)',
-        },
-        {
-          position: '3RD POSITION',
-          name: 'MD Anees Alam (23BECSE13)',
-        },
-      ],
-    },
-    {
-      eventLogo: 'stc.jpg',
-      eventName: 'STACK SCRAMBLE',
-      eventType: 'SOLO',
-      winners: [
-        {
-          position: '1ST POSITION',
-          name: 'Shreyash Prajapati (26BECCS55)',
-        },
-        {
-          position: '2ND POSITION',
-          name: 'Harisankaran (26beccs21)',
-        },
-        {
-          position: '3RD POSITION',
-          name: 'Tanya Popat (26BEMNC47)',
-        },
-      ],
-    },
-
     {
       eventLogo: 'det.jpg',
       eventName: 'THE DETECTIVE',
@@ -107,24 +91,27 @@ const results: EventResult[] =
       winners: [
         {
           position: '1ST POSITION',
+          icon: FaMedal,
           name: 'NIGHTOWL',
           members: [
-            'Manpreet Kaur(25BECCS42)','Kajal Kumari (25BEMNC26)', 'Ayush Kumar(25BEMNC16)'
+            'Manpreet Kaur(25BECCS42)', 'Kajal Kumari (25BEMNC26)', 'Ayush Kumar(25BEMNC16)'
           ],
         },
         {
           position: '2ND POSITION',
+          icon: FaMedal,
           name: 'BHARAT',
           members: [
-            'Ankit Gupta (26BECCS06)','Aashish Pandey (26BECCS11)','Pinkal Bharia, (26BECCS41)'
+            'Ankit Gupta (26BECCS06)', 'Aashish Pandey (26BECCS11)', 'Pinkal Bharia, (26BECCS41)'
 
           ],
         },
         {
           position: '3RD POSITION',
+          icon: FaMedal,
           name: 'PANTHEON',
           members: [
-          'Lakshit Bansal (25BECCS39)','Harshdeep Kaur Raina (25beccs29)','Navneet Kour (25BECSE02)'
+            'Lakshit Bansal (25BECCS39)', 'Harshdeep Kaur Raina (25beccs29)', 'Navneet Kour (25BECSE02)'
           ],
         },
       ],
@@ -136,24 +123,27 @@ const results: EventResult[] =
       winners: [
         {
           position: '1ST POSITION',
+          icon: FaMedal,
           name: 'SAMBA KE ASTER',
           members: [
-            'Sahil khanna (24BECSE50)','Ruhaan Fariz (24BECSE49)'
+            'Sahil khanna (24BECSE50)', 'Ruhaan Fariz (24BECSE49)'
           ],
         },
         {
           position: '2ND POSITION',
+          icon: FaMedal,
           name: 'FINAL_FINAL_REAL',
           members: [
-            'Bhanu Jangra (24BECCS13)','Cherry Bohra (24BECCS16)'
+            'Bhanu Jangra (24BECCS13)', 'Cherry Bohra (24BECCS16)'
 
           ],
         },
         {
           position: '3RD POSITION',
+          icon: FaMedal,
           name: 'LITTIOKLA',
           members: [
-          'Anshu Raj (26BEMNC07)','Tanya Popat (26BEMNC47)'
+            'Anshu Raj (26BEMNC07)', 'Tanya Popat (26BEMNC47)'
           ],
         },
       ],
@@ -165,24 +155,27 @@ const results: EventResult[] =
       winners: [
         {
           position: '1ST POSITION',
+          icon: FaMedal,
           name: 'THE UNPAID INTERNS',
           members: [
-                'Vyom Upadhyay (25BECSE72)','Aman Sharma (25BECSE01)','Raghuvansh Yudhvir (25BECCS59)'
+            'Vyom Upadhyay (25BECSE72)', 'Aman Sharma (25BECSE01)', 'Raghuvansh Yudhvir (25BECCS59)'
           ],
         },
         {
           position: '2ND POSITION',
+          icon: FaMedal,
           name: 'NOTS',
           members: [
-              'Juttuga Mohit Krishna (26BECCS26)','Ankit Rawat (26BECCS08)','Likhit Chawla, (26BECSE34)'
+            'Juttuga Mohit Krishna (26BECCS26)', 'Ankit Rawat (26BECCS08)', 'Likhit Chawla, (26BECSE34)'
 
           ],
         },
         {
           position: '3RD POSITION',
+          icon: FaMedal,
           name: 'YUVA',
           members: [
-                'Ankit Gupta (26BECCS06)','Aashish Pandey (26BECCS11)','Pinkal Bharia (26BECCS41)'
+            'Ankit Gupta (26BECCS06)', 'Aashish Pandey (26BECCS11)', 'Pinkal Bharia (26BECCS41)'
           ],
         },
       ],
@@ -194,24 +187,27 @@ const results: EventResult[] =
       winners: [
         {
           position: '1ST POSITION',
+          icon: FaMedal,
           name: 'NOTS',
           members: [
-            'Aditya Yadav (24BECSE02)', 'Rudra Vijay Saha (26BECCS48)','Ankit Rawat (26BECCS08)','Priyanshu Shekhawat (24BECSE44)'
+            'Aditya Yadav (24BECSE02)', 'Rudra Vijay Saha (26BECCS48)', 'Ankit Rawat (26BECCS08)', 'Priyanshu Shekhawat (24BECSE44)'
           ],
         },
         {
           position: '2ND POSITION',
+          icon: FaMedal,
           name: 'USEEN GODS',
           members: [
-            'Sanjit Singh (24BECCS45)', 'Prashant Singh (24BECCS38)','Anil Prajapati (24BECCS07)','Anubhav Prakash (25BECCS19)'
+            'Sanjit Singh (24BECCS45)', 'Prashant Singh (24BECCS38)', 'Anil Prajapati (24BECCS07)', 'Anubhav Prakash (25BECCS19)'
 
           ],
         },
         {
           position: '3RD POSITION',
+          icon: FaMedal,
           name: 'APEX PREDATORS',
           members: [
-              'Md Sakib (26BEECE26)','Shourya Minhas','Atik Ahmad (26BECCS13)','Abdul Rafey (26BEECA01)'],
+            'Md Sakib (26BEECE26)', 'Shourya Minhas', 'Atik Ahmad (26BECCS13)', 'Abdul Rafey (26BEECA01)'],
         },
       ],
     },
@@ -222,13 +218,15 @@ const results: EventResult[] =
       winners: [
         {
           position: '1ST POSITION',
+          icon: FaMedal,
           name: 'TEAM ECONOMICS',
           members: [
-            'Saksham Ajay (24IECO21)','Tanvir Singh (24IECO28)','VINIT SANGRAL (24IECO30)','AAYUSHMAAN (26IECO01)'
+            'Saksham Ajay (24IECO21)', 'Tanvir Singh (24IECO28)', 'VINIT SANGRAL (24IECO30)', 'AAYUSHMAAN (26IECO01)'
           ],
         },
         {
           position: '2ND POSITION',
+          icon: FaMedal,
           name: '_',
           members: [
             '_'
@@ -237,10 +235,55 @@ const results: EventResult[] =
         },
         {
           position: '3RD POSITION',
+          icon: FaMedal,
           name: '_',
           members: [
-          '_'
+            '_'
           ],
+        },
+      ],
+    },
+    {
+      eventLogo: 'coc.png',
+      eventName: 'CLASH OF CODE 2.0',
+      eventType: 'SOLO',
+      winners: [
+        {
+          position: '1ST POSITION',
+          icon: FaMedal,
+          name: 'Cherry Bohra (24BECCS16)',
+        },
+        {
+          position: '2ND POSITION',
+          icon: FaMedal,
+          name: 'Darsh Dhawan (25BECCS22)',
+        },
+        {
+          position: '3RD POSITION',
+          icon: FaMedal,
+          name: 'MD Anees Alam (23BECSE13)',
+        },
+      ],
+    },
+    {
+      eventLogo: 'stc.jpg',
+      eventName: 'STACK SCRAMBLE',
+      eventType: 'SOLO',
+      winners: [
+        {
+          position: '1ST POSITION',
+          icon: FaMedal,
+          name: 'Shreyash Prajapati (26BECCS55)',
+        },
+        {
+          position: '2ND POSITION',
+          icon: FaMedal,
+          name: 'Harisankaran (26beccs21)',
+        },
+        {
+          position: '3RD POSITION',
+          icon: FaMedal,
+          name: 'Tanya Popat (26BEMNC47)',
         },
       ],
     },
@@ -251,17 +294,19 @@ const results: EventResult[] =
       winners: [
         {
           position: 'ADVANCED MODEL',
-          name: 'N/A',
-          members: 
-            ['Shubh Aryan ( 25BECSE67 )','Kaushal Kumar ( 25BEMNC28 )','Sukhdeep Kaur ( 25BEMNC56 )'],
+          icon: FaMedal,
+          name: 'Traversal Masters',
+          members:
+            ['Shubh Aryan ( 25BECSE67 )', 'Kaushal Kumar ( 25BEMNC28 )', 'Sukhdeep Kaur ( 25BEMNC56 )'],
         },
         {
           position: 'BASIC MODEL',
-          name: 'N/A',
+          icon: FaMedal,
+          name: 'Churma',
           members: [
-            'Samkit Mishra (25BECSE62)','Sahdev Choudhary (25BECSE58)','Prashant Bhandari (25BECSE50)'],
+            'Samkit Mishra (25BECSE62)', 'Sahdev Choudhary (25BECSE58)', 'Prashant Bhandari (25BECSE50)'],
         },
-       
+
       ],
     },
   ]
@@ -1374,15 +1419,15 @@ function Events() {
                     <div className="flex items-center gap-2 sm:pt-1">
                       <span
                         className={`h-1.5 w-1.5 ${result.eventType === 'TEAM'
-                            ? 'bg-[#7C3AED]'
-                            : 'bg-[#00E5FF]'
+                          ? 'bg-[#7C3AED]'
+                          : 'bg-[#00E5FF]'
                           }`}
                       />
 
                       <span
                         className={`font-mono text-[12px] font-bold uppercase tracking-[0.18em] ${result.eventType === 'TEAM'
-                            ? 'text-[#A78BFA]'
-                            : 'text-[#00E5FF]'
+                          ? 'text-[#A78BFA]'
+                          : 'text-[#00E5FF]'
                           }`}
                       >
                         {result.eventType}
@@ -1427,81 +1472,93 @@ function Events() {
                           delay: index * 0.1 + winnerIndex * 0.08,
                         }}
                         className={`relative py-2 ${winnerIndex > 0
-                            ? 'mt-5 border-t border-white/10 pt-6 md:mt-0 md:border-l md:border-t-0 md:pl-5'
-                            : 'md:pr-5'
+                          ? 'mt-5 border-t border-white/10 pt-6 md:mt-0 md:border-l md:border-t-0 md:pl-5'
+                          : 'md:pr-5'
                           }`}
                       >
                         {/* POSITION */}
                         <div className="flex items-center gap-2">
                           <span
                             className={`h-1.5 w-1.5 ${winnerIndex === 0
-                                ? 'bg-[#FFB000]'
-                                : winnerIndex === 1
-                                  ? 'bg-slate-400'
-                                  : 'bg-[#FF6B00]'
+                              ? 'bg-[#FFB000]'
+                              : winnerIndex === 1
+                                ? 'bg-slate-400'
+                                : 'bg-[#FF6B00]'
                               }`}
                           />
 
-                          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] custom-text">
-                            {winner.position}
-                          </span>
-                        </div>
 
-                        {/* WINNER / TEAM NAME */}
-                        <h4 className="mt-4 text-lg font-black uppercase tracking-wide custom-text">
-                          {winner.name}
-                        </h4>
+                          <div className="flex items-center gap-2">
+                            <winner.icon
+                              size={18}
+                              color={getPositionColor(winner.position)}
+                            />
 
-                        {/* SOLO LABEL */}
-                        {result.eventType === 'SOLO' && (
-                          <p className="mt-2 font-mono text-[12px] uppercase tracking-[0.15em] custom-text">
-                            Individual Winner
-                          </p>
-                        )}
-
-                        {/* TEAM MEMBERS */}
-                        {result.eventType === 'TEAM' && winner.members && (
-                          <div className="mt-4 border-l border-white/10 pl-3">
-                            <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] custom-text">
-                              Team Members
-                            </p>
-
-                            <div className="space-y-1.5">
-                              {winner.members.map((member, memberIndex) => (
-                                <motion.div
-                                  key={`${winner.name}-${member}`}
-                                  initial={{
-                                    opacity: 0,
-                                    x: -5,
-                                  }}
-                                  whileInView={{
-                                    opacity: 1,
-                                    x: 0,
-                                  }}
-                                  viewport={{
-                                    once: true,
-                                  }}
-                                  transition={{
-                                    duration: 0.3,
-                                    delay:
-                                      index * 0.1 +
-                                      winnerIndex * 0.08 +
-                                      memberIndex * 0.04,
-                                  }}
-                                  className="flex items-start gap-2 custom-text"
-                                >
-                                  <span className="mt-0.5 font-mono text-[10px] custom-text">
-                                    {String(memberIndex + 1).padStart(2, '0')}
-                                  </span>
-
-                                  <span className="text-[16px] uppercase leading-4 custom-text transition-colors duration-300 hover:custom-text">
-                                    {member}
-                                  </span>
-                                </motion.div>
-                              ))}
-                            </div>
+                            <span
+                              className="font-mono text-[9px] font-bold uppercase tracking-[0.16em]"
+                              style={{
+                                color: getPositionColor(winner.position),
+                              }}
+                            >
+                              {winner.position}
+                            </span>
                           </div>
-                        )}
+                        </div>
+                          {/* WINNER / TEAM NAME */}
+                          <h4 className="mt-4 text-lg font-black uppercase tracking-wide custom-text">
+                            {winner.name}
+                          </h4>
+
+                          {/* SOLO LABEL */}
+                          {result.eventType === 'SOLO' && (
+                            <p className="mt-2 font-mono text-[12px] uppercase tracking-[0.15em] custom-text">
+                              Individual Winner
+                            </p>
+                          )}
+
+                          {/* TEAM MEMBERS */}
+                          {result.eventType === 'TEAM' && winner.members && (
+                            <div className="mt-4 border-l border-white/10 pl-3">
+                              <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] custom-text">
+                                Team Members
+                              </p>
+
+                              <div className="space-y-1.5">
+                                {winner.members.map((member, memberIndex) => (
+                                  <motion.div
+                                    key={`${winner.name}-${member}`}
+                                    initial={{
+                                      opacity: 0,
+                                      x: -5,
+                                    }}
+                                    whileInView={{
+                                      opacity: 1,
+                                      x: 0,
+                                    }}
+                                    viewport={{
+                                      once: true,
+                                    }}
+                                    transition={{
+                                      duration: 0.3,
+                                      delay:
+                                        index * 0.1 +
+                                        winnerIndex * 0.08 +
+                                        memberIndex * 0.04,
+                                    }}
+                                    className="flex items-start gap-2 custom-text"
+                                  >
+                                    <span className="mt-0.5 font-mono text-[10px] custom-text">
+                                      {String(memberIndex + 1).padStart(2, '0')}
+                                    </span>
+
+                                    <span className="text-[16px] uppercase leading-4 custom-text transition-colors duration-300 hover:custom-text">
+                                      {member}
+                                    </span>
+                                  </motion.div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                       </motion.div>
                     ))}
                   </div>

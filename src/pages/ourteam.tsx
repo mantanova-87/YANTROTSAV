@@ -59,7 +59,7 @@ const teamMembers = [
     email: "25BECCS46.cse@cujammu.ac.in",
     instagram: "https://www.instagram.com/9613mehak",
     linkedin: "https://www.linkedin.com/in/mehak-sharma-cyber",
-    whatsapp: "", //https://wa.me/919906814723
+    whatsapp: "https://wa.me/919906814723",
     image: mehak,
   },
   {
@@ -68,7 +68,7 @@ const teamMembers = [
     email: "25BECSE15.cse@cujammu.ac.in",
     instagram: "https://www.instagram.com/ankit_lalji",
     linkedin: "https://www.linkedin.com/in/ankit-kumar-ojha-04de13d12m",
-    whatsapp: "", //https://wa.me/919334569412"
+    whatsapp: "https://wa.me/919334569412",
     image: ankit,
   }, 
 ];
