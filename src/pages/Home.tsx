@@ -74,13 +74,7 @@ const depthReveal = {
 // ============================================================
 
 const messageCards = [
-  {
-    title: "Hon'ble Vice-Chancellor's Message",
-    text: 'It gives me immense pleasure to extend my best wishes on the occasion of Yantrotsav at Central University of Jammu. This event celebrates technology, innovation, creativity, and the talent of our young minds. I hope Yantrotsav inspires students to explore, innovate, and transform ideas into meaningful solutions. I congratulate the organizers and wish the event great success.',
-    text1: 'Prof. Dr. Sanjeev Jain',
-    text2: "Hon'ble Vice Chancellor",
-    image: 'vc.jpg',
-  },
+  
   {
     title: 'Message from the HOD',
     text: 'Yantrotsav is a celebration of the curiosity, creativity, and technical spirit of our students. It is an opportunity to step beyond the classroom, experiment with ideas, and turn knowledge into practical solutions. I encourage every participant to embrace the challenges, learn through collaboration, and enjoy the process of innovation. My best wishes to all the students and the organizing team for a memorable and successful Yantrotsav.',
