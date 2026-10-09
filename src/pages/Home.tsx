@@ -75,8 +75,8 @@ const depthReveal = {
 
 const messageCards = [
   {
-    title: "Hon'ble Vice-Chancellor's Message",
-    text: 'It gives me immense pleasure to extend my best wishes on the occasion of Yantrotsav at Central University of Jammu. This event celebrates technology, innovation, creativity, and the talent of our young minds. I hope Yantrotsav inspires students to explore, innovate, and transform ideas into meaningful solutions. I congratulate the organizers and wish the event great success.',
+    title: "",
+    text: ',
     text1: 'Prof. Dr. Sanjeev Jain',
     text2: "Hon'ble Vice Chancellor",
     image: 'vc.jpg',
